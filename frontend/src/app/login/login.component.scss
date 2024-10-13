@@ -1,0 +1,41 @@
+div.rf-theme {
+  @apply flex flex-col justify-end items-end;
+  @apply w-full;
+
+  button {
+    @apply mt-2 mr-2;
+    width: 150px;
+  }
+}
+
+.rf-login-form {
+  @apply flex flex-col justify-center items-center;
+  height: calc(100vh - 60px);
+}
+
+mat-card-title {
+  @apply uppercase;
+}
+
+mat-card {
+  @apply w-full p-4 text-center;
+  max-width: 400px;
+}
+
+mat-card-title {
+  @apply text-2xl font-bold mb-4;
+}
+
+mat-form-field {
+  @apply w-full mb-4;
+}
+
+button {
+  @apply w-full h-12 rounded;
+}
+
+@media screen and (max-width: 600px) {
+  mat-card {
+    @apply p-2;
+  }
+}
