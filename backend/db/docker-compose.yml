@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  db:
+    image: REDACTED:latest
+    container_name: selita_fish
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: REDACTED
+      POSTGRES_PASSWORD: REDACTED
+      POSTGRES_DB: selita_fish
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
