@@ -1,0 +1,28 @@
+<router-outlet></router-outlet>
+<footer class="se-zoom">
+  <mat-card role="group" aria-label="Page zoom">
+    <mat-card-actions>
+      <button
+        mat-mini-fab
+        aria-label="Decrease page zoom"
+        title="Decrease page zoom"
+        (click)="zoom(-10)"
+        [disabled]="zoomPercentage <= 90"
+        [attr.aria-disabled]="zoomPercentage <= 80"
+      >
+        <mat-icon>remove</mat-icon>
+      </button>
+      <p class="mat-body-1">{{ zoomPercentage }} %</p>
+      <button
+        mat-mini-fab
+        aria-label="Increase page zoom"
+        title="Increase page zoom"
+        (click)="zoom(10)"
+        [disabled]="zoomPercentage >= 200"
+        [attr.aria-disabled]="zoomPercentage >= 2"
+      >
+        <mat-icon>add</mat-icon>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</footer>

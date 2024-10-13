@@ -1,0 +1,203 @@
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use "@angular/material" as mat;
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap");
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat.core();
+
+// Create the theme object. A theme consists of configurations for individual
+// theming systems such as "color" or "typography".
+$rf-default-theme: mat.define-light-theme(
+  (
+    color: (
+      primary: mat.define-palette(mat.$indigo-palette),
+      accent: mat.define-palette(mat.$pink-palette, A200, A100, A400),
+      warn: mat.define-palette(mat.$red-palette),
+    ),
+    typography: mat.define-typography-config(),
+    density: 0,
+  )
+);
+
+$rf-dark-theme: mat.define-dark-theme(
+  (
+    color: (
+      primary: mat.define-palette(mat.$cyan-palette, 200),
+      accent: mat.define-palette(mat.$blue-grey-palette, A200, A100, A400),
+      warn: mat.define-palette(mat.$amber-palette),
+    ),
+    typography: mat.define-typography-config(),
+    density: 0,
+  )
+);
+
+.rf-title {
+  color: #3f51b5;
+  font-weight: 700 !important;
+}
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include mat.typography-hierarchy($rf-default-theme);
+
+@include mat.all-component-themes($rf-default-theme);
+
+.rf-dark-theme {
+  @include mat.typography-hierarchy($rf-dark-theme);
+  @include mat.all-component-colors($rf-dark-theme);
+
+  .rf-title {
+    color: #00bcd4 !important;
+    font-weight: 700 !important;
+  }
+
+  .rf-toolbar {
+    border-color: #535353 !important;
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  @apply h-full m-0;
+}
+
+mat-card {
+  @apply rounded-xl;
+}
+
+// zoom tags
+.rf-zoom {
+  @apply fixed bottom-0 right-0 mb-2 mr-2;
+  z-index: 1;
+
+  p {
+    margin: 0 10px !important;
+  }
+
+  button {
+    @apply shadow-none;
+
+    &:hover {
+      @apply shadow-none;
+    }
+
+    &:focus {
+      @apply shadow-none;
+    }
+  }
+}
+
+.rf-zoom-80 {
+  zoom: 80%;
+}
+
+.rf-zoom-90 {
+  zoom: 90%;
+}
+
+.rf-zoom-100 {
+  zoom: 100%;
+}
+
+.rf-zoom-110 {
+  zoom: 110%;
+}
+
+.rf-zoom-120 {
+  zoom: 120%;
+}
+
+.rf-zoom-130 {
+  zoom: 130%;
+}
+
+.rf-zoom-140 {
+  zoom: 140%;
+}
+
+.rf-zoom-150 {
+  zoom: 150%;
+}
+
+.rf-zoom-160 {
+  zoom: 160%;
+}
+
+.rf-zoom-170 {
+  zoom: 170%;
+}
+
+.rf-zoom-180 {
+  zoom: 180%;
+}
+
+.rf-zoom-190 {
+  zoom: 190%;
+}
+
+.rf-zoom-200 {
+  zoom: 200%;
+}
+
+// table responsive
+.mat-mdc-row:hover {
+  @apply cursor-pointer opacity-80;
+}
+
+.rf-table-responsive {
+  @apply block w-full overflow-x-auto;
+
+  button {
+    @apply shadow-none rounded-3xl;
+  }
+
+  caption {
+    @apply text-left text-xl my-2;
+  }
+
+  .mat-table {
+    @apply table w-full max-w-full mb-4 border-collapse;
+  }
+
+  .mat-row,
+  .mat-header-row {
+    @apply table-row;
+  }
+
+  .mat-cell,
+  .mat-header-cell {
+    @apply table-cell;
+    @apply px-5 py-2;
+    @apply whitespace-nowrap overflow-hidden;
+  }
+}
+
+.rf-blue-label {
+  @apply inline-flex items-center rounded-md;
+  @apply px-2 py-1;
+  @apply text-xs font-medium text-blue-700 bg-blue-50;
+  @apply ring-1 ring-inset ring-blue-700/10;
+}
+
+.rf-red-label {
+  @apply inline-flex items-center rounded-md;
+  @apply px-2 py-1;
+  @apply text-xs font-medium text-red-700 bg-red-50;
+  @apply ring-1 ring-inset ring-red-600/10;
+}
+
+.rf-label-bordered {
+  @apply inline-flex items-center rounded-md;
+  @apply p-2;
+  @apply text-xs font-medium;
+  @apply ring-1 ring-inset;
+}
