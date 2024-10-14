@@ -11,7 +11,7 @@
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
-$rf-default-theme: mat.define-light-theme(
+$se-default-theme: mat.define-light-theme(
   (
     color: (
       primary: mat.define-palette(mat.$indigo-palette),
@@ -23,7 +23,7 @@ $rf-default-theme: mat.define-light-theme(
   )
 );
 
-$rf-dark-theme: mat.define-dark-theme(
+$se-dark-theme: mat.define-dark-theme(
   (
     color: (
       primary: mat.define-palette(mat.$cyan-palette, 200),
@@ -35,7 +35,7 @@ $rf-dark-theme: mat.define-dark-theme(
   )
 );
 
-.rf-title {
+.se-title {
   color: #3f51b5;
   font-weight: 700 !important;
 }
@@ -43,20 +43,20 @@ $rf-dark-theme: mat.define-dark-theme(
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include mat.typography-hierarchy($rf-default-theme);
+@include mat.typography-hierarchy($se-default-theme);
 
-@include mat.all-component-themes($rf-default-theme);
+@include mat.all-component-themes($se-default-theme);
 
-.rf-dark-theme {
-  @include mat.typography-hierarchy($rf-dark-theme);
-  @include mat.all-component-colors($rf-dark-theme);
+.se-dark-theme {
+  @include mat.typography-hierarchy($se-dark-theme);
+  @include mat.all-component-colors($se-dark-theme);
 
-  .rf-title {
+  .se-title {
     color: #00bcd4 !important;
     font-weight: 700 !important;
   }
 
-  .rf-toolbar {
+  .se-toolbar {
     border-color: #535353 !important;
   }
 }
@@ -75,7 +75,7 @@ mat-card {
 }
 
 // zoom tags
-.rf-zoom {
+.se-zoom {
   @apply fixed bottom-0 right-0 mb-2 mr-2;
   z-index: 1;
 
@@ -96,55 +96,55 @@ mat-card {
   }
 }
 
-.rf-zoom-80 {
+.se-zoom-80 {
   zoom: 80%;
 }
 
-.rf-zoom-90 {
+.se-zoom-90 {
   zoom: 90%;
 }
 
-.rf-zoom-100 {
+.se-zoom-100 {
   zoom: 100%;
 }
 
-.rf-zoom-110 {
+.se-zoom-110 {
   zoom: 110%;
 }
 
-.rf-zoom-120 {
+.se-zoom-120 {
   zoom: 120%;
 }
 
-.rf-zoom-130 {
+.se-zoom-130 {
   zoom: 130%;
 }
 
-.rf-zoom-140 {
+.se-zoom-140 {
   zoom: 140%;
 }
 
-.rf-zoom-150 {
+.se-zoom-150 {
   zoom: 150%;
 }
 
-.rf-zoom-160 {
+.se-zoom-160 {
   zoom: 160%;
 }
 
-.rf-zoom-170 {
+.se-zoom-170 {
   zoom: 170%;
 }
 
-.rf-zoom-180 {
+.se-zoom-180 {
   zoom: 180%;
 }
 
-.rf-zoom-190 {
+.se-zoom-190 {
   zoom: 190%;
 }
 
-.rf-zoom-200 {
+.se-zoom-200 {
   zoom: 200%;
 }
 
@@ -153,7 +153,7 @@ mat-card {
   @apply cursor-pointer opacity-80;
 }
 
-.rf-table-responsive {
+.se-table-responsive {
   @apply block w-full overflow-x-auto;
 
   button {
@@ -181,21 +181,21 @@ mat-card {
   }
 }
 
-.rf-blue-label {
+.se-blue-label {
   @apply inline-flex items-center rounded-md;
   @apply px-2 py-1;
   @apply text-xs font-medium text-blue-700 bg-blue-50;
   @apply ring-1 ring-inset ring-blue-700/10;
 }
 
-.rf-red-label {
+.se-red-label {
   @apply inline-flex items-center rounded-md;
   @apply px-2 py-1;
   @apply text-xs font-medium text-red-700 bg-red-50;
   @apply ring-1 ring-inset ring-red-600/10;
 }
 
-.rf-label-bordered {
+.se-label-bordered {
   @apply inline-flex items-center rounded-md;
   @apply p-2;
   @apply text-xs font-medium;

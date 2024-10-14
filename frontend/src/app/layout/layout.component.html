@@ -1,0 +1,105 @@
+<mat-sidenav-container>
+  <mat-sidenav
+    class="se-sidenav"
+    #rfnav
+    [mode]="mobileQuery.matches ? 'over' : 'side'"
+    [style.width]="mobileQuery.matches ? '215px' : '250px'"
+    role="region"
+    fixedInViewport="true"
+  >
+    <div class="flex justify-end" *ngIf="mobileQuery.matches">
+      <button
+        mat-icon-button
+        aria-label="Close sidenav"
+        title="Close sidenav"
+        (click)="rfnav.toggle()"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <!-- user info -->
+    <div class="se-avatar-container">
+      <i class="material-icons" aria-hidden="true">account_circle</i>
+      <div>
+        <p class="mat-headline-6">{{ username }}</p>
+        <p class="mat-body-2">{{ firstName }} {{ lastName }}</p>
+      </div>
+    </div>
+    <!-- navigation -->
+    <mat-nav-list>
+      <mat-divider></mat-divider>
+      <button
+        mat-list-item
+        aria-label="Open movies view"
+        title="Open movies view"
+        [activated]="this.router.url === '/'"
+        (click)="this.router.navigate([''])"
+      >
+        <mat-icon matListItemIcon>movies</mat-icon>
+        <div matListItemTitle>Movies</div>
+      </button>
+      <button
+        mat-list-item
+        aria-label="Open history view"
+        title="Open history view"
+        [activated]="this.router.url === '/history'"
+        (click)="this.router.navigate(['/history'])"
+      >
+        <mat-icon matListItemIcon>history</mat-icon>
+        <div matListItemTitle>History</div>
+      </button>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content role="main">
+    <mat-toolbar class="se-toolbar" role="toolbar">
+      <!-- open menu and title -->
+      <div class="flex items-center">
+        <button
+          mat-icon-button
+          (click)="rfnav.toggle()"
+          [title]="rfnav.opened ? 'Close sidenav' : 'Open sidenav'"
+          [attr.aria-label]="rfnav.opened ? 'Close sidenav' : 'Open sidenav'"
+        >
+          <mat-icon>menu</mat-icon>
+        </button>
+        <h1>Rentflix</h1>
+      </div>
+      <div class="flex items-end gap-4">
+        <!-- dark/light mode -->
+        <button
+          (click)="this.darkModeService.toggleDarkMode()"
+          mat-stroked-button
+          [attr.aria-label]="
+            this.darkModeService.darkMode
+              ? 'Active dark mode'
+              : 'Active light mode'
+          "
+          [title]="
+            this.darkModeService.darkMode
+              ? 'Active dark mode'
+              : 'Active light mode'
+          "
+        >
+          <mat-icon style="margin: 0">{{
+            this.darkModeService.darkMode ? "light_mode" : "dark_mode"
+          }}</mat-icon>
+        </button>
+        <!-- logout -->
+        <button
+          (click)="logout()"
+          mat-stroked-button
+          aria-label="Logout"
+          title="Logout"
+        >
+          <mat-icon style="margin: 0">logout</mat-icon>
+        </button>
+      </div>
+    </mat-toolbar>
+    <!-- main content -->
+    <div class="py-4 px-5">
+      <router-outlet></router-outlet>
+    </div>
+    <!-- end main content -->
+  </mat-sidenav-content>
+</mat-sidenav-container>

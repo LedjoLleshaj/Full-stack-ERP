@@ -12,7 +12,7 @@ import { AuthApiService } from "../shared/services/auth-api/auth-api.service";
   styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent implements OnInit {
-  loginForm: FormGroup;
+  loginForm!: FormGroup;
 
   constructor(
     private router: Router,
