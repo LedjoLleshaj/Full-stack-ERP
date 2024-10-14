@@ -1,4 +1,5 @@
 import { Component } from "@angular/core";
+import { RouterModule, Routes } from "@angular/router";
 
 @Component({
   selector: "app-root",
@@ -9,10 +10,10 @@ export class AppComponent {
 
   zoom(direction: number) {
     const className = document.body.className.replace(
-      ` rf-zoom-${this.zoomPercentage}`,
+      ` se-zoom-${this.zoomPercentage}`,
       ""
     );
     this.zoomPercentage += direction;
-    document.body.className = className + ` rf-zoom-${this.zoomPercentage}`;
+    document.body.className = className + ` se-zoom-${this.zoomPercentage}`;
   }
 }

@@ -12,10 +12,10 @@ import { MatGridListModule } from "@angular/material/grid-list";
 import { HttpClientModule } from "@angular/common/http";
 
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
+import { LayoutComponent } from "./layout/layout.component";
 import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatIconModule } from "@angular/material/icon";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
-
 import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatMenuModule } from "@angular/material/menu";
 import { MatDialogContent, MatDialogModule } from "@angular/material/dialog";
@@ -24,7 +24,7 @@ import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent],
+  declarations: [AppComponent, LayoutComponent, LoginComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -43,6 +43,7 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
     MatMenuModule,
     MatDialogModule,
     MatChipsModule,
+
     MatStepperModule,
     MatProgressSpinnerModule,
   ],
