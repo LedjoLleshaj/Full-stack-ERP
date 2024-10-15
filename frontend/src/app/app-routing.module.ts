@@ -12,11 +12,11 @@ const routes: Routes = [
     children: [
       {
         path: "",
-        title: "Available Film - Rentflix",
+        title: "Available Film - Selita",
       },
       {
         path: "history",
-        title: "Rental histoy - Rentflix",
+        title: "Rental histoy - Selita",
       },
     ],
     canActivate: [AuthGuard],
@@ -25,7 +25,7 @@ const routes: Routes = [
     path: "login",
     component: LoginComponent,
     canActivate: [PublicGuard],
-    title: "Login - Rentflix",
+    title: "Login - Selita",
   },
 ];
 

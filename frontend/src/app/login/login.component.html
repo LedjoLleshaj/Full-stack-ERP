@@ -3,16 +3,10 @@
     <button
       (click)="this.darkModeService.toggleDarkMode()"
       mat-stroked-button
-      [attr.aria-label]="
-        this.darkModeService.darkMode ? 'Active light mode' : 'Active dark mode'
-      "
-      [title]="
-        this.darkModeService.darkMode ? 'Active light mode' : 'Active dark mode'
-      "
+      [attr.aria-label]="this.darkModeService.darkMode ? 'Active light mode' : 'Active dark mode'"
+      [title]="this.darkModeService.darkMode ? 'Active light mode' : 'Active dark mode'"
     >
-      <mat-icon>{{
-        this.darkModeService.darkMode ? "light_mode" : "dark_mode"
-      }}</mat-icon>
+      <mat-icon>{{ this.darkModeService.darkMode ? "light_mode" : "dark_mode" }}</mat-icon>
       {{ this.darkModeService.darkMode ? "Light mode" : "Dark mode" }}
     </button>
   </div>
@@ -22,17 +16,9 @@
       <mat-card-content>
         <form [formGroup]="loginForm">
           <mat-form-field>
-            <input
-              matInput
-              placeholder="Username"
-              formControlName="username"
-              name="username"
-              required
-            />
+            <input matInput placeholder="Username" formControlName="username" name="username" required />
 
-            <mat-error
-              *ngIf="loginForm.controls?.['username']?.errors && (loginForm.touched || loginForm.dirty)"
-            >
+            <mat-error *ngIf="loginForm.controls?.['username']?.errors && (loginForm.touched || loginForm.dirty)">
               Username is required
             </mat-error>
           </mat-form-field>
@@ -45,20 +31,11 @@
               name="password"
               required
             />
-            <mat-error
-              *ngIf="loginForm.controls?.['password']?.errors && (loginForm.touched || loginForm.dirty)"
-            >
+            <mat-error *ngIf="loginForm.controls?.['password']?.errors && (loginForm.touched || loginForm.dirty)">
               Password is required with a minimum of 4 characters
             </mat-error>
           </mat-form-field>
-          <button
-            mat-flat-button
-            color="primary"
-            [disabled]="!loginForm.valid"
-            (click)="confirm()"
-          >
-            Login
-          </button>
+          <button mat-flat-button color="primary" [disabled]="!loginForm.valid" (click)="confirm()">Login</button>
         </form>
       </mat-card-content>
     </mat-card>
