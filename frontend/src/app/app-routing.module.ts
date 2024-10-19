@@ -12,10 +12,12 @@ const routes: Routes = [
     children: [
       {
         path: "",
+        component: LoginComponent,
         title: "Available Film - Selita",
       },
       {
         path: "history",
+        component: LoginComponent,
         title: "Rental histoy - Selita",
       },
     ],
