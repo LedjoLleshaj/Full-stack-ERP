@@ -17,11 +17,13 @@ def getUsers(request):
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
+@api_view(["GET"])
 def getUser(request, pk):
     user = Users.objects.get(id=pk)
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
 
+@api_view(["POST"])
 def createUser(request):
     data = request.data
     user = Users.objects.create(
@@ -36,6 +38,7 @@ def createUser(request):
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
 
+@api_view(["POST"])
 def updateUser(request, pk):
     user = Users.objects.get(id=pk)
     data = request.data
@@ -50,6 +53,7 @@ def updateUser(request, pk):
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
 
+@api_view(["DELETE"])
 def deleteUser(request, pk):
     user = Users.objects.get(id=pk)
     user.delete()
