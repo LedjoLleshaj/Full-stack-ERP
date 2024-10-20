@@ -10,6 +10,8 @@ from .serializers import UserSerializer, ProductSerializer
 
 
 # Create your views here.
+# ======== USERS ========
+
 
 @api_view(["GET"])
 def getUsers(request):
@@ -17,11 +19,13 @@ def getUsers(request):
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
+
 @api_view(["GET"])
 def getUser(request, pk):
     user = Users.objects.get(id=pk)
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
+
 
 @api_view(["POST"])
 def createUser(request):
@@ -38,6 +42,7 @@ def createUser(request):
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
 
+
 @api_view(["POST"])
 def updateUser(request, pk):
     user = Users.objects.get(id=pk)
@@ -45,13 +50,12 @@ def updateUser(request, pk):
     user.username = data["username"]
     user.password = data["password"]
     user.email = data["email"]
-    user.first_name = data["first_name"]
-    user.last_name = data["last_name"]
-    user.phone = data["phone"]
-    user.city = data["city"]
+    user.firstname = data["first_name"]
+    user.lastname = data["last_name"]
     user.save()
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
+
 
 @api_view(["DELETE"])
 def deleteUser(request, pk):
@@ -59,9 +63,12 @@ def deleteUser(request, pk):
     user.delete()
     return Response("User deleted successfully")
 
+
+# ======== PRODUCTS ========
+
+
 @api_view(["GET"])
 def getProducts(request):
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
-
