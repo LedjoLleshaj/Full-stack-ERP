@@ -62,8 +62,7 @@ CREATE TABLE Restock (
 );
 
 -- Inserting data
-INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('admin', 'admin', '
-admin@selita_fish.com', 'Admin', 'Admin', 'admin');
+INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('admin', 'admin', 'admin@selita_fish.com', 'Admin', 'Admin', 'admin');
 INSERT INTO Product_Categories (category_name) VALUES ('Fish'), ('Seafood'), ('Shellfish'), ('Crustaceans'), ('Molluscs');
 INSERT INTO Product_Names (product_name, category_id) VALUES ('Salmon', 1), ('Tuna', 1), ('Swordfish', 1), ('Cod', 1), ('Haddock', 1), ('Mackerel', 1), ('Sardines', 1), ('Anchovies', 1), ('Prawns', 2), ('Shrimp', 2), ('Crab', 3), ('Lobster', 3), ('Crayfish', 3), ('Mussels', 4), ('Oysters', 4), ('Clams', 4), ('Scallops', 4), ('Squid', 5), ('Octopus', 5);
 INSERT INTO Product (name, category, price, description) VALUES ('Salmon', 'Fish', 10.00, 'Fresh salmon fillets'), ('Tuna', 'Fish', 12.00, 'Fresh tuna steaks'), ('Swordfish', 'Fish', 15.00, 'Fresh swordfish steaks'), ('Cod', 'Fish', 8.00, 'Fresh cod fillets'), ('Haddock', 'Fish', 7.00, 'Fresh haddock fillets'), ('Mackerel', 'Fish', 6.00, 'Fresh mackerel fillets'), ('Sardines', 'Fish', 5.00, 'Fresh sardines'), ('Anchovies', 'Fish', 4.00, 'Fresh anchovies'), ('Prawns', 'Seafood', 20.00, 'Fresh prawns'), ('Shrimp', 'Seafood', 18.00, 'Fresh shrimp'), ('Crab', 'Shellfish', 25.00, 'Fresh crab'), ('Lobster', 'Shellfish', 30.00, 'Fresh lobster'), ('Crayfish', 'Shellfish', 22.00, 'Fresh crayfish'), ('Mussels', 'Crustaceans', 12.00, 'Fresh mussels'), ('Oysters', 'Crustaceans', 14.00, 'Fresh oysters'), ('Clams', 'Crustaceans', 10.00, 'Fresh clams'), ('Scallops', 'Crustaceans', 16.00, 'Fresh scallops'), ('Squid', 'Molluscs', 8.00, 'Fresh squid'), ('Octopus', 'Molluscs', 10.00, 'Fresh octopus'), ('Merluc', 'Fish', 4.00, 'Fresh anchovies');
