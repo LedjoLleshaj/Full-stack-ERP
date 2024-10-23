@@ -48,6 +48,16 @@
         <mat-icon matListItemIcon>history</mat-icon>
         <div matListItemTitle>History</div>
       </button>
+      <button
+        mat-list-item
+        aria-label="Open product view"
+        title="Open product view"
+        [activated]="this.router.url === '/products'"
+        (click)="this.router.navigate(['/products'])"
+      >
+        <mat-icon matListItemIcon>shopping_cart</mat-icon>
+        <div matListItemTitle>Products</div>
+      </button>
     </mat-nav-list>
   </mat-sidenav>
 

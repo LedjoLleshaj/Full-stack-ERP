@@ -8,9 +8,7 @@ import { LoginComponent } from "./login/login.component";
 import { CustomMaterialModule } from "./material.modules";
 import { MatListModule } from "@angular/material/list";
 import { MatGridListModule } from "@angular/material/grid-list";
-
 import { HttpClientModule } from "@angular/common/http";
-
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { LayoutComponent } from "./layout/layout.component";
 import { MatSidenavModule } from "@angular/material/sidenav";
@@ -18,13 +16,20 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatMenuModule } from "@angular/material/menu";
-import { MatDialogContent, MatDialogModule } from "@angular/material/dialog";
+import { MatDialogModule } from "@angular/material/dialog";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatTableModule } from '@angular/material/table'; // Import MatTableModule
+import { ProductsViewComponent } from './products-view/products-view.component';
 
 @NgModule({
-  declarations: [AppComponent, LayoutComponent, LoginComponent],
+  declarations: [
+    AppComponent,
+    LayoutComponent,
+    LoginComponent,
+    ProductsViewComponent
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -38,14 +43,13 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
     MatSidenavModule,
     MatIconModule,
     MatSnackBarModule,
-    FormsModule,
     MatPaginatorModule,
     MatMenuModule,
     MatDialogModule,
     MatChipsModule,
-
     MatStepperModule,
     MatProgressSpinnerModule,
+    MatTableModule // Add MatTableModule here
   ],
   providers: [],
   bootstrap: [AppComponent],
