@@ -49,7 +49,7 @@ import { ProductsViewComponent } from './products-view/products-view.component';
     MatChipsModule,
     MatStepperModule,
     MatProgressSpinnerModule,
-    MatTableModule // Add MatTableModule here
+    MatTableModule
   ],
   providers: [],
   bootstrap: [AppComponent],
