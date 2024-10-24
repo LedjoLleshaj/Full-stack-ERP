@@ -22,6 +22,8 @@ import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatTableModule } from '@angular/material/table'; // Import MatTableModule
 import { ProductsViewComponent } from './products-view/products-view.component';
+import { MatSortModule } from '@angular/material/sort';
+
 
 @NgModule({
   declarations: [
@@ -49,7 +51,8 @@ import { ProductsViewComponent } from './products-view/products-view.component';
     MatChipsModule,
     MatStepperModule,
     MatProgressSpinnerModule,
-    MatTableModule
+    MatTableModule,
+    MatSortModule
   ],
   providers: [],
   bootstrap: [AppComponent],

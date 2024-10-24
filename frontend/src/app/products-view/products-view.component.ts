@@ -34,7 +34,7 @@ export class ProductsViewComponent implements OnInit {
     this.http.get<Product[]>('http://127.0.0.1:8080/selita/products').subscribe(data => {
       this.dataSource.data = data;
       this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
+      this.dataSource.sort = this.sort; // adding mat sort for ordering
     });
   }
 
