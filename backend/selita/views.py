@@ -72,3 +72,12 @@ def getProducts(request):
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
+
+
+@api_view(["POST"])
+def addProduct(request):
+    serializer = ProductSerializer(data=request.data)
+    if serializer.is_valid():
+        product = serializer.save() 
+        return Response({"message": "Product added successfully!", "product_id": product.id}, status=201)
+    return Response(serializer.errors, status=400)
