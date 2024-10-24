@@ -20,9 +20,10 @@ import { MatDialogModule } from "@angular/material/dialog";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatTableModule } from '@angular/material/table'; // Import MatTableModule
+import { MatTableModule } from '@angular/material/table';
 import { ProductsViewComponent } from './products-view/products-view.component';
 import { MatSortModule } from '@angular/material/sort';
+import { AddProductViewComponent } from './add-product-view/add-product-view.component';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { MatSortModule } from '@angular/material/sort';
     AppComponent,
     LayoutComponent,
     LoginComponent,
-    ProductsViewComponent
+    ProductsViewComponent,
+    AddProductViewComponent
   ],
   imports: [
     BrowserModule,

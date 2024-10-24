@@ -8,12 +8,7 @@
     fixedInViewport="true"
   >
     <div class="flex justify-end" *ngIf="mobileQuery.matches">
-      <button
-        mat-icon-button
-        aria-label="Close sidenav"
-        title="Close sidenav"
-        (click)="rfnav.toggle()"
-      >
+      <button mat-icon-button aria-label="Close sidenav" title="Close sidenav" (click)="rfnav.toggle()">
         <mat-icon>close</mat-icon>
       </button>
     </div>
@@ -58,6 +53,16 @@
         <mat-icon matListItemIcon>shopping_cart</mat-icon>
         <div matListItemTitle>Products</div>
       </button>
+      <button
+        mat-list-item
+        aria-label="Add new product"
+        title="Add new product"
+        [activated]="this.router.url === '/add-product'"
+        (click)="this.router.navigate(['/add-product'])"
+      >
+        <mat-icon matListItemIcon>add</mat-icon>
+        <div matListItemTitle>Add Product</div>
+      </button>
     </mat-nav-list>
   </mat-sidenav>
 
@@ -80,28 +85,13 @@
         <button
           (click)="this.darkModeService.toggleDarkMode()"
           mat-stroked-button
-          [attr.aria-label]="
-            this.darkModeService.darkMode
-              ? 'Active dark mode'
-              : 'Active light mode'
-          "
-          [title]="
-            this.darkModeService.darkMode
-              ? 'Active dark mode'
-              : 'Active light mode'
-          "
+          [attr.aria-label]="this.darkModeService.darkMode ? 'Active dark mode' : 'Active light mode'"
+          [title]="this.darkModeService.darkMode ? 'Active dark mode' : 'Active light mode'"
         >
-          <mat-icon style="margin: 0">{{
-            this.darkModeService.darkMode ? "light_mode" : "dark_mode"
-          }}</mat-icon>
+          <mat-icon style="margin: 0">{{ this.darkModeService.darkMode ? "light_mode" : "dark_mode" }}</mat-icon>
         </button>
         <!-- logout -->
-        <button
-          (click)="logout()"
-          mat-stroked-button
-          aria-label="Logout"
-          title="Logout"
-        >
+        <button (click)="logout()" mat-stroked-button aria-label="Logout" title="Logout">
           <mat-icon style="margin: 0">logout</mat-icon>
         </button>
       </div>
