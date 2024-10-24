@@ -3,6 +3,7 @@ import { RouterModule, Routes } from "@angular/router";
 import { LayoutComponent } from "./layout/layout.component";
 import { LoginComponent } from "./login/login.component";
 import { ProductsViewComponent } from "./products-view/products-view.component";
+import { AddProductViewComponent } from './add-product-view/add-product-view.component';
 import { AuthGuard } from "./shared/auth.guard";
 import { PublicGuard } from "./shared/public.guard";
 
@@ -26,6 +27,7 @@ const routes: Routes = [
         component: ProductsViewComponent,
         title: "Products - Selita",
       },
+      { path: 'add-product', component: AddProductViewComponent },
     ],
     canActivate: [AuthGuard],
   },
@@ -35,6 +37,7 @@ const routes: Routes = [
     canActivate: [PublicGuard],
     title: "Login - Selita",
   },
+
 ];
 
 @NgModule({
