@@ -43,26 +43,34 @@
         <mat-icon matListItemIcon>history</mat-icon>
         <div matListItemTitle>History</div>
       </button>
+
+      <!-- Products button with submenu -->
       <button
         mat-list-item
         aria-label="Open product view"
         title="Open product view"
-        [activated]="this.router.url === '/products'"
-        (click)="this.router.navigate(['/products'])"
+        [activated]="this.router.url === '/products' || this.router.url === '/add-product'"
+        (click)="navigateToProducts()"
       >
         <mat-icon matListItemIcon>shopping_cart</mat-icon>
         <div matListItemTitle>Products</div>
+        <mat-icon class="arrow-icon" *ngIf="!isProductMenuOpen">expand_more</mat-icon>
+        <mat-icon class="arrow-icon" *ngIf="isProductMenuOpen">expand_less</mat-icon>
       </button>
-      <button
-        mat-list-item
-        aria-label="Add new product"
-        title="Add new product"
-        [activated]="this.router.url === '/add-product'"
-        (click)="this.router.navigate(['/add-product'])"
-      >
-        <mat-icon matListItemIcon>add</mat-icon>
-        <div matListItemTitle>Add Product</div>
-      </button>
+
+      <div *ngIf="isProductMenuOpen" class="submenu">
+        <button
+          mat-list-item
+          aria-label="Add new product"
+          title="Add new product"
+          [activated]="this.router.url === '/add-product'"
+          (click)="this.router.navigate(['/add-product'])"
+        >
+          <mat-icon matListItemIcon>add</mat-icon>
+          <div matListItemTitle>Add Product</div>
+        </button>
+      </div>
+
     </mat-nav-list>
   </mat-sidenav>
 
