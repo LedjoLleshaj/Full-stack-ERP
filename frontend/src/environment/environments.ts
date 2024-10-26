@@ -4,4 +4,5 @@ export const environment = {
   login: "/login",
   addProduct: "/add-product",
   getProducts: "/products",
+  getCategories: "/product-categories",
 };

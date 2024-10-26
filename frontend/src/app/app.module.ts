@@ -5,7 +5,7 @@ import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { LoginComponent } from "./login/login.component";
-import { CustomMaterialModule } from "./material.modules";
+import { CustomMaterialModule } from "./material.modules"; 
 import { MatListModule } from "@angular/material/list";
 import { MatGridListModule } from "@angular/material/grid-list";
 import { HttpClientModule } from "@angular/common/http";
@@ -24,7 +24,8 @@ import { MatTableModule } from '@angular/material/table';
 import { ProductsViewComponent } from './products-view/products-view.component';
 import { MatSortModule } from '@angular/material/sort';
 import { AddProductViewComponent } from './add-product-view/add-product-view.component';
-
+import { MatSelectModule } from '@angular/material/select'; // Import MatSelectModule
+import { MatFormFieldModule } from '@angular/material/form-field'; // Import MatFormFieldModule
 
 @NgModule({
   declarations: [
@@ -54,7 +55,9 @@ import { AddProductViewComponent } from './add-product-view/add-product-view.com
     MatStepperModule,
     MatProgressSpinnerModule,
     MatTableModule,
-    MatSortModule
+    MatSortModule,
+    MatSelectModule, 
+    MatFormFieldModule 
   ],
   providers: [],
   bootstrap: [AppComponent],
