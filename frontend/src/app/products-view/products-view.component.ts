@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { ProductService } from '../shared/services/product-api/product.service';
+
 
 interface Product {
   id: number;
