@@ -16,6 +16,7 @@ export class LayoutComponent {
   username: string = "";
   firstName: string = "";
   lastName: string = "";
+  isProductMenuOpen: boolean = false; // Track product menu state
 
   constructor(
     public router: Router,
@@ -43,5 +44,10 @@ export class LayoutComponent {
     AuthApiService.logout();
     document.body.classList.remove("se-dark-theme");
     this.router.navigate(["/login"]);
+  }
+
+  navigateToProducts() {
+    this.isProductMenuOpen = !this.isProductMenuOpen;
+    this.router.navigate(['/products']);
   }
 }
