@@ -54,8 +54,8 @@
       >
         <mat-icon matListItemIcon>shopping_cart</mat-icon>
         <div matListItemTitle>Products</div>
-        <mat-icon class="arrow-icon" *ngIf="!isProductMenuOpen">expand_more</mat-icon>
-        <mat-icon class="arrow-icon" *ngIf="isProductMenuOpen">expand_less</mat-icon>
+        <mat-icon matListItemIcon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
+        <mat-icon matListItemIcon *ngIf="isProductMenuOpen">expand_more</mat-icon>
       </button>
 
       <div *ngIf="isProductMenuOpen" class="submenu">
