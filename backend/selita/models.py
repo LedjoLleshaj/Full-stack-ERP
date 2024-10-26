@@ -42,10 +42,10 @@ class Product_Categories(models.Model):
 
 class Product_Names(models.Model):
     product_name = models.CharField(max_length=200)
-    category_id = models.ForeignKey(Product_Categories, on_delete=models.CASCADE)
+    category = models.ForeignKey(Product_Categories, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = "Product_Names"
+        db_table = "product_names"
 
     def __str__(self):
         return self.product_name, self.category_id

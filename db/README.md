@@ -3,7 +3,7 @@
 ## To run the database
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 The database will be available at `IP:5050` with the following credentials:
