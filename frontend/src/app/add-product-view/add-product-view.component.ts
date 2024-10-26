@@ -1,18 +1,17 @@
-// src/app/add-product-view/add-product-view.component.ts
-
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductService } from '../shared/services/product-api/product.service';
 import { Router } from '@angular/router';
-import { Product } from '../models/product.model'; 
+import { ProductCategory } from '../models/product-category.model'; // Make sure this model exists
 
 @Component({
   selector: 'app-add-product-view',
   templateUrl: './add-product-view.component.html',
   styleUrls: ['./add-product-view.component.scss']
 })
-export class AddProductViewComponent {
+export class AddProductViewComponent implements OnInit {
   productForm: FormGroup;
+  categories: ProductCategory[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -24,6 +23,21 @@ export class AddProductViewComponent {
       category: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
       description: ['', Validators.required]
+    });
+  }
+
+  ngOnInit(): void {
+    this.fetchCategories();
+  }
+
+  fetchCategories() {
+    this.productService.getProductCategories().subscribe({
+      next: (data: ProductCategory[]) => {
+        this.categories = data;
+      },
+      error: (error) => {
+        console.error('Error fetching categories:', error);
+      }
     });
   }
 
