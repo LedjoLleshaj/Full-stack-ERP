@@ -1,18 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ProductService } from '../shared/services/product-api/product.service';
-
-
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  description: string;
-}
+import { Product } from '../models/product.model';
 
 @Component({
   selector: 'app-products-view',
@@ -26,17 +17,17 @@ export class ProductsViewComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private http: HttpClient) {}
+  constructor(private productService: ProductService) {}
 
   ngOnInit() {
     this.fetchProducts();
   }
 
   fetchProducts() {
-    this.http.get<Product[]>('http://127.0.0.1:8080/selita/products').subscribe(data => {
+    this.productService.getProducts().subscribe(data => {
       this.dataSource.data = data;
       this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort; // adding mat sort for ordering
+      this.dataSource.sort = this.sort;
     });
   }
 
