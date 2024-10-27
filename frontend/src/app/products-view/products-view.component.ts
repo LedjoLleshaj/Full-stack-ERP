@@ -13,6 +13,7 @@ import { Product } from '../models/product.model';
 export class ProductsViewComponent implements OnInit {
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
   displayedColumns: string[] = ['id', 'name', 'category', 'price', 'description'];
+  categories: string[] = [];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -21,6 +22,7 @@ export class ProductsViewComponent implements OnInit {
 
   ngOnInit() {
     this.fetchProducts();
+    this.fetchCategories();
   }
 
   fetchProducts() {
@@ -31,9 +33,23 @@ export class ProductsViewComponent implements OnInit {
     });
   }
 
+  fetchCategories() {
+    this.productService.getProductCategories().subscribe(categories => {
+      this.categories = categories.map(category => category.category_name);
+    });
+  }
+
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
+
+  filterByCategory(category: string) {
+    this.dataSource.filter = category.trim().toLowerCase();
 
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
