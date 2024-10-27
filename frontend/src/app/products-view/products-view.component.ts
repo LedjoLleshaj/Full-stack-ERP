@@ -12,8 +12,9 @@ import { Product } from '../models/product.model';
 })
 export class ProductsViewComponent implements OnInit {
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
-  displayedColumns: string[] = ['id', 'name', 'category', 'price', 'description'];
+  displayedColumns: string[] = ['name', 'category', 'price', 'description', 'buy'];
   categories: string[] = [];
+  activeCategory: string | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -49,10 +50,15 @@ export class ProductsViewComponent implements OnInit {
   }
 
   filterByCategory(category: string) {
-    this.dataSource.filter = category.trim().toLowerCase();
+    this.activeCategory = this.activeCategory === category ? null : category;
+    this.dataSource.filter = this.activeCategory ? this.activeCategory.trim().toLowerCase() : '';
 
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  buyProduct(product: Product) {
+    console.log('Buying product:', product);
   }
 }
