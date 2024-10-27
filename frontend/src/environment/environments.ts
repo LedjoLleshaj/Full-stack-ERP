@@ -6,4 +6,5 @@ export const environment = {
   getProducts: "/products",
   getProductCategories: "/product-categories",
   getProductNames:"/product-names",
+  productbyid:"/productbyid"
 };

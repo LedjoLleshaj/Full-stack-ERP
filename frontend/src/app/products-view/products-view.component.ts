@@ -59,6 +59,7 @@ export class ProductsViewComponent implements OnInit {
   }
 
   buyProduct(product: Product) {
+    // TODO:
     console.log('Buying product:', product);
   }
 }
