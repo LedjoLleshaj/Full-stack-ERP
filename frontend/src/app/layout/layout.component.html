@@ -43,20 +43,19 @@
         <mat-icon matListItemIcon>history</mat-icon>
         <div matListItemTitle>History</div>
       </button>
-<!-- Products button with submenu -->
-<button
-  mat-list-item
-  aria-label="Open product view"
-  title="Open product view"
-  [activated]="this.router.url === '/products' || this.router.url === '/add-product'"
-  (click)="navigateToProducts()"
->
-  <mat-icon matListItemIcon>shopping_cart</mat-icon>
-  <div matListItemTitle>Product</div>
-  <mat-icon matListItemIcon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
-  <mat-icon matListItemIcon *ngIf="isProductMenuOpen">expand_more</mat-icon>
-</button>
-
+      <!-- Products button with submenu -->
+      <button
+        mat-list-item
+        aria-label="Open product view"
+        title="Open product view"
+        [activated]="this.router.url === '/products' || this.router.url === '/add-product'"
+        (click)="navigateToProducts()"
+      >
+        <mat-icon matListItemIcon>shopping_cart</mat-icon>
+        <div matListItemTitle>Product</div>
+        <mat-icon matListItemIcon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
+        <mat-icon matListItemIcon *ngIf="isProductMenuOpen">expand_more</mat-icon>
+      </button>
 
       <div *ngIf="isProductMenuOpen" class="submenu">
         <button
@@ -70,7 +69,6 @@
           <div matListItemTitle>Add Product</div>
         </button>
       </div>
-
     </mat-nav-list>
   </mat-sidenav>
 
@@ -97,6 +95,10 @@
           [title]="this.darkModeService.darkMode ? 'Active dark mode' : 'Active light mode'"
         >
           <mat-icon style="margin: 0">{{ this.darkModeService.darkMode ? "light_mode" : "dark_mode" }}</mat-icon>
+        </button>
+        <!-- Shopping Menu (click)=""-->
+        <button mat-stroked-button aria-label="shoppingMenu" title="ShoppingMenu">
+          <mat-icon style="margin: 0">shopping_bag</mat-icon>
         </button>
         <!-- logout -->
         <button (click)="logout()" mat-stroked-button aria-label="Logout" title="Logout">
