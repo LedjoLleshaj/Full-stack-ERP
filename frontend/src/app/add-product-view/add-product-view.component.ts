@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductService } from '../shared/services/product-api/product.service';
 import { Router } from '@angular/router';
 import { ProductCategory } from '../models/product-category.model';
+import { ProductName } from '../models/product-name.model';
 
 @Component({
   selector: 'app-add-product-view',
@@ -12,6 +13,7 @@ import { ProductCategory } from '../models/product-category.model';
 export class AddProductViewComponent implements OnInit {
   productForm: FormGroup;
   categories: ProductCategory[] = [];
+  names: ProductName[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -28,6 +30,7 @@ export class AddProductViewComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchCategories();
+    this.fetchProductNames();
   }
 
   fetchCategories() {
@@ -37,6 +40,17 @@ export class AddProductViewComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error fetching categories:', error);
+      }
+    });
+  }
+
+  fetchProductNames() {
+    this.productService.getProductNames().subscribe({
+      next: (data: ProductName[]) => {
+        this.names = data;
+      },
+      error: (error) => {
+        console.error('Error fetching product names:', error);
       }
     });
   }

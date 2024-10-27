@@ -2,10 +2,15 @@
   <h2>Add New Product</h2>
   <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
     <div class="form-grid">
+
       <!-- Product Name -->
       <mat-form-field class="full-width">
         <mat-label>Name</mat-label>
-        <input matInput formControlName="name" required>
+        <mat-select formControlName="name" required>
+          <mat-option *ngFor="let name of names" [value]="name.product_name">
+            {{ name.product_name }}
+          </mat-option>
+        </mat-select>
         <mat-error *ngIf="productForm.controls['name'].hasError('required')">
           Name is required
         </mat-error>
