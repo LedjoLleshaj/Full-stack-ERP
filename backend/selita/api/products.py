@@ -18,6 +18,13 @@ def getProducts(request):
     return Response(serializer.data)
 
 
+@api_view(["GET"])
+def getProduct(request, pk):
+    product = Product.objects.get(id=pk)
+    serializer = ProductSerializer(product, many=False)
+    return Response(serializer.data)
+
+
 @api_view(["POST"])
 def addProduct(request):
     serializer = ProductSerializer(data=request.data)
