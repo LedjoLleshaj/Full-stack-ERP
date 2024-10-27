@@ -48,41 +48,41 @@ class Product_Names(models.Model):
         db_table = "product_names"
 
     def __str__(self):
-        return self.product_name, self.category_id
+        return f"{self.product_name}, {self.category}"
 
 
 class Inventory(models.Model):
-    prod_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    prod = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
-    restock_date = models.DateField(auto_now_add=True)
+    restock_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "inventory"
 
     def __str__(self):
-        return self.prod_id.name, self.quantity, self.restock_date
+        return f"{self.id},{self.prod}, {self.quantity}, {self.restock_date}"
 
 
 class Sales(models.Model):
-    prod_id = models.ForeignKey(Product, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(Users, on_delete=models.CASCADE)
+    prod = models.ForeignKey(Product, on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
     quantity = models.IntegerField()
-    sale_date = models.DateField(auto_now_add=True)
+    sale_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "sales"
 
     def __str__(self):
-        return self.prod_id.name, self.quantity, self.sale_date
+        return f"{self.prod}, {self.user}, {self.quantity}, {self.sale_date}"
 
 
 class Restock(models.Model):
-    prod_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    prod = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
-    restock_date = models.DateField(auto_now_add=True)
+    restock_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "restock"
 
     def __str__(self):
-        return self.prod_id.name, self.quantity, self.restock_date
+        return f"{self.prod}, {self.quantity}, {self.restock_date}"
