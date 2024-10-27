@@ -4,6 +4,8 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ProductService } from '../shared/services/product-api/product.service';
 import { Product } from '../models/product.model';
+import { MatDialog } from '@angular/material/dialog';
+import { ProductDetailDialogComponent } from '../product-detail-dialog/product-detail-dialog.component'; // Import the dialog component
 
 @Component({
   selector: 'app-products-view',
@@ -19,7 +21,7 @@ export class ProductsViewComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private productService: ProductService) {}
+  constructor(private productService: ProductService, private dialog: MatDialog) {} // Inject MatDialog
 
   ngOnInit() {
     this.fetchProducts();
@@ -61,5 +63,15 @@ export class ProductsViewComponent implements OnInit {
   buyProduct(product: Product) {
     // TODO:
     console.log('Buying product:', product);
+  }
+
+  openProductDetail(product: Product) {
+    const dialogRef = this.dialog.open(ProductDetailDialogComponent, {
+      data: product,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed', result);
+    });
   }
 }
