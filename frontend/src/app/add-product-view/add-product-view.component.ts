@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductService } from '../shared/services/product-api/product.service';
 import { Router } from '@angular/router';
-import { ProductCategory } from '../models/product-category.model'; // Make sure this model exists
+import { ProductCategory } from '../models/product-category.model';
 
 @Component({
   selector: 'app-add-product-view',
