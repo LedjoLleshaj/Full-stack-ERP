@@ -6,8 +6,8 @@
   </mat-form-field>
 
   <!-- Category Buttons Row -->
-  <div class="flex flex-wrap gap-2 mt-2">
-    <button mat-button *ngFor="let category of categories" (click)="filterByCategory(category)">
+  <div class="category-buttons-row flex flex-wrap gap-2 mt-2 mb-4">
+    <button mat-button *ngFor="let category of categories" (click)="filterByCategory(category)" class="category-button">
       {{ category }}
     </button>
   </div>

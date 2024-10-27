@@ -1,0 +1,18 @@
+.category-buttons-row {
+    margin-bottom: 16px;
+  }
+  
+  
+  .category-button {
+    background-color: #007bff; 
+    color: #ffffff;
+    border-radius: 20px; 
+    padding: 6px 12px; 
+    text-transform: capitalize;
+    transition: background-color 0.3s ease;
+  
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+  
