@@ -3,9 +3,10 @@ import { RouterModule, Routes } from "@angular/router";
 import { LayoutComponent } from "./layout/layout.component";
 import { LoginComponent } from "./login/login.component";
 import { ProductsViewComponent } from "./products-view/products-view.component";
-import { AddProductViewComponent } from './add-product-view/add-product-view.component';
+import { AddProductViewComponent } from "./add-product-view/add-product-view.component";
 import { AuthGuard } from "./shared/auth.guard";
 import { PublicGuard } from "./shared/public.guard";
+import { SalesViewComponent } from "./sales-view/sales-view.component";
 
 const routes: Routes = [
   {
@@ -18,16 +19,16 @@ const routes: Routes = [
         title: "Available Film - Selita",
       },
       {
-        path: "history",
-        component: LoginComponent,
-        title: "Rental history - Selita",
+        path: "sales",
+        component: SalesViewComponent,
+        title: "Sale History - Selita",
       },
       {
         path: "products",
         component: ProductsViewComponent,
         title: "Products - Selita",
       },
-      { path: 'add-product', component: AddProductViewComponent },
+      { path: "add-product", component: AddProductViewComponent },
     ],
     canActivate: [AuthGuard],
   },
@@ -37,7 +38,6 @@ const routes: Routes = [
     canActivate: [PublicGuard],
     title: "Login - Selita",
   },
-
 ];
 
 @NgModule({
