@@ -25,7 +25,8 @@ import { ProductsViewComponent } from './products-view/products-view.component';
 import { MatSortModule } from '@angular/material/sort';
 import { AddProductViewComponent } from './add-product-view/add-product-view.component';
 import { MatSelectModule } from '@angular/material/select'; // Import MatSelectModule
-import { MatFormFieldModule } from '@angular/material/form-field'; // Import MatFormFieldModule
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { SalesViewComponent } from './sales-view/sales-view.component'; // Import MatFormFieldModule
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { MatFormFieldModule } from '@angular/material/form-field'; // Import Mat
     LayoutComponent,
     LoginComponent,
     ProductsViewComponent,
-    AddProductViewComponent
+    AddProductViewComponent,
+    SalesViewComponent
   ],
   imports: [
     BrowserModule,
