@@ -17,6 +17,7 @@ export class LayoutComponent {
   firstName: string = "";
   lastName: string = "";
   isProductMenuOpen: boolean = false; // Track product menu state
+  isRightNavOpen: boolean = false; // Track right nav state
 
   constructor(
     public router: Router,
@@ -50,4 +51,11 @@ export class LayoutComponent {
     this.isProductMenuOpen = !this.isProductMenuOpen;
     this.router.navigate(['/products']);
   }
+
+  // shooping card menu open close function
+  toggleRightNav() {
+    this.isRightNavOpen = !this.isRightNavOpen;
+  }
+
+
 }
