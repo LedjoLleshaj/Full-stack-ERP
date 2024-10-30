@@ -96,10 +96,10 @@
         >
           <mat-icon style="margin: 0">{{ this.darkModeService.darkMode ? "light_mode" : "dark_mode" }}</mat-icon>
         </button>
-        <!-- Shopping Menu (click)=""-->
-        <button mat-stroked-button aria-label="shoppingMenu" title="ShoppingMenu">
-          <mat-icon style="margin: 0">shopping_bag</mat-icon>
-        </button>
+        <!-- Shopping Menu button -->
+      <button mat-stroked-button (click)="toggleRightNav()" title="Shopping Menu">
+        <mat-icon>shopping_bag</mat-icon>
+      </button>
         <!-- logout -->
         <button (click)="logout()" mat-stroked-button aria-label="Logout" title="Logout">
           <mat-icon style="margin: 0">logout</mat-icon>
@@ -112,4 +112,34 @@
     </div>
     <!-- end main content -->
   </mat-sidenav-content>
+</mat-sidenav-container>
+
+
+<!-- Adding the shooping card menu -->
+
+
+<mat-sidenav-container>
+  <!-- Right-side nav menu -->
+  <mat-sidenav
+    class="right-sidenav"
+    #rightNav
+    [opened]="isRightNavOpen"
+    position="end"
+    [style.width]="'300px'"
+    [style.height]="'50%'"
+    role="region"
+    fixedInViewport="true"
+  >
+    <div class="flex justify-end">
+      <button mat-icon-button (click)="toggleRightNav()" aria-label="Close right nav">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <!-- New menu content -->
+    <div class="right-nav-content">
+      <h2>Shopping Menu</h2>
+      <p>Product information and other static elements go here.</p>
+    </div>
+  </mat-sidenav>
+
 </mat-sidenav-container>
