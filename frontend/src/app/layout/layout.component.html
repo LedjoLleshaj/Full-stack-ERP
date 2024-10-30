@@ -117,7 +117,6 @@
 
 <!-- Adding the shooping card menu -->
 
-
 <mat-sidenav-container>
   <!-- Right-side nav menu -->
   <mat-sidenav
@@ -130,16 +129,18 @@
     role="region"
     fixedInViewport="true"
   >
-    <div class="flex justify-end">
+  
+    <!-- Header with close button -->
+    <div class="header">
+      <h2>Shopping Menu</h2>
       <button mat-icon-button (click)="toggleRightNav()" aria-label="Close right nav">
         <mat-icon>close</mat-icon>
       </button>
     </div>
+
     <!-- New menu content -->
     <div class="right-nav-content">
-      <h2>Shopping Menu</h2>
       <p>Product information and other static elements go here.</p>
     </div>
   </mat-sidenav>
-
 </mat-sidenav-container>
