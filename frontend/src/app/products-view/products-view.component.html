@@ -72,22 +72,3 @@
     <mat-paginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
   </div>
 </div>
-
-<!-- Submenu Overlay -->
-<div *ngIf="selectedProduct" class="submenu-overlay">
-  <div class="submenu">
-    <button mat-icon-button class="close-button" (click)="closeSubmenu()">X</button>
-    <h3>{{ selectedProduct.name }}</h3>
-    <p>Category: {{ selectedProduct.category }}</p>
-    <p>Description: {{ selectedProduct.description }}</p>
-    <p>Price: {{ selectedProduct.price | currency }}</p>
-    <div class="submenu-actions">
-      <button mat-stroked-button color="primary" (click)="addToCart(selectedProduct)">
-        <mat-icon>add</mat-icon> Add
-      </button>
-      <button mat-raised-button color="accent" (click)="buyProduct(selectedProduct)">
-        Buy Directly
-      </button>
-    </div>
-  </div>
-</div>
