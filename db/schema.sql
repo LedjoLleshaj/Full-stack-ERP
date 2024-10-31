@@ -24,19 +24,20 @@ CREATE TABLE Product (
 );
 
 CREATE TABLE Product_Categories (
-    category_id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     category_name VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE Product_Names (
-    product_name_id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     product_name VARCHAR(255) NOT NULL,
     category_id INT NOT NULL,
-    FOREIGN KEY (category_id) REFERENCES Product_Categories(category_id)
+    FOREIGN KEY (category_id) REFERENCES Product_Categories(id)
 );
 
 
 CREATE TABLE Inventory (
+    id SERIAL PRIMARY KEY,
     prod_id INT NOT NULL,
     quantity INT NOT NULL,
     restock_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
