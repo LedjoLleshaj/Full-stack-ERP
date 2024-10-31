@@ -26,8 +26,7 @@ h2 {
   margin-top: 20px;
 }
 
-// Style to restrict the dropdown height to show only 4 options at a time
 .mat-select-panel {
-  max-height: 200px; // Adjust the height to fit around 4 options
-  overflow-y: auto;  // Enable vertical scrolling
+  max-height: 200px;
+  overflow-y: auto;
 }

@@ -18,6 +18,7 @@ export class LayoutComponent {
   lastName: string = "";
   isProductMenuOpen: boolean = false; // Track product menu state
   isRightNavOpen: boolean = false; // Track right nav state
+  cartItems: any[] = []; // Store unique cart items with their counts
 
   constructor(
     public router: Router,
@@ -35,6 +36,7 @@ export class LayoutComponent {
     this.firstName = localStorage.getItem(LOCAL_STORAGE_KEYS.FIRST_NAME) || "";
     this.lastName = localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_NAME) || "";
     this.darkModeService.initDarkModeSettings();
+    this.loadCartItems();
   }
 
   ngOnDestroy(): void {
@@ -52,10 +54,27 @@ export class LayoutComponent {
     this.router.navigate(['/products']);
   }
 
-  // shooping card menu open close function
+  // Shopping cart menu open-close function
   toggleRightNav() {
     this.isRightNavOpen = !this.isRightNavOpen;
   }
 
+  // TODO:
+  loadCartItems() {
+    const storedItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    const itemCounts: { [key: string]: { count: number; item: any } } = {};
 
+    storedItems.forEach((item: any) => {
+      if (itemCounts[item.id]) {
+        itemCounts[item.id].count++;
+      } else {
+        itemCounts[item.id] = { count: 1, item };
+      }
+    });
+
+    this.cartItems = Object.values(itemCounts).map(entry => ({
+      ...entry.item,
+      count: entry.count,
+    }));
+  }
 }

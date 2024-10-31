@@ -115,10 +115,7 @@
 </mat-sidenav-container>
 
 
-<!-- Adding the shooping card menu -->
-
 <mat-sidenav-container>
-  <!-- Right-side nav menu -->
   <mat-sidenav
     class="right-sidenav"
     #rightNav
@@ -129,8 +126,6 @@
     role="region"
     fixedInViewport="true"
   >
-  
-    <!-- Header with close button -->
     <div class="header">
       <h2>Shopping Menu</h2>
       <button mat-icon-button (click)="toggleRightNav()" aria-label="Close right nav">
@@ -138,9 +133,13 @@
       </button>
     </div>
 
-    <!-- New menu content -->
     <div class="right-nav-content">
-      <p>Product information and other static elements go here.</p>
+      <div *ngFor="let item of cartItems" class="cart-item-card">
+        <h3>{{ item.name }}</h3>
+        <p>Category: {{ item.category }}</p>
+        <p>Price: {{ item.price | currency }}</p>
+        <p>Quantity: {{ item.count }}x</p>
+      </div>
     </div>
   </mat-sidenav>
 </mat-sidenav-container>
