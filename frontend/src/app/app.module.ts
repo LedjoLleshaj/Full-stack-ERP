@@ -26,7 +26,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { AddProductViewComponent } from './add-product-view/add-product-view.component';
 import { MatSelectModule } from '@angular/material/select'; 
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { ProductDetailDialogComponent } from './product-detail-dialog/product-detail-dialog.component';
+import { ProductDetailDialogComponent } from './dialogs/product-detail-dialog/product-detail-dialog.component';
 
 @NgModule({
   declarations: [

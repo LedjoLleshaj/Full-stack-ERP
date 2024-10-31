@@ -5,7 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ProductService } from '../shared/services/product-api/product.service';
 import { Product } from '../models/product.model';
 import { MatDialog } from '@angular/material/dialog';
-import { ProductDetailDialogComponent } from '../product-detail-dialog/product-detail-dialog.component';
+import { ProductDetailDialogComponent } from '../dialogs/product-detail-dialog/product-detail-dialog.component';
 
 @Component({
   selector: 'app-products-view',
