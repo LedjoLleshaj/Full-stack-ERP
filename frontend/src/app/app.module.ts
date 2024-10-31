@@ -5,12 +5,10 @@ import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { LoginComponent } from "./login/login.component";
-import { CustomMaterialModule } from "./material.modules";
+import { CustomMaterialModule } from "./material.modules"; 
 import { MatListModule } from "@angular/material/list";
 import { MatGridListModule } from "@angular/material/grid-list";
-
 import { HttpClientModule } from "@angular/common/http";
-
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { LayoutComponent } from "./layout/layout.component";
 import { MatSidenavModule } from "@angular/material/sidenav";
@@ -18,13 +16,25 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatMenuModule } from "@angular/material/menu";
-import { MatDialogContent, MatDialogModule } from "@angular/material/dialog";
+import { MatDialogModule } from "@angular/material/dialog";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatTableModule } from '@angular/material/table';
+import { ProductsViewComponent } from './products-view/products-view.component';
+import { MatSortModule } from '@angular/material/sort';
+import { AddProductViewComponent } from './add-product-view/add-product-view.component';
+import { MatSelectModule } from '@angular/material/select'; // Import MatSelectModule
+import { MatFormFieldModule } from '@angular/material/form-field'; // Import MatFormFieldModule
 
 @NgModule({
-  declarations: [AppComponent, LayoutComponent, LoginComponent],
+  declarations: [
+    AppComponent,
+    LayoutComponent,
+    LoginComponent,
+    ProductsViewComponent,
+    AddProductViewComponent
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -38,14 +48,16 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
     MatSidenavModule,
     MatIconModule,
     MatSnackBarModule,
-    FormsModule,
     MatPaginatorModule,
     MatMenuModule,
     MatDialogModule,
     MatChipsModule,
-
     MatStepperModule,
     MatProgressSpinnerModule,
+    MatTableModule,
+    MatSortModule,
+    MatSelectModule, 
+    MatFormFieldModule 
   ],
   providers: [],
   bootstrap: [AppComponent],
