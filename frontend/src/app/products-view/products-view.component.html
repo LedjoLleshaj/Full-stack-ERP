@@ -6,7 +6,7 @@
   </mat-form-field>
 
   <!-- Category Buttons Row -->
-  <div class="category-buttons-row flex flex-wrap gap-2 mt-2 mb-4">
+  <div class="category-buttons-row">
     <button 
       mat-button 
       *ngFor="let category of categories" 
@@ -56,7 +56,7 @@
         <td mat-cell *matCellDef="let product">
           <button 
             mat-button 
-            (click)="buyProduct(product)" 
+            (click)="buyProductButton(product)" 
             class="category-button"
           >
             Buy
@@ -73,9 +73,21 @@
   </div>
 </div>
 
-<!-- Spinner for Loading State -->
-<ng-template #elseBlock>
-  <div class="flex justify-center">
-    <mat-spinner aria-label="Loading products data"></mat-spinner>
+<!-- Submenu Overlay -->
+<div *ngIf="selectedProduct" class="submenu-overlay">
+  <div class="submenu">
+    <button mat-icon-button class="close-button" (click)="closeSubmenu()">X</button>
+    <h3>{{ selectedProduct.name }}</h3>
+    <p>Category: {{ selectedProduct.category }}</p>
+    <p>Description: {{ selectedProduct.description }}</p>
+    <p>Price: {{ selectedProduct.price | currency }}</p>
+    <div class="submenu-actions">
+      <button mat-stroked-button color="primary" (click)="addToCart(selectedProduct)">
+        <mat-icon>add</mat-icon> Add
+      </button>
+      <button mat-raised-button color="accent" (click)="buyProduct(selectedProduct)">
+        Buy Directly
+      </button>
+    </div>
   </div>
-</ng-template>
+</div>
