@@ -1,0 +1,96 @@
+<div class="se-table-responsive">
+  <table
+    mat-table
+    matSort
+    (matSortChange)="this.announceSortChange.emit($event)"
+    [dataSource]="data"
+    class="mat-elevation-z1 table"
+  >
+    <caption>
+      Product Sales History
+    </caption>
+    <!-- sale id -->
+    <ng-container matColumnDef="sale_id" sticky>
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by id">Id</th>
+      <td mat-cell class="se-table-row" *matCellDef="let sale">
+        {{ sale.id }}
+      </td>
+    </ng-container>
+
+    <!-- product -->
+
+    <ng-container matColumnDef="product">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by product">
+        Product
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        {{ sale.product.name }}
+      </td>
+    </ng-container>
+
+    <!-- quantity -->
+
+    <ng-container matColumnDef="quantity">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by quantity">
+        Quantity
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        {{ sale.quantity }}
+      </td>
+    </ng-container>
+
+    <!-- product_price -->
+    <ng-container matColumnDef="product_price">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by product_price">
+        Price
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        {{ sale.product.price }}
+      </td>
+    </ng-container>
+
+    <!-- sale_date -->
+
+    <ng-container matColumnDef="sale_date">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by sale date">
+        Sale date
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        {{ sale.sale_date | date : "dd/MM/yyyy" }}
+      </td>
+    </ng-container>
+
+    <!-- address -->
+    <ng-container matColumnDef="address">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by address">
+        Address
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        {{ sale.address ? sale.address : "Address" }}
+      </td>
+    </ng-container>
+
+    <!-- amount -->
+    <ng-container matColumnDef="amount">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by amount">
+        Amount
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        <!-- {{ sale.payment ? sale.payment.amount + " €" : "In progress" }} -->
+        {{ sale.quantity * sale.product.price + " €" }}
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+  </table>
+</div>
+<mat-paginator
+  class="mat-elevation-z1"
+  [length]="this.total"
+  [pageSize]="10"
+  [pageSizeOptions]="[5, 10, 25, 50]"
+  showFirstLastButtons
+  (page)="this.nextPage.emit($event)"
+  aria-label="Pagination Navigation"
+></mat-paginator>
