@@ -1,1 +1,16 @@
-<p>sales-view works!</p>
+<div class="flex flex-col items-stretch justify-start">
+  <div class="pb-16 py-6 rounded-md" *ngIf="data; else elseBlock">
+    <app-sale-table
+      [data]="data"
+      [total]="total"
+      (nextPage)="nextPage($event)"
+      (infoRental)="infoRental($event)"
+      (announceSortChange)="announceSortChange($event)"
+    ></app-sale-table>
+  </div>
+  <ng-template #elseBlock>
+    <div class="flex justify-center">
+      <mat-spinner aria-label="Loading history"></mat-spinner>
+    </div>
+  </ng-template>
+</div>
