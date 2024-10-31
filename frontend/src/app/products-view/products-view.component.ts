@@ -5,7 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ProductService } from '../shared/services/product-api/product.service';
 import { Product } from '../models/product.model';
 import { MatDialog } from '@angular/material/dialog';
-import { ProductDetailDialogComponent } from '../product-detail-dialog/product-detail-dialog.component'; // Import the dialog component
+import { ProductDetailDialogComponent } from '../product-detail-dialog/product-detail-dialog.component';
 
 @Component({
   selector: 'app-products-view',
@@ -17,11 +17,12 @@ export class ProductsViewComponent implements OnInit {
   displayedColumns: string[] = ['name', 'category', 'price', 'description', 'buy'];
   categories: string[] = [];
   activeCategory: string | null = null;
+  selectedProduct: Product | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private productService: ProductService, private dialog: MatDialog) {} // Inject MatDialog
+  constructor(private productService: ProductService, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.fetchProducts();
@@ -45,31 +46,35 @@ export class ProductsViewComponent implements OnInit {
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
 
   filterByCategory(category: string) {
     this.activeCategory = this.activeCategory === category ? null : category;
     this.dataSource.filter = this.activeCategory ? this.activeCategory.trim().toLowerCase() : '';
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  }
 
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+  buyProductButton(product: Product) {
+    this.selectedProduct = product;
+  }
+
+  closeSubmenu() {
+    this.selectedProduct = null;
+  }
+
+  addToCart(product: Product) {
+    console.log('Adding to cart:', product);
+    // TODO: Add to local storge that I can put into the shopping card menu
   }
 
   buyProduct(product: Product) {
-    // TODO:
-    console.log('Buying product:', product);
+    console.log('Buying directly:', product);
+    // TODO: opening the buy page to buy the product
   }
 
   openProductDetail(product: Product) {
-    const dialogRef = this.dialog.open(ProductDetailDialogComponent, {
-      data: product,
-    });
-
+    const dialogRef = this.dialog.open(ProductDetailDialogComponent, { data: product });
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed', result);
     });
