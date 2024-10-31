@@ -27,6 +27,7 @@ import { AddProductViewComponent } from './add-product-view/add-product-view.com
 import { MatSelectModule } from '@angular/material/select'; 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ProductDetailDialogComponent } from './dialogs/product-detail-dialog/product-detail-dialog.component';
+import { ProductBuyDialogComponent } from './dialogs/product-buy-dialog/product-buy-dialog.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { ProductDetailDialogComponent } from './dialogs/product-detail-dialog/pr
     LoginComponent,
     ProductsViewComponent,
     AddProductViewComponent,
-    ProductDetailDialogComponent
+    ProductDetailDialogComponent,
+    ProductBuyDialogComponent
   ],
   imports: [
     BrowserModule,

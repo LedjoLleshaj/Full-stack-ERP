@@ -5,6 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ProductService } from '../shared/services/product-api/product.service';
 import { Product } from '../models/product.model';
 import { MatDialog } from '@angular/material/dialog';
+import { ProductBuyDialogComponent } from '../dialogs/product-buy-dialog/product-buy-dialog.component';
 import { ProductDetailDialogComponent } from '../dialogs/product-detail-dialog/product-detail-dialog.component';
 
 @Component({
@@ -17,7 +18,6 @@ export class ProductsViewComponent implements OnInit {
   displayedColumns: string[] = ['name', 'category', 'price', 'description', 'buy'];
   categories: string[] = [];
   activeCategory: string | null = null;
-  selectedProduct: Product | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -56,21 +56,13 @@ export class ProductsViewComponent implements OnInit {
   }
 
   buyProductButton(product: Product) {
-    this.selectedProduct = product;
-  }
+    const dialogRef = this.dialog.open(ProductBuyDialogComponent, {
+      data: product,
+    });
 
-  closeSubmenu() {
-    this.selectedProduct = null;
-  }
-
-  addToCart(product: Product) {
-    console.log('Adding to cart:', product);
-    // TODO: Add to local storge that I can put into the shopping card menu
-  }
-
-  buyProduct(product: Product) {
-    console.log('Buying directly:', product);
-    // TODO: opening the buy page to buy the product
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed', result);
+    });
   }
 
   openProductDetail(product: Product) {
