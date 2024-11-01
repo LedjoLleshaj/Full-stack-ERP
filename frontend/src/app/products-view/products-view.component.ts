@@ -25,10 +25,11 @@ export class ProductsViewComponent implements OnInit {
   constructor(private productService: ProductService, private dialog: MatDialog) {}
 
   ngOnInit() {
-    this.fetchProducts();
+    //this.fetchProducts();
     this.fetchCategories();
   }
 
+  /*
   fetchProducts() {
     this.productService.getProducts().subscribe(data => {
       this.dataSource.data = data;
@@ -36,6 +37,7 @@ export class ProductsViewComponent implements OnInit {
       this.dataSource.sort = this.sort;
     });
   }
+    */
 
   fetchCategories() {
     this.productService.getProductCategories().subscribe(categories => {
@@ -43,11 +45,13 @@ export class ProductsViewComponent implements OnInit {
     });
   }
 
+  
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
     if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
+    
 
   filterByCategory(category: string) {
     this.activeCategory = this.activeCategory === category ? null : category;
@@ -59,16 +63,19 @@ export class ProductsViewComponent implements OnInit {
     const dialogRef = this.dialog.open(ProductBuyDialogComponent, {
       data: product,
     });
-
+  
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed', result);
     });
   }
+  
 
+  /*
   openProductDetail(product: Product) {
     const dialogRef = this.dialog.open(ProductDetailDialogComponent, { data: product });
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed', result);
     });
   }
+    */
 }
