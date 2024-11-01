@@ -13,11 +13,8 @@ import { MatDialog } from '@angular/material/dialog';
   styleUrls: ['./product-table.component.scss']
 })
 export class ProductTableComponent implements OnInit {
-  @Output() buyProduct = new EventEmitter<Product>(); // Emit buyProduct event
-  //dataSource: MatTableDataSource<Product> = new MatTableDataSource();
-  //displayedColumns: string[] = ['name', 'category', 'price', 'description', 'buy'];
-
-  @Input() dataSource!: MatTableDataSource<Product>;  // Make sure the type matches your usage
+  @Output() buyProduct = new EventEmitter<Product>();
+  @Input() dataSource!: MatTableDataSource<Product>; 
   @Input() displayedColumns!: string[];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -35,12 +32,6 @@ export class ProductTableComponent implements OnInit {
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
     });
-  }
-
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
 
   openProductDetail(product: Product) {
