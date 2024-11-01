@@ -28,6 +28,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ProductDetailDialogComponent } from './shared/components/dialogs/product-detail-dialog/product-detail-dialog.component';
 import { ProductBuyDialogComponent } from './shared/components/dialogs/product-buy-dialog/product-buy-dialog.component';
+import { ProductTableComponent } from './shared/components/product-table/product-table.component';
+
 
 @NgModule({
   declarations: [
@@ -37,7 +39,8 @@ import { ProductBuyDialogComponent } from './shared/components/dialogs/product-b
     ProductsViewComponent,
     AddProductViewComponent,
     ProductDetailDialogComponent,
-    ProductBuyDialogComponent
+    ProductBuyDialogComponent,
+    ProductTableComponent
   ],
   imports: [
     BrowserModule,
