@@ -1,11 +1,5 @@
 <div class="se-table-responsive">
-  <table
-    mat-table
-    matSort
-    (matSortChange)="this.announceSortChange.emit($event)"
-    [dataSource]="data"
-    class="mat-elevation-z1 table"
-  >
+  <table mat-table matSort [dataSource]="dataSource" class="mat-elevation-z1 table">
     <caption>
       Product Sales History
     </caption>
@@ -91,6 +85,5 @@
   [pageSize]="5"
   [pageSizeOptions]="[5, 10, 25, 50]"
   showFirstLastButtons
-  (page)="this.nextPage.emit($event)"
   aria-label="Pagination Navigation"
 ></mat-paginator>
