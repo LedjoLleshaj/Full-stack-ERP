@@ -36,8 +36,8 @@ export class SalesViewComponent {
 
   fetchHistory() {
     this.saleApiService.getSales().subscribe((data) => {
-      this.total = data.getSales.total;
-      this.data = data.getSales.rentals;
+      this.total = data.length;
+      this.data = data;
     });
   }
 
@@ -69,8 +69,8 @@ export class SalesViewComponent {
   // }
 
   nextPage(event: PageEvent) {
-    this.filter.page = event.pageIndex + 1;
-    this.filter.itemsPerPage = event.pageSize;
+    // this.filter.page = event.pageIndex + 1;
+    // this.filter.itemsPerPage = event.pageSize;
     this.fetchHistory();
   }
 
