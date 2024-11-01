@@ -21,6 +21,6 @@ urlpatterns = [
     path("productsfrominventory", inventory.getProductsFromInventory),
     path("sale/<str:pk>", sales.getSale),
     path("sales", sales.getSales),
-    path("productsfromsales", sales.getProductsFromSales),
+    path("salesinfo", sales.getProductsFromSales),
     path("usersfromsales", sales.getUsersFromSales),
 ]

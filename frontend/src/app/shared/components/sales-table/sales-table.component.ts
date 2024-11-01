@@ -13,7 +13,7 @@ import { Sale } from "../../../models/sale.model";
   imports: [MatTableModule, MatButtonModule, MatPaginatorModule, NgIf, NgFor, MatSortModule, DatePipe],
 })
 export class SalesTableComponent {
-  columns: string[] = ["sale_id", "product", "quantity", "product_price", "sale_date", "destination", "amount"];
+  columns: string[] = ["sale_id", "product", "quantity", "product_price", "sale_date", "address", "amount"];
   @Input() data: Sale[] = [];
   @Input() total: number = 0;
   @Output() nextPage: EventEmitter<any> = new EventEmitter();
