@@ -25,7 +25,7 @@ import { Sale } from "../../../models/sale.model";
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SalesTableComponent implements AfterViewInit, OnChanges {
-  columns: string[] = ["sale_id", "product", "quantity", "product_price", "sale_date", "address", "amount"];
+  columns: string[] = ["id", "product", "quantity", "product_price", "sale_date", "address", "amount"];
 
   @Input() data: Sale[] = [];
   @Input() total: number = 0;
@@ -41,8 +41,28 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes["data"]) {
-      this.dataSource.data = this.data; // Update data source whenever `data` input changes
+    this.dataSource.sortingDataAccessor = (item, property) => {
+      switch (property) {
+        case "id":
+          return item.id;
+        case "product":
+          return item.product.name;
+        case "quantity":
+          return item.quantity;
+        case "product_price":
+          return item.product.price;
+        case "sale_date":
+          return item.sale_date;
+        case "address": //TODO: Add address to sale model
+          return "address";
+        case "amount":
+          return item.product.price * item.quantity;
+        default:
+          return item.id;
+      }
+    };
+    if (changes) {
+      this.dataSource.data = this.data;
     }
   }
 }
