@@ -25,16 +25,6 @@
       <mat-divider></mat-divider>
       <button
         mat-list-item
-        aria-label="Open movies view"
-        title="Open movies view"
-        [activated]="this.router.url === '/'"
-        (click)="this.router.navigate([''])"
-      >
-        <mat-icon matListItemIcon>movies</mat-icon>
-        <div matListItemTitle>Movies</div>
-      </button>
-      <button
-        mat-list-item
         aria-label="Open sales view"
         title="Open sales history"
         [activated]="this.router.url === '/sales'"
@@ -45,6 +35,7 @@
       </button>
       <!-- Products button with submenu -->
       <button
+        class="flex flex-row"
         mat-list-item
         aria-label="Open product view"
         title="Open product view"
@@ -52,9 +43,11 @@
         (click)="navigateToProducts()"
       >
         <mat-icon matListItemIcon>shopping_cart</mat-icon>
-        <div matListItemTitle>Product</div>
-        <mat-icon matListItemIcon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
-        <mat-icon matListItemIcon *ngIf="isProductMenuOpen">expand_more</mat-icon>
+        <div matListItemTitle class="flex items-center">
+          Product
+          <mat-icon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isProductMenuOpen">expand_more</mat-icon>
+        </div>
       </button>
 
       <div *ngIf="isProductMenuOpen" class="submenu">
