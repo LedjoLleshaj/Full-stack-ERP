@@ -46,7 +46,7 @@ export class LoginComponent implements OnInit {
         localStorage.setItem(LOCAL_STORAGE_KEYS.USERNAME, JSON.parse(userData).username);
         localStorage.setItem(LOCAL_STORAGE_KEYS.FIRST_NAME, response.first_name);
         localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_NAME, response.last_name);
-        this.router.navigate(["/"]);
+        this.router.navigate(["/products"]);
       },
       error: (error) => {
         this.snackBar.open("Username or password not correct");

@@ -25,26 +25,17 @@
       <mat-divider></mat-divider>
       <button
         mat-list-item
-        aria-label="Open movies view"
-        title="Open movies view"
-        [activated]="this.router.url === '/'"
-        (click)="this.router.navigate([''])"
-      >
-        <mat-icon matListItemIcon>movies</mat-icon>
-        <div matListItemTitle>Movies</div>
-      </button>
-      <button
-        mat-list-item
-        aria-label="Open history view"
-        title="Open history view"
-        [activated]="this.router.url === '/history'"
-        (click)="this.router.navigate(['/history'])"
+        aria-label="Open sales view"
+        title="Open sales history"
+        [activated]="this.router.url === '/sales'"
+        (click)="this.router.navigate(['/sales'])"
       >
         <mat-icon matListItemIcon>history</mat-icon>
-        <div matListItemTitle>History</div>
+        <div matListItemTitle>Sales</div>
       </button>
       <!-- Products button with submenu -->
       <button
+        class="flex flex-row"
         mat-list-item
         aria-label="Open product view"
         title="Open product view"
@@ -52,9 +43,11 @@
         (click)="navigateToProducts()"
       >
         <mat-icon matListItemIcon>shopping_cart</mat-icon>
-        <div matListItemTitle>Product</div>
-        <mat-icon matListItemIcon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
-        <mat-icon matListItemIcon *ngIf="isProductMenuOpen">expand_more</mat-icon>
+        <div matListItemTitle class="flex items-center">
+          Product
+          <mat-icon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isProductMenuOpen">expand_more</mat-icon>
+        </div>
       </button>
 
       <div *ngIf="isProductMenuOpen" class="submenu">
@@ -97,9 +90,9 @@
           <mat-icon style="margin: 0">{{ this.darkModeService.darkMode ? "light_mode" : "dark_mode" }}</mat-icon>
         </button>
         <!-- Shopping Menu button -->
-      <button mat-stroked-button (click)="toggleRightNav()" title="Shopping Menu">
-        <mat-icon>shopping_bag</mat-icon>
-      </button>
+        <button mat-stroked-button (click)="toggleRightNav()" title="Shopping Menu">
+          <mat-icon>shopping_bag</mat-icon>
+        </button>
         <!-- logout -->
         <button (click)="logout()" mat-stroked-button aria-label="Logout" title="Logout">
           <mat-icon style="margin: 0">logout</mat-icon>
@@ -113,7 +106,6 @@
     <!-- end main content -->
   </mat-sidenav-content>
 </mat-sidenav-container>
-
 
 <mat-sidenav-container>
   <mat-sidenav

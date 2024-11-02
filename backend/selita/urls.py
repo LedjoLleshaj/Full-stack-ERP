@@ -17,4 +17,10 @@ urlpatterns = [
     path("product-names", products.getProductNames),
     path("productbycategory/<str:category>", products.getProductsByCategory),
     path("productbyname/<str:name>", products.getProductsByNames),
+    path("inventory", inventory.getInventory),
+    path("productsfrominventory", inventory.getProductsFromInventory),
+    path("sale/<str:pk>", sales.getSale),
+    path("sales", sales.getSales),
+    path("salesinfo", sales.getProductsFromSales),
+    path("usersfromsales", sales.getUsersFromSales),
 ]
