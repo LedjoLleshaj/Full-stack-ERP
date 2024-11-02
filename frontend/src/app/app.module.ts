@@ -5,7 +5,7 @@ import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { LoginComponent } from "./login/login.component";
-import { CustomMaterialModule } from "./material.modules"; 
+import { CustomMaterialModule } from "./material.modules";
 import { MatListModule } from "@angular/material/list";
 import { MatGridListModule } from "@angular/material/grid-list";
 import { HttpClientModule } from "@angular/common/http";
@@ -20,16 +20,17 @@ import { MatDialogModule } from "@angular/material/dialog";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatTableModule } from '@angular/material/table';
-import { ProductsViewComponent } from './products-view/products-view.component';
-import { MatSortModule } from '@angular/material/sort';
-import { AddProductViewComponent } from './add-product-view/add-product-view.component';
-import { MatSelectModule } from '@angular/material/select'; 
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { ProductDetailDialogComponent } from './shared/components/dialogs/product-detail-dialog/product-detail-dialog.component';
-import { ProductBuyDialogComponent } from './shared/components/dialogs/product-buy-dialog/product-buy-dialog.component';
-import { ProductTableComponent } from './shared/components/product-table/product-table.component';
-
+import { SalesViewComponent } from "./sales-view/sales-view.component";
+import { SalesTableComponent } from "./shared/components/sales-table/sales-table.component"; // Import MatFormFieldModule
+import { MatTableModule } from "@angular/material/table";
+import { ProductsViewComponent } from "./products-view/products-view.component";
+import { MatSortModule } from "@angular/material/sort";
+import { AddProductViewComponent } from "./add-product-view/add-product-view.component";
+import { MatSelectModule } from "@angular/material/select";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
+import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
+import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
 
 @NgModule({
   declarations: [
@@ -40,7 +41,9 @@ import { ProductTableComponent } from './shared/components/product-table/product
     AddProductViewComponent,
     ProductDetailDialogComponent,
     ProductBuyDialogComponent,
-    ProductTableComponent
+    ProductTableComponent,
+    AddProductViewComponent,
+    SalesViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -63,8 +66,9 @@ import { ProductTableComponent } from './shared/components/product-table/product
     MatProgressSpinnerModule,
     MatTableModule,
     MatSortModule,
-    MatSelectModule, 
-    MatFormFieldModule 
+    MatSelectModule,
+    MatFormFieldModule,
+    SalesTableComponent,
   ],
   providers: [],
   bootstrap: [AppComponent],

@@ -5,6 +5,7 @@ export const environment = {
   addProduct: "/add-product",
   getProducts: "/products",
   getProductCategories: "/product-categories",
-  getProductNames:"/product-names",
-  productbyid:"/productbyid"
+  getProductNames: "/product-names",
+  getSales: "/salesinfo",
+  productbyid: "/productbyid",
 };
