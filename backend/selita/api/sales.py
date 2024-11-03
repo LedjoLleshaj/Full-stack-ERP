@@ -1,15 +1,17 @@
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from ..models import Sales, Product, Users
 from ..serializers import SalesSerializer, ProductSerializer, UserSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 
 # ======== USERS ========
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getSales(request):
     try:
         sales = Sales.objects.all()
@@ -23,6 +25,7 @@ def getSales(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getSale(request, pk):
     try:
         # Retrieve sale record by primary key

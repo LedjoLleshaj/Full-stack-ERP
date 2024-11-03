@@ -1,14 +1,17 @@
 from rest_framework.response import Response
 from ..models import Inventory, Product, Product_Names
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from ..serializers import InventorySerializer, ProductSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+
 
 # ======== USERS ========
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getInventory(request):
     try:
         inventory = Inventory.objects.all()
@@ -22,6 +25,7 @@ def getInventory(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProductsFromInventory(request):
     try:
         inventory = Inventory.objects.all()
