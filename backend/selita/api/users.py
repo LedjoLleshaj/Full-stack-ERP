@@ -1,9 +1,11 @@
 from rest_framework.response import Response
+from rest_framework import permissions
 from ..models import Users
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from ..serializers import UserSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from django.contrib.auth.hashers import make_password
 
 
 # ======== USERS ========
@@ -38,8 +40,9 @@ def createUser(request):
         data = request.data
         user = Users.objects.create(
             username=data["username"],
-            password=data["password"],
-            email=data["email"],
+            password=make_password(
+                data["password"]
+            ),  # Hash the password here            email=data["email"],
             first_name=data["first_name"],
             last_name=data["last_name"],
             phone=data["phone"],
