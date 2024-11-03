@@ -12,6 +12,7 @@ from django.contrib.auth.hashers import make_password
 
 
 @api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
 def getUsers(request):
     try:
         users = Users.objects.all()
@@ -25,6 +26,7 @@ def getUsers(request):
 
 
 @api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
 def getUser(request, pk):
     try:
         user = Users.objects.get(id=pk)
@@ -35,6 +37,7 @@ def getUser(request, pk):
 
 
 @api_view(["POST"])
+@permission_classes([permissions.AllowAny])
 def createUser(request):
     try:
         data = request.data
@@ -58,6 +61,7 @@ def createUser(request):
 
 
 @api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
 def updateUser(request, pk):
     try:
         user = Users.objects.get(id=pk)
@@ -82,6 +86,7 @@ def updateUser(request, pk):
 
 
 @api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
 def deleteUser(request, pk):
     try:
         user = Users.objects.get(id=pk)

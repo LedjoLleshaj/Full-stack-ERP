@@ -46,6 +46,7 @@ def login(request):
                     "refresh_token": refresh_token,
                     "first_name": user.firstname,
                     "last_name": user.lastname,
+                    "username": user.username,
                 },
                 status=status.HTTP_200_OK,
             )
