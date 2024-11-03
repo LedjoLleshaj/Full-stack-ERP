@@ -40,9 +40,11 @@ export class LoginComponent implements OnInit {
   confirm() {
     this.authService.login(this.username?.value, this.password?.value).subscribe({
       next: (response) => {
-        const token = response.token;
+        const token = response.access_token;
+        const refreshToken = response.refresh_token;
         const userData = atob(token.split(".")[1]);
         localStorage.setItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN, token);
+        localStorage.setItem(LOCAL_STORAGE_KEYS.REFERSH_TOKEN, refreshToken);
         localStorage.setItem(LOCAL_STORAGE_KEYS.USERNAME, JSON.parse(userData).username);
         localStorage.setItem(LOCAL_STORAGE_KEYS.FIRST_NAME, response.first_name);
         localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_NAME, response.last_name);

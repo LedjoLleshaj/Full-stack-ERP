@@ -48,4 +48,9 @@ export class AuthApiService {
       return of(result as T);
     };
   }
+
+  getToken(): string {
+    console.log("auth token: ", localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN)); // Log auth token to console
+    return localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN) ?? "";
+  }
 }
