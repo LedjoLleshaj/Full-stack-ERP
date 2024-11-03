@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY = "django-insecure-9lip&-^1#&x1eq69_bf%7vo08_j%=0_lz0z90kbt4wnud_$j4!"
 SECRET_KEY = "state_secret"
 JWT_ALGORITHM = "HS256"
 
