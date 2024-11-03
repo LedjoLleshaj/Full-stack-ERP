@@ -3,6 +3,7 @@ export interface LoginResponse {
   refresh_token: string;
   first_name: string;
   last_name: string;
+  username: string;
 }
 
 export interface RefreshToken {

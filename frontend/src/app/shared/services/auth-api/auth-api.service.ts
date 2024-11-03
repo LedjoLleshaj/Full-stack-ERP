@@ -23,7 +23,6 @@ export class AuthApiService {
 
   // Send post request to login endpoint e.g., http://0.0.0.0:8080/selita/login
   login(username: string, password: string): Observable<LoginResponse> {
-    console.log("auth: ", username, password); // Log username and password to console
     const loginUrl = `${this.apiUrl}${environment.login}`; // Ensure that environment.apiUrl and environment.login are properly defined
     return this.http.post<LoginResponse>(loginUrl, { username, password }, this.httpOptions).pipe(
       catchError(this.handleError<LoginResponse>("login")) // Add error handling
@@ -76,7 +75,6 @@ export class AuthApiService {
   }
 
   getToken(): string {
-    console.log("auth token: ", localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN)); // Log auth token to console
     return localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN) ?? "";
   }
 }

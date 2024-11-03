@@ -74,6 +74,7 @@ def getSale(request, pk):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProductsFromSales(request):
     try:
         sales = Sales.objects.all()
@@ -99,6 +100,7 @@ def getProductsFromSales(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getUsersFromSales(request):
     try:
         sales = Sales.objects.all()
