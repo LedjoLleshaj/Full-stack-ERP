@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from ..models import Product, Product_Categories, Product_Names
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from ..serializers import (
     ProductSerializer,
     ProductCategoriesSerializer,
@@ -8,6 +8,7 @@ from ..serializers import (
 )
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 
 # ======== PRODUCTS ========
@@ -44,6 +45,7 @@ def getProduct(request, pk):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def addProduct(request):
     try:
         serializer = ProductSerializer(data=request.data)

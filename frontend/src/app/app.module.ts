@@ -8,7 +8,7 @@ import { LoginComponent } from "./login/login.component";
 import { CustomMaterialModule } from "./material.modules";
 import { MatListModule } from "@angular/material/list";
 import { MatGridListModule } from "@angular/material/grid-list";
-import { HttpClientModule } from "@angular/common/http";
+import { HTTP_INTERCEPTORS, HttpClientModule } from "@angular/common/http";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { LayoutComponent } from "./layout/layout.component";
 import { MatSidenavModule } from "@angular/material/sidenav";
@@ -31,6 +31,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
+import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
 
 @NgModule({
   declarations: [
@@ -70,7 +71,7 @@ import { ProductTableComponent } from "./shared/components/product-table/product
     MatFormFieldModule,
     SalesTableComponent,
   ],
-  providers: [],
+  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
