@@ -18,6 +18,7 @@ import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatMenuModule } from "@angular/material/menu";
 import { MatDialogModule } from "@angular/material/dialog";
 import { MatChipsModule } from "@angular/material/chips";
+import { ChipsComponent } from "./shared/components/chips/chips.component";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { SalesViewComponent } from "./sales-view/sales-view.component";
@@ -60,6 +61,7 @@ import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
     MatIconModule,
     MatSnackBarModule,
     MatPaginatorModule,
+    ChipsComponent,
     MatMenuModule,
     MatDialogModule,
     MatChipsModule,
