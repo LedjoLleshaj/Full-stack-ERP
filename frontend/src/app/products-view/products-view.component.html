@@ -1,17 +1,29 @@
 <div class="flex flex-col items-stretch">
   <!-- Search Input Field -->
   <mat-form-field class="sm:w-1/2 md:w-2/5">
-    <mat-label>Kerko</mat-label>
-    <input matInput (input)="applyFilter($event)" placeholder="Search by name" />
+    <mat-label>Search</mat-label>
+    <input matInput (input)="applyFilter($event)" placeholder="Search by name">
   </mat-form-field>
 
-  <app-chips (selectedCategories)="filterByCategories($event)"></app-chips>
+  <!-- Category Buttons Row -->
+  <div class="category-buttons-row">
+    <button 
+      mat-button 
+      *ngFor="let category of categories" 
+      (click)="filterByCategory(category)" 
+      [ngClass]="{'active': activeCategory === category}" 
+      class="category-button"
+    >
+      {{ category }}
+    </button>
+  </div>
 
-  <!-- Product Table Component -->
-  <app-product-table
-    [dataSource]="dataSource"
-    [displayedColumns]="displayedColumns"
-    (buyProduct)="buyProductButton($event)"
-  >
-  </app-product-table>
+
+<!-- Product Table Component -->
+<app-product-table 
+[dataSource]="dataSource" 
+[displayedColumns]="displayedColumns" 
+(buyProduct)="buyProductButton($event)">
+</app-product-table>
+
 </div>

@@ -8,12 +8,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ClientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Clients
-        fields = "__all__"
-
-
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product

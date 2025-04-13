@@ -1,7 +1,6 @@
 # Ignore virtual environments
 /env
 /env/
-venv/
 
 # Ignore Python cache directories
 **/__pycache__/

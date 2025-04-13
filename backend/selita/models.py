@@ -17,21 +17,6 @@ class Users(models.Model):
         return self.username
 
 
-class Clients(models.Model):
-    firstname = models.CharField(max_length=200)
-    lastname = models.CharField(max_length=200)
-    email = models.CharField(max_length=200)
-    phone = models.CharField(max_length=200)
-    address = models.CharField(max_length=200)
-    city = models.CharField(max_length=200)
-
-    class Meta:
-        db_table = "clients"
-
-    def __str__(self):
-        return f"{self.firstname} {self.lastname}, {self.email}, {self.phone}, {self.address}, {self.city}"
-
-
 class Product(models.Model):
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=200)
@@ -81,7 +66,6 @@ class Inventory(models.Model):
 class Sales(models.Model):
     prod = models.ForeignKey(Product, on_delete=models.CASCADE)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    client = models.ForeignKey(Clients, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     sale_date = models.DateTimeField(auto_now_add=True)
 

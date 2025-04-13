@@ -25,26 +25,26 @@
       <mat-divider></mat-divider>
       <button
         mat-list-item
-        aria-label="Hap historikun e shitjeve"
-        title="Hap historikun e shitjeve"
+        aria-label="Open sales view"
+        title="Open sales history"
         [activated]="this.router.url === '/sales'"
         (click)="this.router.navigate(['/sales'])"
       >
         <mat-icon matListItemIcon>history</mat-icon>
-        <div matListItemTitle>Shitjet</div>
+        <div matListItemTitle>Sales</div>
       </button>
       <!-- Products button with submenu -->
       <button
         class="flex flex-row"
         mat-list-item
-        aria-label="Hap produktet"
-        title="Hap produktet"
+        aria-label="Open product view"
+        title="Open product view"
         [activated]="this.router.url === '/products' || this.router.url === '/add-product'"
         (click)="navigateToProducts()"
       >
         <mat-icon matListItemIcon>shopping_cart</mat-icon>
         <div matListItemTitle class="flex items-center">
-          Produktet
+          Product
           <mat-icon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
           <mat-icon *ngIf="isProductMenuOpen">expand_more</mat-icon>
         </div>
@@ -53,13 +53,13 @@
       <div *ngIf="isProductMenuOpen" class="submenu">
         <button
           mat-list-item
-          aria-label="Shto nje produkt"
-          title="Shto nje produkt"
+          aria-label="Add new product"
+          title="Add new product"
           [activated]="this.router.url === '/add-product'"
           (click)="this.router.navigate(['/add-product'])"
         >
           <mat-icon matListItemIcon>add</mat-icon>
-          <div matListItemTitle>Shto nje produkt</div>
+          <div matListItemTitle>Add Product</div>
         </button>
       </div>
     </mat-nav-list>
@@ -128,9 +128,9 @@
     <div class="right-nav-content">
       <div *ngFor="let item of cartItems" class="cart-item-card">
         <h3>{{ item.name }}</h3>
-        <p>Kategoria: {{ item.category }}</p>
-        <p>Cmimi: {{ item.price | currency }}</p>
-        <p>Sasia: {{ item.count }}x</p>
+        <p>Category: {{ item.category }}</p>
+        <p>Price: {{ item.price | currency }}</p>
+        <p>Quantity: {{ item.count }}x</p>
       </div>
     </div>
   </mat-sidenav>
