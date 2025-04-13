@@ -1,34 +1,41 @@
 <div class="add-product-container">
-  <h2>Shto nje produkt</h2>
+  <h2>Add New Product</h2>
   <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
     <div class="form-grid">
+
       <!-- Product Name -->
       <mat-form-field class="full-width">
-        <mat-label>Emri</mat-label>
+        <mat-label>Name</mat-label>
         <mat-select formControlName="name" required>
           <mat-option *ngFor="let name of names" [value]="name.product_name">
             {{ name.product_name }}
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="productForm.controls['name'].hasError('required')"> Name is required </mat-error>
+        <mat-error *ngIf="productForm.controls['name'].hasError('required')">
+          Name is required
+        </mat-error>
       </mat-form-field>
 
       <!-- Product Category -->
       <mat-form-field class="full-width">
-        <mat-label>Kategoria</mat-label>
+        <mat-label>Category</mat-label>
         <mat-select formControlName="category" required>
           <mat-option *ngFor="let category of categories" [value]="category.category_name">
             {{ category.category_name }}
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="productForm.controls['category'].hasError('required')"> Category is required </mat-error>
+        <mat-error *ngIf="productForm.controls['category'].hasError('required')">
+          Category is required
+        </mat-error>
       </mat-form-field>
 
       <!-- Product Price -->
       <mat-form-field class="full-width">
-        <mat-label>Cmimi</mat-label>
-        <input matInput type="number" formControlName="price" required />
-        <mat-error *ngIf="productForm.controls['price'].hasError('required')"> Price is required </mat-error>
+        <mat-label>Price</mat-label>
+        <input matInput type="number" formControlName="price" required>
+        <mat-error *ngIf="productForm.controls['price'].hasError('required')">
+          Price is required
+        </mat-error>
         <mat-error *ngIf="productForm.controls['price'].hasError('min')">
           Price must be greater than or equal to 0
         </mat-error>
@@ -36,7 +43,7 @@
 
       <!-- Product Description -->
       <mat-form-field class="full-width">
-        <mat-label>Pershkrimi</mat-label>
+        <mat-label>Description</mat-label>
         <textarea matInput formControlName="description" required></textarea>
         <mat-error *ngIf="productForm.controls['description'].hasError('required')">
           Description is required
@@ -45,7 +52,7 @@
 
       <!-- Submit Button -->
       <div class="button-container">
-        <button mat-raised-button color="primary" type="submit" [disabled]="!productForm.valid">Shto produktin</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="!productForm.valid">Add Product</button>
       </div>
     </div>
   </form>
