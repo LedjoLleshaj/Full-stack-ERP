@@ -3,7 +3,7 @@
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
     <!-- Name Column -->
     <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Emeri</th>
       <td mat-cell *matCellDef="let product">
         <button mat-button (click)="openProductDetail(product)">
           {{ product.name }}
@@ -13,27 +13,27 @@
 
     <!-- Category Column -->
     <ng-container matColumnDef="category">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Kategoria</th>
       <td mat-cell *matCellDef="let product">{{ product.category }}</td>
     </ng-container>
 
     <!-- Price Column -->
     <ng-container matColumnDef="price">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Price</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Cmimi</th>
       <td mat-cell *matCellDef="let product">{{ product.price | currency }}</td>
     </ng-container>
 
     <!-- Description Column -->
     <ng-container matColumnDef="description">
-      <th mat-header-cell *matHeaderCellDef>Description</th>
+      <th mat-header-cell *matHeaderCellDef>Pershkrimi</th>
       <td mat-cell *matCellDef="let product">{{ product.description }}</td>
     </ng-container>
 
     <!-- Buy Column -->
     <ng-container matColumnDef="buy">
-      <th mat-header-cell *matHeaderCellDef>Buy</th>
+      <th mat-header-cell *matHeaderCellDef>Blej</th>
       <td mat-cell *matCellDef="let product">
-        <button mat-button (click)="onBuyProduct(product)" class="buy-button">Buy</button>
+        <button mat-button (click)="onBuyProduct(product)" class="buy-button">Blej</button>
       </td>
     </ng-container>
 

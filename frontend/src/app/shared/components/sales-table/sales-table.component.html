@@ -15,7 +15,7 @@
 
     <ng-container matColumnDef="product">
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by product">
-        Product
+        Produkti
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         {{ sale.product.name }}
@@ -26,7 +26,7 @@
 
     <ng-container matColumnDef="quantity">
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by quantity">
-        Quantity
+        Sasia
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         {{ sale.quantity }}
@@ -36,7 +36,7 @@
     <!-- product_price -->
     <ng-container matColumnDef="product_price">
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by product_price">
-        Price
+        Cmimi
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         {{ sale.product.price }}
@@ -47,7 +47,7 @@
 
     <ng-container matColumnDef="sale_date">
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by sale date">
-        Sale date
+        Data e shitjes
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         {{ sale.sale_date | date : "dd/MM/yyyy" }}
@@ -57,7 +57,7 @@
     <!-- address -->
     <ng-container matColumnDef="address">
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by address">
-        Address
+        Addresa
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         {{ sale.address ? sale.address : "Address" }}
@@ -67,7 +67,7 @@
     <!-- amount -->
     <ng-container matColumnDef="amount">
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by amount">
-        Amount
+        Totali
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         <!-- {{ sale.payment ? sale.payment.amount + " €" : "In progress" }} -->
