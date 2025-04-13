@@ -120,6 +120,30 @@ def getProductsByCategory(request, category):
 
 
 @api_view(["GET"])
+def filterByCategories(request):
+    # Get the 'categories' parameter from the query string
+    categories = request.GET.get("categories", "")
+
+    # If the 'categories' parameter is empty, return an empty list
+    if not categories:
+        product = Product.objects.all()
+        serializer = ProductSerializer(product, many=True)
+        return Response(serializer.data)
+
+    # Split the comma-separated string into a list
+    categories_list = categories.split(",")
+
+    # Filter products whose category is in the list of categories
+    products = Product.objects.filter(category__in=categories_list)
+
+    # Serialize the filtered products
+    serializer = ProductSerializer(products, many=True)
+
+    # Return the serialized data as a response
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
 def getProductsByNames(request, name):
     name = Product.objects.filter(name=name)
     serializer = ProductSerializer(name, many=True)
