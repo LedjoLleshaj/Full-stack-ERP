@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .api import auth, users, products, inventory, sales
+from .api import auth, users, clients, products, inventory, sales
 
 
 urlpatterns = [
@@ -10,6 +10,9 @@ urlpatterns = [
     path("login", auth.login),
     path("users", users.getUsers),
     path("user/<str:pk>", users.getUser),
+    path("client/<str:pk>", clients.getClient),
+    path("clients", clients.getClients),
+    path("client-sales/<str:pk>", clients.getClientSales),
     path("create-user", users.createUser),
     path("update-user/<str:pk>", users.updateUser),
     path("delete-user/<str:pk>", users.deleteUser),
