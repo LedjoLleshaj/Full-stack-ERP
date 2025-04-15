@@ -1,0 +1,10 @@
+<div class="flex flex-col items-stretch">
+  <!-- Search Input Field -->
+  <mat-form-field class="sm:w-1/2 md:w-2/5">
+    <mat-label>Kerko Klientin</mat-label>
+    <input matInput (input)="applyFilter($event)" placeholder="Kerko me emer" />
+  </mat-form-field>
+
+  <!-- client Table Component -->
+  <app-client-table [dataSource]="dataSource" [displayedColumns]="displayedColumns"> </app-client-table>
+</div>

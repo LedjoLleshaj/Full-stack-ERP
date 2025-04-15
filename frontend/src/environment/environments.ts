@@ -10,4 +10,5 @@ export const environment = {
   filterByCategories: "/filterbycategories",
   getSales: "/salesinfo",
   productbyid: "/productbyid",
+  getClients: "/clients",
 };

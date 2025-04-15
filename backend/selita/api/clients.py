@@ -15,7 +15,14 @@ from rest_framework import status
 def getClients(request):
     try:
         clients = Clients.objects.all()
+        # for each client get the balance by summing the amount they have to pay in unpaid sales
         serializer = ClientSerializer(clients, many=True)
+        for client in serializer.data:
+            sales = Sales.objects.filter(client=client["id"], is_paid=False)
+            total_amount = 0
+            for sale in sales:
+                total_amount += sale.prod_price * sale.quantity
+            client["balance"] = total_amount
         return Response(serializer.data)
     except Exception as e:
         return Response(

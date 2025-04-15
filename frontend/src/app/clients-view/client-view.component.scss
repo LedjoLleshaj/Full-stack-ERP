@@ -1,0 +1,26 @@
+.category-buttons-row {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-button {
+  padding: 8px 16px;
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: capitalize;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-color: transparent;
+
+  &:hover {
+    background-color: #ffffff9e;
+  }
+
+  &.active {
+    background-color: #8590a784;
+  }
+}
