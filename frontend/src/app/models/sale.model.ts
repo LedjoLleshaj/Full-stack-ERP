@@ -4,6 +4,13 @@ export interface Sale {
   quantity: number;
   sale_date: string;
   prod: number;
+  prod_price: number;
+  is_paid: boolean;
   user: number;
+  client: {
+    name: string;
+    phone: string;
+    address: string;
+  };
   product: Product;
 }

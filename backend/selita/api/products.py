@@ -1,10 +1,11 @@
 from rest_framework.response import Response
-from ..models import Product, Product_Categories, Product_Names
+from ..models import Product, Product_Categories, Product_Names, Inventory
 from rest_framework.decorators import api_view, permission_classes
 from ..serializers import (
     ProductSerializer,
     ProductCategoriesSerializer,
     ProductNamesSerializer,
+    InventorySerializer,
 )
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
@@ -18,8 +19,16 @@ from rest_framework.permissions import IsAuthenticated
 def getProducts(request):
     try:
         products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data)
+        # for each product get disponibility from inventory by porduct id
+        product_serializer = ProductSerializer(products, many=True)
+
+        for product in product_serializer.data:
+            try:
+                inventory = Inventory.objects.get(prod=product["id"])
+                product["disponibility"] = inventory.quantity
+            except ObjectDoesNotExist:
+                product["disponibility"] = 0
+        return Response(product_serializer.data)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},

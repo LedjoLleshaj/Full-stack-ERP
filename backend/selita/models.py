@@ -80,6 +80,8 @@ class Inventory(models.Model):
 
 class Sales(models.Model):
     prod = models.ForeignKey(Product, on_delete=models.CASCADE)
+    prod_price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_paid = models.BooleanField(default=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
     quantity = models.IntegerField()
