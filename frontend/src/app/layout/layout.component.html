@@ -33,6 +33,17 @@
         <mat-icon matListItemIcon>history</mat-icon>
         <div matListItemTitle>Shitjet</div>
       </button>
+      <mat-divider></mat-divider>
+      <button
+        mat-list-item
+        aria-label="Hap listen e klienteve"
+        title="Hap listen e klienteve"
+        [activated]="this.router.url === '/clients'"
+        (click)="this.router.navigate(['/clients'])"
+      >
+        <mat-icon matListItemIcon>contacts</mat-icon>
+        <div matListItemTitle>Klientet</div>
+      </button>
       <!-- Products button with submenu -->
       <button
         class="flex flex-row"

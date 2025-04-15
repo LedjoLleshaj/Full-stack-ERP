@@ -7,6 +7,7 @@ import { AddProductViewComponent } from "./add-product-view/add-product-view.com
 import { AuthGuard } from "./shared/auth.guard";
 import { PublicGuard } from "./shared/public.guard";
 import { SalesViewComponent } from "./sales-view/sales-view.component";
+import { ClientViewComponent } from "./clients-view/client-view.component";
 
 const routes: Routes = [
   {
@@ -16,12 +17,17 @@ const routes: Routes = [
       {
         path: "",
         component: LoginComponent,
-        title: "Available Film - Selita",
+        title: "- Selita -",
       },
       {
         path: "sales",
         component: SalesViewComponent,
         title: "Sale History - Selita",
+      },
+      {
+        path: "clients",
+        component: ClientViewComponent,
+        title: "Client List - Selita",
       },
       {
         path: "products",

@@ -32,7 +32,10 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
+
 import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
+import { ClientTableComponent } from "./shared/components/client-table/client-table.component";
+import { ClientViewComponent } from "./clients-view/client-view.component";
 
 @NgModule({
   declarations: [
@@ -40,10 +43,12 @@ import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
     LayoutComponent,
     LoginComponent,
     ProductsViewComponent,
+    ClientViewComponent,
     AddProductViewComponent,
     ProductDetailDialogComponent,
     ProductBuyDialogComponent,
     ProductTableComponent,
+    ClientTableComponent,
     AddProductViewComponent,
     SalesViewComponent,
   ],
