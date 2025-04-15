@@ -56,6 +56,8 @@ CREATE TABLE Inventory (
 CREATE TABLE Sales (
     id SERIAL PRIMARY KEY,
     prod_id INT NOT NULL,
+    prod_price DECIMAL(10, 2) NOT NULL,
+    is_paid BOOLEAN DEFAULT FALSE,
     user_id INT NOT NULL,
     client_id INT NOT NULL,
     quantity INT NOT NULL,
@@ -77,26 +79,28 @@ CREATE TABLE Restock (
 
 -- Inserting data
 INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('admin', 'pbkdf2_sha256$870000$4Q0rcQv0fwttnrAAWvqpfU$vzu7I2egFdnXYvsfrGna0Ee5PO2u5O+XeQ7z1avuyrI=', 'admin@selita_fish.com', 'Admin', 'Admin', 'admin'),('Ledjo', 'pbkdf2_sha256$870000$4Q0rcQv0fwttnrAAWvqpfU$vzu7I2egFdnXYvsfrGna0Ee5PO2u5O+XeQ7z1avuyrI=', 'ledjo@selita_fish.com', 'Ledjo', 'Lleshaj', 'admin');
-INSERT INTO Clients (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Durres'), ('Kristi', 'Gjinaj', 'kristi@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
+INSERT INTO Clients (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
 INSERT INTO Product_Categories (category_name) VALUES ('Peshk'), ('Fruta Deti'), ('Gafforre'), ('Kallamar'), ('Midhje'),('Karkaleca'),('Peshk i eger');
 INSERT INTO Product_Names (product_name, category_id) VALUES 
 ('Salmon',1),('Karkaleca',5),('Koce',1),('Midhje',
 5),('Peshk i eger',1),('Peshk',1),('Fruta Deti',2),('Gafforre',3),('Kallamar',4),('Karkaleca',6),('Peshk i eger',7);
 INSERT INTO Product (name, category, price, description) VALUES 
-('Salmon', 'Peshk', 10.00, 'Salmon fish from Norway'),
-('Karkaleca', 'Fruta Deti', 15.00, 'Shrimp from Mediterranean'),
-('Koce', 'Peshk', 20.00, 'Tuna fish from Atlantic'),
-('Midhje', 'Fruta Deti', 5.00, 'Mussels from Adriatic'),
-('Peshk i eger', 'Peshk i eger', 30.00, 'Wild fish from Adriatic'),
-('Peshk', 'Peshk', 12.00, 'Fish from Adriatic'),
-('Fruta Deti', 'Fruta Deti', 8.00, 'Seafood from Adriatic'),
-('Gafforre', 'Gafforre', 25.00, 'Eel from Adriatic'),
-('Kallamar', 'Kallamar', 18.00, 'Squid from Adriatic'),
-('Karkaleca', 'Karkaleca', 22.00, 'Crab from Adriatic'),
-('Peshk i eger', 'Peshk i eger', 35.00, 'Wild fish from Adriatic');
+('Salmon', 'Peshk', 10.00, 'Peshk Salmon'),
+('Karkaleca', 'Fruta Deti', 15.00, 'Karkaleca nga Mesdheu'),
+('Koce', 'Peshk', 20.00, 'Peshk Koce'),
+('Midhje', 'Fruta Deti', 5.00, 'Midhje nga Adriatiku'),
+('Peshk i eger', 'Peshk i eger', 30.00, 'Pesh i eger nga Adriatiku'),
+('Peshk', 'Peshk', 12.00, 'Peshk nga Adriatiku'),
+('Fruta Deti', 'Fruta Deti', 8.00, 'Fruta deti nga Adriatiku'),
+('Gafforre', 'Gafforre', 25.00, 'Gaffore nga Adriatiku'),
+('Kallamar', 'Kallamar', 18.00, 'Kallamar nga Adriatiku'),
+('Karkaleca', 'Karkaleca', 22.00, 'Karkaleca nga Adriatiku'),
+('Peshkaqen', 'Peshk i eger', 35.00, 'Pesh i eger nga Mesdheu');
 INSERT INTO Inventory (prod_id, quantity) VALUES 
 (1, 100), (2, 100), (3, 100), (4, 100), (5, 100), (6, 100), (7, 100), (8, 100), (9, 100), (10, 100), (11, 100);
-INSERT INTO Sales (prod_id, user_id,client_id, quantity) VALUES (1, 1,2, 10), (2, 1,2, 10), (3, 1,1, 10), (4, 1,1, 10), (5, 1,1, 10), (6, 1,1, 10), (7, 1,1, 10), (8, 1,1, 10), (9, 1,1, 10), (10, 1,1, 10), (11, 1,1, 10), (2, 1,1, 10), (3, 1,1, 10), (4, 1,1, 10), (5, 1,1, 10), (6, 1,1, 10), (7, 1,1, 10), (8, 1,1, 10), (9, 1,1, 10);
+INSERT INTO Sales (prod_id,prod_price,is_paid, user_id,client_id, quantity) VALUES 
+(1, 10.00, TRUE, 1, 1, 2), (2, 15.00, FALSE, 1, 2, 3), (3, 20.00, TRUE, 1, 1, 4), (4, 5.00, TRUE, 1, 2, 5), (5, 30.00, TRUE, 1, 1, 6), (6, 12.00, TRUE, 1, 2, 7), (7, 8.00, FALSE, 1, 1, 8), (8, 25.00, FALSE, 1, 2, 9), (9, 18.00, FALSE, 1, 1 ,10), (10 ,22.00 ,FALSE ,1 ,2 ,11), (11 ,35.00 ,TRUE ,1 ,1 ,12);
+
 INSERT INTO Restock (prod_id, quantity) VALUES 
 (1, 50), (2, 30), (3, 20), (4, 10), (5, 5), (6, 15), (7, 25), (8, 35), (9, 45), (10, 55), (11, 65);
 

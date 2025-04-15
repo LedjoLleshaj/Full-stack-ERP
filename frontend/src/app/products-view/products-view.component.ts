@@ -14,7 +14,7 @@ import { ProductBuyDialogComponent } from "../shared/components/dialogs/product-
 })
 export class ProductsViewComponent implements OnInit {
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
-  displayedColumns: string[] = ["name", "category", "price", "description", "buy"];
+  displayedColumns: string[] = ["name", "category", "price", "disponibility", "description", "buy"];
   categories: string[] = [];
   activeCategory: string | null = null;
 

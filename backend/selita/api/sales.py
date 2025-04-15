@@ -1,7 +1,12 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Sales, Product, Users
-from ..serializers import SalesSerializer, ProductSerializer, UserSerializer
+from ..models import Sales, Product, Users, Clients
+from ..serializers import (
+    SalesSerializer,
+    ProductSerializer,
+    UserSerializer,
+    ClientSerializer,
+)
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -74,7 +79,7 @@ def getSale(request, pk):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def getProductsFromSales(request):
     try:
         sales = Sales.objects.all()
@@ -83,6 +88,7 @@ def getProductsFromSales(request):
         # For each sale, retrieve and add the product data
         for sale_data in sales_serializer.data:
             prod_id = sale_data["prod"]
+            client_id = sale_data["client"]
 
             try:
                 product = Product.objects.get(id=prod_id)
@@ -90,6 +96,21 @@ def getProductsFromSales(request):
                 sale_data["product"] = product_serializer.data
             except Product.DoesNotExist:
                 sale_data["product"] = {"error": "Product not found"}
+            try:
+                client = Clients.objects.get(id=client_id)
+                client_serializer = ClientSerializer(client)
+                sale_data["client"] = {
+                    "name": client_serializer.data["firstname"]
+                    + " "
+                    + client_serializer.data["lastname"],
+                    "phone": client_serializer.data["phone"],
+                    "address": client_serializer.data["address"],
+                }
+
+            except Users.DoesNotExist:
+                sale_data["client"] = {"error": "Client not found"}
+        # Return the sales data with product and client information
+        # return Response(sales_serializer.data)
 
         return Response(sales_serializer.data)
     except Exception as e:

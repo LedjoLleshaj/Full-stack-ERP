@@ -3,13 +3,13 @@
     <caption>
       Historiku i shitjeve
     </caption>
-    <!-- sale id -->
+    <!-- sale id
     <ng-container matColumnDef="id" sticky>
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by id">Id</th>
       <td mat-cell class="se-table-row" *matCellDef="let sale">
         {{ sale.id }}
       </td>
-    </ng-container>
+    </ng-container> -->
 
     <!-- product -->
 
@@ -54,6 +54,17 @@
       </td>
     </ng-container>
 
+    <!-- klient -->
+
+    <ng-container matColumnDef="client">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by sale date">
+        Klienti
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        {{ sale.client.name }}
+      </td>
+    </ng-container>
+
     <!-- address -->
     <ng-container matColumnDef="address">
       <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by address">
@@ -71,7 +82,18 @@
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         <!-- {{ sale.payment ? sale.payment.amount + " €" : "In progress" }} -->
-        {{ sale.quantity * sale.product.price + " €" }}
+        {{ sale.quantity * sale.prod_price + " €" }}
+      </td>
+    </ng-container>
+
+    <!-- Status -->
+
+    <ng-container matColumnDef="is_paid">
+      <th mat-header-cell *matHeaderCellDef scope="col">Statusi i Pageses</th>
+      <td class="se-table-row" mat-cell *matCellDef="let sale">
+        <span [ngClass]="sale.is_paid ? 'text-green' : 'text-red'">
+          {{ sale.is_paid ? "E paguar" : "Nuk eshte paguar" }}</span
+        >
       </td>
     </ng-container>
 
@@ -82,7 +104,7 @@
 <mat-paginator
   class="mat-elevation-z1"
   [length]="this.total"
-  [pageSize]="5"
+  [pageSize]="10"
   [pageSizeOptions]="[5, 10, 25, 50]"
   showFirstLastButtons
   aria-label="Pagination Navigation"

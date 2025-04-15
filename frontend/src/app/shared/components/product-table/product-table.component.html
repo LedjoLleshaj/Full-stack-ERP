@@ -3,7 +3,7 @@
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
     <!-- Name Column -->
     <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Emeri</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Produkti</th>
       <td mat-cell *matCellDef="let product">
         <button mat-button (click)="openProductDetail(product)">
           {{ product.name }}
@@ -21,6 +21,12 @@
     <ng-container matColumnDef="price">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Cmimi</th>
       <td mat-cell *matCellDef="let product">{{ product.price | currency }}</td>
+    </ng-container>
+
+    <!-- Disponibility Column -->
+    <ng-container matColumnDef="disponibility">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Sasia gjendje</th>
+      <td mat-cell *matCellDef="let product">{{ product.disponibility }}</td>
     </ng-container>
 
     <!-- Description Column -->
