@@ -4,7 +4,7 @@ import { BrowserModule } from "@angular/platform-browser";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { LoginComponent } from "./login/login.component";
+import { LoginComponent } from "./views/login-view/login.component";
 import { CustomMaterialModule } from "./material.modules";
 import { MatListModule } from "@angular/material/list";
 import { MatGridListModule } from "@angular/material/grid-list";
@@ -21,12 +21,12 @@ import { MatChipsModule } from "@angular/material/chips";
 import { ChipsComponent } from "./shared/components/chips/chips.component";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { SalesViewComponent } from "./sales-view/sales-view.component";
+import { SalesViewComponent } from "./views/sales-view/sales-view.component";
 import { SalesTableComponent } from "./shared/components/sales-table/sales-table.component"; // Import MatFormFieldModule
 import { MatTableModule } from "@angular/material/table";
-import { ProductsViewComponent } from "./products-view/products-view.component";
+import { ProductsViewComponent } from "./views/products-view/products-view.component";
 import { MatSortModule } from "@angular/material/sort";
-import { AddProductViewComponent } from "./add-product-view/add-product-view.component";
+import { AddProductViewComponent } from "./views/add-product-view/add-product-view.component";
 import { MatSelectModule } from "@angular/material/select";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
@@ -35,7 +35,7 @@ import { ProductTableComponent } from "./shared/components/product-table/product
 
 import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
 import { ClientTableComponent } from "./shared/components/client-table/client-table.component";
-import { ClientViewComponent } from "./clients-view/client-view.component";
+import { ClientViewComponent } from "./views/clients-view/client-view.component";
 
 @NgModule({
   declarations: [

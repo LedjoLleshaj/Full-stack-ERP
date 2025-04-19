@@ -2,9 +2,9 @@ import { Component, OnInit, ViewChild } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
-import { ClientService } from "../shared/services/clients-api/client.service";
+import { ClientService } from "../../shared/services/clients-api/client.service";
 import { MatDialog } from "@angular/material/dialog";
-import { Client } from "../models/client.model";
+import { Client } from "../../models/client.model";
 
 @Component({
   selector: "app-client-view",

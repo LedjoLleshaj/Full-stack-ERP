@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Sale } from "../models/sale.model";
-import { SalesApiService } from "../shared/services/sales-api/sales-api.service";
+import { Sale } from "../../models/sale.model";
+import { SalesApiService } from "../../shared/services/sales-api/sales-api.service";
 
 @Component({
   selector: "app-sales-view",
