@@ -17,6 +17,12 @@
   color: red;
 }
 
+.clickable-cell {
+  cursor: pointer;
+  text-decoration: underline;
+  color: red;
+}
+
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
 $se-default-theme: mat.define-light-theme(

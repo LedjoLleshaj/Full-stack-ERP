@@ -147,3 +147,31 @@ def getUsersFromSales(request):
             {"error": "An unexpected error occurred", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def paySale(request, pk):
+    try:
+        # Retrieve the sale record by primary key
+        sale = Sales.objects.get(id=pk)
+        if sale.is_paid:
+            return Response(
+                {"error": "Sale already paid"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update the sale status to "paid"
+        sale.is_paid = True
+        sale.save()
+
+        # Serialize the updated sale record
+        serializer = SalesSerializer(sale)
+
+        return Response(serializer.data)
+    except Sales.DoesNotExist:
+        return Response({"error": "Sale not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
