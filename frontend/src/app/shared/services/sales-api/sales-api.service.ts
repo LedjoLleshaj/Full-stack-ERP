@@ -13,4 +13,8 @@ export class SalesApiService {
   getSales(): Observable<Sale[]> {
     return this.http.get<Sale[]>(`${environment.apiUrl}${environment.getSales}`);
   }
+
+  paySale(id: number): Observable<Sale> {
+    return this.http.put<Sale>(`${environment.apiUrl}${environment.paySale}+${id}`, {});
+  }
 }

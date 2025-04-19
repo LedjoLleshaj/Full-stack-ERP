@@ -16,6 +16,7 @@ import { MatTableDataSource } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
 import { DatePipe, NgClass, NgFor, NgIf } from "@angular/common";
 import { Sale } from "../../../models/sale.model";
+import { SalesApiService } from "../../services/sales-api/sales-api.service";
 
 @Component({
   selector: "app-sales-table",
@@ -29,6 +30,8 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
 
   @Input() data: Sale[] = [];
   @Input() total: number = 0;
+
+  constructor(private saleService: SalesApiService) {}
 
   dataSource = new MatTableDataSource<Sale>();
 
@@ -66,5 +69,20 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
     if (changes) {
       this.dataSource.data = this.data;
     }
+  }
+
+  markAsPaid(sale: any): void {
+    // Replace with your actual API service
+    console.log("Marking as paid", sale.id);
+    this.saleService.paySale(sale.id).subscribe(
+      (response) => {
+        console.log("Sale marked as paid", response);
+        // Optionally, refresh the data or update the UI
+        this.dataSource.data = this.dataSource.data.map((s) => (s.id === sale.id ? { ...s, is_paid: true } : s));
+      },
+      (error) => {
+        console.error("Error marking sale as paid", error);
+      }
+    );
   }
 }

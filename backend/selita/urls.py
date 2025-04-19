@@ -30,4 +30,5 @@ urlpatterns = [
     path("sales", sales.getSales),
     path("salesinfo", sales.getProductsFromSales),
     path("usersfromsales", sales.getUsersFromSales),
+    path("pay-sale/<str:pk>", sales.paySale),
 ]

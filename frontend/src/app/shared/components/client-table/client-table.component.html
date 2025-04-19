@@ -33,7 +33,7 @@
     <ng-container matColumnDef="balance">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Balanca per te paguar</th>
       <td mat-cell *matCellDef="let client">
-        <span [ngClass]="client.balance > 0 ? 'text-green' : 'text-red'">{{
+        <span [ngClass]="client.balance <= 0 ? 'text-green' : 'text-red'">{{
           client.balance > 0 ? " - " + client.balance + " €" : " + " + client.balance + " €"
         }}</span>
       </td>
