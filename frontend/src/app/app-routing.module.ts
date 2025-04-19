@@ -1,13 +1,13 @@
 import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 import { LayoutComponent } from "./layout/layout.component";
-import { LoginComponent } from "./login/login.component";
-import { ProductsViewComponent } from "./products-view/products-view.component";
-import { AddProductViewComponent } from "./add-product-view/add-product-view.component";
+import { LoginComponent } from "./views/login-view/login.component";
+import { ProductsViewComponent } from "./views/products-view/products-view.component";
+import { AddProductViewComponent } from "./views/add-product-view/add-product-view.component";
 import { AuthGuard } from "./shared/auth.guard";
 import { PublicGuard } from "./shared/public.guard";
-import { SalesViewComponent } from "./sales-view/sales-view.component";
-import { ClientViewComponent } from "./clients-view/client-view.component";
+import { SalesViewComponent } from "./views/sales-view/sales-view.component";
+import { ClientViewComponent } from "./views/clients-view/client-view.component";
 
 const routes: Routes = [
   {

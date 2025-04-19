@@ -23,6 +23,36 @@
     <!-- navigation -->
     <mat-nav-list>
       <mat-divider></mat-divider>
+
+      <button
+        class="flex flex-row"
+        mat-list-item
+        aria-label="Hap produktet"
+        title="Hap produktet"
+        [activated]="this.router.url === '/products' || this.router.url === '/add-product'"
+        (click)="navigateToProducts()"
+      >
+        <mat-icon matListItemIcon>shopping_cart</mat-icon>
+        <div matListItemTitle class="flex items-center">
+          Inventari
+          <mat-icon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isProductMenuOpen">expand_more</mat-icon>
+        </div>
+      </button>
+
+      <div *ngIf="isProductMenuOpen" class="submenu">
+        <button
+          mat-list-item
+          aria-label="Shto nje produkt"
+          title="Shto nje produkt"
+          [activated]="this.router.url === '/add-product'"
+          (click)="this.router.navigate(['/add-product'])"
+        >
+          <mat-icon matListItemIcon>add</mat-icon>
+          <div matListItemTitle>Shto nje produkt</div>
+        </button>
+      </div>
+      <mat-divider></mat-divider>
       <button
         mat-list-item
         aria-label="Hap historikun e shitjeve"
@@ -45,34 +75,6 @@
         <div matListItemTitle>Klientet</div>
       </button>
       <!-- Products button with submenu -->
-      <button
-        class="flex flex-row"
-        mat-list-item
-        aria-label="Hap produktet"
-        title="Hap produktet"
-        [activated]="this.router.url === '/products' || this.router.url === '/add-product'"
-        (click)="navigateToProducts()"
-      >
-        <mat-icon matListItemIcon>shopping_cart</mat-icon>
-        <div matListItemTitle class="flex items-center">
-          Produktet
-          <mat-icon *ngIf="!isProductMenuOpen">expand_less</mat-icon>
-          <mat-icon *ngIf="isProductMenuOpen">expand_more</mat-icon>
-        </div>
-      </button>
-
-      <div *ngIf="isProductMenuOpen" class="submenu">
-        <button
-          mat-list-item
-          aria-label="Shto nje produkt"
-          title="Shto nje produkt"
-          [activated]="this.router.url === '/add-product'"
-          (click)="this.router.navigate(['/add-product'])"
-        >
-          <mat-icon matListItemIcon>add</mat-icon>
-          <div matListItemTitle>Shto nje produkt</div>
-        </button>
-      </div>
     </mat-nav-list>
   </mat-sidenav>
 

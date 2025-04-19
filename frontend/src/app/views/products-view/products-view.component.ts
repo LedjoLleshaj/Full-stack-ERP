@@ -2,10 +2,10 @@ import { Component, OnInit, ViewChild } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
-import { ProductService } from "../shared/services/product-api/product.service";
-import { Product } from "../models/product.model";
+import { ProductService } from "../../shared/services/product-api/product.service";
+import { Product } from "../../models/product.model";
 import { MatDialog } from "@angular/material/dialog";
-import { ProductBuyDialogComponent } from "../shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
+import { ProductBuyDialogComponent } from "../../shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 
 @Component({
   selector: "app-products-view",
@@ -14,7 +14,7 @@ import { ProductBuyDialogComponent } from "../shared/components/dialogs/product-
 })
 export class ProductsViewComponent implements OnInit {
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
-  displayedColumns: string[] = ["name", "category", "price", "disponibility", "description", "buy"];
+  displayedColumns: string[] = ["name", "category", "description", "price", "disponibility"];
   categories: string[] = [];
   activeCategory: string | null = null;
 
