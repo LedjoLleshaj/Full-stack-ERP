@@ -22,7 +22,7 @@ def getClients(request):
             total_amount = 0
             for sale in sales:
                 total_amount += sale.prod_price * sale.quantity
-            client["balance"] = total_amount
+            client["unpaidBalance"] = total_amount
         return Response(serializer.data)
     except Exception as e:
         return Response(
@@ -37,7 +37,18 @@ def getClient(request, pk):
     try:
         client = Clients.objects.get(id=pk)
         serializer = ClientSerializer(client, many=False)
-        return Response(serializer.data)
+        client = serializer.data
+        sales = Sales.objects.filter(client=client["id"])
+        unpaidBalance = 0
+        totalBought = 0
+        for sale in sales:
+            if sale.is_paid == False:
+                unpaidBalance += sale.prod_price * sale.quantity
+
+            totalBought += sale.prod_price * sale.quantity
+        client["unpaidBalance"] = unpaidBalance
+        client["totalBought"] = totalBought
+        return Response(client)
     except ObjectDoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 

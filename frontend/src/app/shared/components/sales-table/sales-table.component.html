@@ -91,7 +91,7 @@
     <ng-container matColumnDef="is_paid">
       <th mat-header-cell *matHeaderCellDef scope="col">Statusi i Pageses</th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
-        <span *ngIf="sale.is_paid" class="text-green">E paguar</span>
+        <span *ngIf="sale.is_paid">E paguar</span>
         <button
           *ngIf="!sale.is_paid"
           class="text-red underline cursor-pointer bg-transparent border-none p-0 m-0"

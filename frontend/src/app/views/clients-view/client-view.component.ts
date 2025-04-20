@@ -13,7 +13,7 @@ import { Client } from "../../models/client.model";
 })
 export class ClientViewComponent {
   dataSource: MatTableDataSource<Client> = new MatTableDataSource();
-  displayedColumns: string[] = ["firstname", "lastname", "phone", "address", "balance"]; //shto balancen per cdo klient
+  displayedColumns: string[] = ["firstname", "lastname", "phone", "address", "unpaidBalance"]; //shto balancen per cdo klient
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
