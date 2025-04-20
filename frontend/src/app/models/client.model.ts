@@ -6,4 +6,6 @@ export interface Client {
   phone: string;
   address: string;
   city: string;
+  unpaidBalance: number;
+  totalBought?: number;
 }

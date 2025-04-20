@@ -12,4 +12,5 @@ export const environment = {
   productbyid: "/productbyid",
   getClients: "/clients",
   paySale: "/pay-sale/",
+  getClientById: "/client/",
 };

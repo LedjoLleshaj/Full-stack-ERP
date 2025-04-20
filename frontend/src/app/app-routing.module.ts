@@ -8,6 +8,7 @@ import { AuthGuard } from "./shared/auth.guard";
 import { PublicGuard } from "./shared/public.guard";
 import { SalesViewComponent } from "./views/sales-view/sales-view.component";
 import { ClientViewComponent } from "./views/clients-view/client-view.component";
+import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
 
 const routes: Routes = [
   {
@@ -33,6 +34,11 @@ const routes: Routes = [
         path: "products",
         component: ProductsViewComponent,
         title: "Products - Selita",
+      },
+      {
+        path: "client/:id",
+        component: ClientDetailsViewComponent,
+        title: "Client Details - Selita",
       },
       { path: "add-product", component: AddProductViewComponent },
     ],

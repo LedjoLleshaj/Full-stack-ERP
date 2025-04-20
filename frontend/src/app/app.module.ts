@@ -36,6 +36,7 @@ import { ProductTableComponent } from "./shared/components/product-table/product
 import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
 import { ClientTableComponent } from "./shared/components/client-table/client-table.component";
 import { ClientViewComponent } from "./views/clients-view/client-view.component";
+import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
 
 @NgModule({
   declarations: [
@@ -49,6 +50,7 @@ import { ClientViewComponent } from "./views/clients-view/client-view.component"
     ProductBuyDialogComponent,
     ProductTableComponent,
     ClientTableComponent,
+    ClientDetailsViewComponent,
     AddProductViewComponent,
     SalesViewComponent,
   ],
