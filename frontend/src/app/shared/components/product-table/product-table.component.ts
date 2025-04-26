@@ -28,7 +28,7 @@ export class ProductTableComponent implements OnInit {
 
   fetchProducts() {
     this.productService.getProducts().subscribe((data) => {
-      this.dataSource.data = data;
+      this.dataSource.data = data.filter((product) => product.disponibility > 0);
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
     });
