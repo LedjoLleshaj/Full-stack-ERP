@@ -1,5 +1,12 @@
 <div class="se-table-responsive">
-  <table mat-table matSort [dataSource]="dataSource" class="mat-elevation-z1 table">
+  <table
+    mat-table
+    matSort
+    [dataSource]="dataSource"
+    [matSortActive]="'sale_date'"
+    matSortDirection="desc"
+    class="mat-elevation-z1 table"
+  >
     <caption>
       Historiku i shitjeve
     </caption>

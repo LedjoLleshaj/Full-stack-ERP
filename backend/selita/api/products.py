@@ -157,3 +157,21 @@ def getProductsByNames(request, name):
     name = Product.objects.filter(name=name)
     serializer = ProductSerializer(name, many=True)
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+def checkDisponibility(request, pk):
+    try:
+        product = Product.objects.get(id=pk)
+        inventory = Inventory.objects.get(prod=product)
+        serializer = InventorySerializer(inventory, many=False)
+        return Response(serializer.data)
+    except ObjectDoesNotExist:
+        return Response(
+            {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

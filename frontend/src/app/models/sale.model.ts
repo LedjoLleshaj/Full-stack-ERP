@@ -1,5 +1,5 @@
 import { Product } from "./product.model";
-export interface Sale {
+export interface SaleResponse {
   id: number;
   quantity: number;
   sale_date: string;
@@ -13,4 +13,13 @@ export interface Sale {
     address: string;
   };
   product: Product;
+}
+
+export interface Sale {
+  prod: number;
+  prod_price: number;
+  is_paid: boolean;
+  user: number;
+  client: number;
+  quantity: number;
 }

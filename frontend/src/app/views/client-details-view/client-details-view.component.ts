@@ -3,8 +3,10 @@ import { ActivatedRoute } from "@angular/router";
 
 import { Client } from "src/app/models/client.model";
 import { Product } from "src/app/models/product.model";
+import { Sale } from "src/app/models/sale.model";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
 import { ProductService } from "src/app/shared/services/product-api/product.service";
+import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
 
 @Component({
   selector: "app-client-details-view",
@@ -13,22 +15,24 @@ import { ProductService } from "src/app/shared/services/product-api/product.serv
 })
 export class ClientDetailsViewComponent implements OnInit {
   client!: Client;
+  clientId!: number;
   totalBought = 0;
   unpaidBalance = 0;
-
   searchText = "";
   availableProducts: Product[] = [];
+  currentUserId: number = 1; // ⚡ Set this properly, or get it from auth service
 
   constructor(
     private route: ActivatedRoute,
     private clientService: ClientService,
-    private productService: ProductService
+    private productService: ProductService,
+    private saleService: SalesApiService
   ) {}
 
   ngOnInit() {
-    const clientId = Number(this.route.snapshot.paramMap.get("id"));
-    if (clientId) {
-      this.loadClient(clientId);
+    this.clientId = Number(this.route.snapshot.paramMap.get("id"));
+    if (this.clientId) {
+      this.loadClient(this.clientId);
     }
     this.fetchProducts();
   }
@@ -48,7 +52,6 @@ export class ClientDetailsViewComponent implements OnInit {
   fetchProducts(): void {
     this.productService.getProducts().subscribe({
       next: (products) => {
-        // only keep the products that are not sold out
         this.availableProducts = products.filter((product) => product.disponibility > 0);
       },
       error: (err) => {
@@ -61,13 +64,36 @@ export class ClientDetailsViewComponent implements OnInit {
     return this.availableProducts.filter((p) => p.name.toLowerCase().includes(this.searchText.toLowerCase()));
   }
 
-  // onAddSale(): void {
-  //   console.log("Add Sale for:", this.client?.id);
-  //   // Trigger navigation or modal for adding sale
-  // }
+  confirmPaymentStatus(product: Product): void {
+    const userConfirmed = window.confirm("Did the client pay now? Click OK for Yes, Cancel for Pay Later.");
 
-  addProductToSale(product: Product): void {
-    // Logic to add product to sale
-    console.log("Product added to sale:", product, this.client);
+    const isPaid = userConfirmed ? true : false;
+
+    this.addProductToSale(product, isPaid);
+  }
+
+  addProductToSale(product: Product, isPaid: boolean): void {
+    console.log("Adding product to sale:", product, this.client, isPaid);
+
+    const newSale: any = {
+      prod: product.id,
+      prod_price: product.price,
+      quantity: product.selectedQuantity, // Default quantity
+      is_paid: isPaid,
+      user: this.currentUserId, // Adjust if you get user from AuthService
+      client: this.clientId,
+    };
+
+    console.log("Temporary Sale:", newSale);
+
+    this.saleService.createSale(newSale).subscribe({
+      next: (response) => {
+        console.log("Sale created successfully:", response);
+        this.fetchProducts(); // Refresh product list after sale
+      },
+      error: (error) => {
+        console.error("Error creating sale:", error);
+      },
+    });
   }
 }
