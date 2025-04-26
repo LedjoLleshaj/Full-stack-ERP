@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Sale } from "../../models/sale.model";
+import { Sale, SaleResponse } from "../../models/sale.model";
 import { SalesApiService } from "../../shared/services/sales-api/sales-api.service";
 
 @Component({
@@ -7,7 +7,7 @@ import { SalesApiService } from "../../shared/services/sales-api/sales-api.servi
   templateUrl: "./sales-view.component.html",
 })
 export class SalesViewComponent implements OnInit, OnDestroy {
-  data: Sale[] = [];
+  data: SaleResponse[] = [];
   total: number = 0;
   periodicUpdate: any;
 

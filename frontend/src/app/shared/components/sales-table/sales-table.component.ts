@@ -15,7 +15,7 @@ import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
 import { DatePipe, NgClass, NgFor, NgIf } from "@angular/common";
-import { Sale } from "../../../models/sale.model";
+import { Sale, SaleResponse } from "../../../models/sale.model";
 import { SalesApiService } from "../../services/sales-api/sales-api.service";
 
 @Component({
@@ -28,12 +28,12 @@ import { SalesApiService } from "../../services/sales-api/sales-api.service";
 export class SalesTableComponent implements AfterViewInit, OnChanges {
   columns: string[] = ["product", "quantity", "product_price", "sale_date", "client", "address", "amount", "is_paid"];
 
-  @Input() data: Sale[] = [];
+  @Input() data: SaleResponse[] = [];
   @Input() total: number = 0;
 
   constructor(private saleService: SalesApiService) {}
 
-  dataSource = new MatTableDataSource<Sale>();
+  dataSource = new MatTableDataSource<SaleResponse>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;

@@ -1,11 +1,12 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Sales, Product, Users, Clients
+from ..models import Sales, Product, Users, Clients, Inventory
 from ..serializers import (
     SalesSerializer,
     ProductSerializer,
     UserSerializer,
     ClientSerializer,
+    InventorySerializer,
 )
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
@@ -170,6 +171,55 @@ def paySale(request, pk):
         return Response(serializer.data)
     except Sales.DoesNotExist:
         return Response({"error": "Sale not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["POST"])
+# @permission_classes([IsAuthenticated])
+def createSale(request):
+    quantity = request.data.get("quantity")
+    print("Quantity from request:", quantity)
+    if quantity <= 0:
+        return Response(
+            {"error": "Quantity must be greater than zero"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        # Create a new sale record and reduce the product quantity in inventory
+        # Check if the product exists and enough quantity is available
+        product_id = request.data.get("prod")
+        try:
+            product = Product.objects.get(id=product_id)
+            # get inventory from prod id
+            inventory = Inventory.objects.get(prod=product)
+            if inventory.quantity < quantity:
+                return Response(
+                    {"error": "Not enough product in inventory"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except ObjectDoesNotExist:
+            return Response(
+                {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        # Create the sale record
+        serializer = SalesSerializer(data=request.data)
+        if serializer.is_valid():
+            sale = serializer.save()
+
+            # Reduce the product quantity in inventory
+            inventory.quantity -= quantity
+            print("Product quantity before sale:", inventory.quantity)
+
+            inventory.save()
+            return Response(
+                {"message": "Sale created successfully!", "sale_id": sale.id},
+                status=201,
+            )
+        return Response(serializer.errors, status=400)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
