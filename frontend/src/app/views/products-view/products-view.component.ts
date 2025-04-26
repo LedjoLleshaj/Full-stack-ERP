@@ -50,7 +50,7 @@ export class ProductsViewComponent implements OnInit {
     }
 
     this.productService.filterByCategories(category).subscribe((products) => {
-      this.dataSource = new MatTableDataSource(products);
+      this.dataSource = new MatTableDataSource(products.filter((product) => product.disponibility > 0));
       this.dataSource.paginator = this.paginator;
     });
   }

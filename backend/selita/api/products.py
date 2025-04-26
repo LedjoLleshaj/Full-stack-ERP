@@ -135,21 +135,23 @@ def filterByCategories(request):
 
     # If the 'categories' parameter is empty, return an empty list
     if not categories:
-        product = Product.objects.all()
-        serializer = ProductSerializer(product, many=True)
-        return Response(serializer.data)
+        products = Product.objects.all()
+    else:
+        # Split the comma-separated string into a list
+        categories_list = categories.split(",")
 
-    # Split the comma-separated string into a list
-    categories_list = categories.split(",")
+        # Filter products whose category is in the list of categories
+        products = Product.objects.filter(category__in=categories_list)
 
-    # Filter products whose category is in the list of categories
-    products = Product.objects.filter(category__in=categories_list)
+    product_serializer = ProductSerializer(products, many=True)
 
-    # Serialize the filtered products
-    serializer = ProductSerializer(products, many=True)
-
-    # Return the serialized data as a response
-    return Response(serializer.data)
+    for product in product_serializer.data:
+        try:
+            inventory = Inventory.objects.get(prod=product["id"])
+            product["disponibility"] = inventory.quantity
+        except ObjectDoesNotExist:
+            product["disponibility"] = 0
+    return Response(product_serializer.data)
 
 
 @api_view(["GET"])
