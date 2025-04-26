@@ -94,13 +94,13 @@ INSERT INTO Product (name, category, price, description) VALUES
 ('Fruta Deti', 'Fruta Deti', 8.00, 'Fruta deti nga Adriatiku'),
 ('Gafforre', 'Gafforre', 25.00, 'Gaffore nga Adriatiku'),
 ('Kallamar', 'Kallamar', 18.00, 'Kallamar nga Adriatiku'),
-('Karkaleca', 'Karkaleca', 22.00, 'Karkaleca nga Adriatiku'),
+('Sepie', 'Fruta Deti', 22.00, 'Sepie nga Adriatiku'),
 ('Peshkaqen', 'Peshk i eger', 35.00, 'Pesh i eger nga Mesdheu');
 INSERT INTO Inventory (prod_id, quantity) VALUES 
 (1, 10), (2, 15), (3, 20), (4, 5), (5, 30), (6, 50), (7, 10), (8, 10), (9, 10), (10, 10), (11, 10);
 INSERT INTO Sales (prod_id,prod_price,is_paid, user_id,client_id, quantity) VALUES 
 (1, 10.00, TRUE, 1, 1, 2), (2, 15.00, FALSE, 1, 2, 3), (3, 20.00, TRUE, 1, 1, 4), (4, 5.00, TRUE, 1, 2, 5), (5, 30.00, TRUE, 1, 1, 6), (6, 12.00, TRUE, 1, 2, 7), (7, 8.00, FALSE, 1, 1, 8), (8, 25.00, FALSE, 1, 2, 9), (9, 18.00, FALSE, 1, 1 ,10), (10 ,22.00 ,FALSE ,1 ,2 ,11), (11 ,35.00 ,TRUE ,1 ,1 ,12);
 
-INSERT INTO Restock (prod_id, quantity) VALUES 
-(1, 50), (2, 30), (3, 20), (4, 10), (5, 5), (6, 15), (7, 25), (8, 35), (9, 45), (10, 55), (11, 65);
+--INSERT INTO Restock (prod_id, quantity) VALUES 
+--(1, 50), (2, 30), (3, 20), (4, 10), (5, 5), (6, 15), (7, 25), (8, 35), (9, 45), (10, 55), (11, 65);
 

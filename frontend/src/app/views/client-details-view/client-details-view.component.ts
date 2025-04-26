@@ -61,18 +61,13 @@ export class ClientDetailsViewComponent implements OnInit {
     return this.availableProducts.filter((p) => p.name.toLowerCase().includes(this.searchText.toLowerCase()));
   }
 
-  onAddSale(): void {
-    console.log("Add Sale for:", this.client?.id);
-    // Trigger navigation or modal for adding sale
-  }
-
-  selectProduct(product: Product): void {
-    // maybe open dialog to confirm quantity and price, then register sale
-    console.log("Selected product:", product);
-  }
+  // onAddSale(): void {
+  //   console.log("Add Sale for:", this.client?.id);
+  //   // Trigger navigation or modal for adding sale
+  // }
 
   addProductToSale(product: Product): void {
     // Logic to add product to sale
-    console.log("Product added to sale:", product);
+    console.log("Product added to sale:", product, this.client);
   }
 }

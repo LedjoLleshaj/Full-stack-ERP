@@ -12,3 +12,9 @@ The database will be available at `IP:5050` with the following credentials:
 - Password: `password`
 
 To get the IP address of the database, check the output of the `docker-compose up` command.
+
+If u have the port 5432 occupied then u have to clear it with
+
+```bash
+sudo fuser -k 5432/tcp
+```

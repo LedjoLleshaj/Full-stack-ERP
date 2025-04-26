@@ -22,7 +22,7 @@ import { SalesApiService } from "../../services/sales-api/sales-api.service";
   selector: "app-sales-table",
   templateUrl: "./sales-table.component.html",
   standalone: true,
-  imports: [MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, NgIf, NgFor, DatePipe, NgClass],
+  imports: [MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, NgIf, DatePipe],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SalesTableComponent implements AfterViewInit, OnChanges {
