@@ -1,0 +1,55 @@
+<div class="add-client-container">
+  <h2>Shto nje Klient</h2>
+  <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
+    <div class="form-grid">
+      <!-- Client Name -->
+      <mat-form-field class="full-width">
+        <mat-label>Emri</mat-label>
+        <textarea matInput formControlName="firstname" required></textarea>
+        <mat-error *ngIf="clientForm.controls['firstname'].hasError('required')"> Firstname is required </mat-error>
+      </mat-form-field>
+
+      <!-- Lastname -->
+      <mat-form-field class="full-width">
+        <mat-label>Mbiemri</mat-label>
+        <textarea matInput formControlName="lastname" required></textarea>
+        <mat-error *ngIf="clientForm.controls['lastname'].hasError('required')"> lastname is required </mat-error>
+      </mat-form-field>
+
+      <!-- Email -->
+      <mat-form-field class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" />
+
+        <mat-error *ngIf="clientForm.controls['email'].hasError('email')"> Invalid email format </mat-error>
+      </mat-form-field>
+
+      <!-- Phone number -->
+      <mat-form-field class="full-width">
+        <mat-label>Num. Cel</mat-label>
+        <textarea matInput formControlName="phone" required></textarea>
+        <mat-error *ngIf="clientForm.controls['phone'].hasError('required')"> Phone number is required </mat-error>
+        <mat-error *ngIf="clientForm.controls['phone'].hasError('pattern')"> Invalid phone number format </mat-error>
+      </mat-form-field>
+
+      <!-- Address -->
+      <mat-form-field class="full-width">
+        <mat-label>Adresa</mat-label>
+        <textarea matInput formControlName="address" required></textarea>
+        <mat-error *ngIf="clientForm.controls['address'].hasError('required')"> Address is required </mat-error>
+      </mat-form-field>
+
+      <!-- City -->
+      <mat-form-field class="full-width">
+        <mat-label>Qyteti</mat-label>
+        <textarea matInput formControlName="city" required></textarea>
+        <mat-error *ngIf="clientForm.controls['city'].hasError('required')"> City is required </mat-error>
+      </mat-form-field>
+
+      <!-- Submit Button -->
+      <div class="button-container">
+        <button mat-raised-button color="primary" type="submit" [disabled]="!clientForm.valid">Shto klientin</button>
+      </div>
+    </div>
+  </form>
+</div>

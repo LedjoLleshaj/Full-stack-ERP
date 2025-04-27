@@ -13,6 +13,8 @@ export const environment = {
   getClients: "/clients",
   paySale: "/pay-sale/",
   createSale: "/create-sale",
+  updateInventory: "/update-inventory",
   checkdisponibility: "/checkdisponibility/",
   getClientById: "/client/",
+  addClient: "/add-client",
 };

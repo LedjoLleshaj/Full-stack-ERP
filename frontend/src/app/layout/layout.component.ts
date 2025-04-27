@@ -18,6 +18,7 @@ export class LayoutComponent {
   lastName: string = "";
   isProductMenuOpen: boolean = false; // Track product menu state
   isRightNavOpen: boolean = false; // Track right nav state
+  isClientMenuOpen: boolean = false; // Track client menu state
   cartItems: any[] = []; // Store unique cart items with their counts
 
   constructor(
@@ -51,7 +52,11 @@ export class LayoutComponent {
 
   navigateToProducts() {
     this.isProductMenuOpen = !this.isProductMenuOpen;
-    this.router.navigate(['/products']);
+    this.router.navigate(["/products"]);
+  }
+  navigateToClients() {
+    this.isClientMenuOpen = !this.isClientMenuOpen;
+    this.router.navigate(["/clients"]);
   }
 
   // Shopping cart menu open-close function
@@ -61,7 +66,7 @@ export class LayoutComponent {
 
   // TODO:
   loadCartItems() {
-    const storedItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    const storedItems = JSON.parse(localStorage.getItem("cartItems") || "[]");
     const itemCounts: { [key: string]: { count: number; item: any } } = {};
 
     storedItems.forEach((item: any) => {
@@ -72,7 +77,7 @@ export class LayoutComponent {
       }
     });
 
-    this.cartItems = Object.values(itemCounts).map(entry => ({
+    this.cartItems = Object.values(itemCounts).map((entry) => ({
       ...entry.item,
       count: entry.count,
     }));
