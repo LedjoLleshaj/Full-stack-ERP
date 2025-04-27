@@ -37,7 +37,7 @@
       <!-- Product Description -->
       <mat-form-field class="full-width">
         <mat-label>Pershkrimi</mat-label>
-        <textarea matInput formControlName="description" required></textarea>
+        <textarea matInput></textarea>
       </mat-form-field>
 
       <!-- Product Quantity -->
@@ -46,7 +46,7 @@
         <input matInput type="number" formControlName="quantity" required />
         <mat-error *ngIf="productForm.controls['quantity'].hasError('required')"> Quantity is required </mat-error>
         <mat-error *ngIf="productForm.controls['quantity'].hasError('min')">
-          Quantity must be greater than or equal to 0
+          Quantity must be greater than or equal to 1
         </mat-error>
       </mat-form-field>
 

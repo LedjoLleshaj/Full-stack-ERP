@@ -85,7 +85,7 @@ def addProductToInventory(request):
                 {"error": "Quantity must be greater than zero"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if price <= 0:
+        if price < 0:
             return Response(
                 {"error": "Price must be greater than zero"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -104,6 +104,11 @@ def addProductToInventory(request):
             inventory = Inventory.objects.get(prod=product)
             # Update the existing inventory item's quantity
             inventory.quantity += quantity
+            # update price if it is different
+            if inventory.prod.price != price:
+                inventory.prod.price = price
+                inventory.prod.save()
+            # Save the updated inventory item
 
             inventory.save()
         except ObjectDoesNotExist:
