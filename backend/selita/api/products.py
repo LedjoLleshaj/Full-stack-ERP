@@ -36,23 +36,6 @@ def getProducts(request):
         )
 
 
-@api_view(["GET"])
-def getProduct(request, pk):
-    try:
-        product = Product.objects.get(id=pk)
-        serializer = ProductSerializer(product, many=False)
-        return Response(serializer.data)
-    except ObjectDoesNotExist:
-        return Response(
-            {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
-        )
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def addProduct(request):
@@ -76,6 +59,23 @@ def addProduct(request):
 def getProduct(request, pk):
     try:
         product = Product.objects.get(id=pk)
+        serializer = ProductSerializer(product, many=False)
+        return Response(serializer.data)
+    except ObjectDoesNotExist:
+        return Response(
+            {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def getProductByName(request, name):
+    try:
+        product = Product.objects.get(name=name)
         serializer = ProductSerializer(product, many=False)
         return Response(serializer.data)
     except ObjectDoesNotExist:
@@ -155,9 +155,9 @@ def filterByCategories(request):
 
 
 @api_view(["GET"])
-def getProductsByNames(request, name):
+def getProductByNames(request, name):
     name = Product.objects.filter(name=name)
-    serializer = ProductSerializer(name, many=True)
+    serializer = ProductSerializer(name, many=False)
     return Response(serializer.data)
 
 
