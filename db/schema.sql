@@ -19,18 +19,18 @@ CREATE TABLE Clients (
     id SERIAL PRIMARY KEY,
     firstname VARCHAR(255) NOT NULL,
     lastname VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
-    phone VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    phone VARCHAR(255) UNIQUE NOT NULL,
     address VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL
     );
 
 CREATE TABLE Product (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL, --has table with possible names
+    name VARCHAR(255) UNIQUE NOT NULL, --has table with possible names
     category VARCHAR(255) NOT NULL, --has table with possible categories
     price DECIMAL(10, 2) NOT NULL, -- price per kg
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
 );
 
 CREATE TABLE Product_Categories (
@@ -40,7 +40,7 @@ CREATE TABLE Product_Categories (
 
 CREATE TABLE Product_Names (
     id SERIAL PRIMARY KEY,
-    product_name VARCHAR(255) NOT NULL,
+    product_name VARCHAR(255) UNIQUE NOT NULL,
     category_id INT NOT NULL,
     FOREIGN KEY (category_id) REFERENCES Product_Categories(id)
 );
