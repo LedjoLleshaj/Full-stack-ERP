@@ -27,6 +27,10 @@ class Clients(models.Model):
 
     class Meta:
         db_table = "clients"
+        constraints = [
+            models.UniqueConstraint(fields=["phone"], name="unique_client_phone"),
+            models.UniqueConstraint(fields=["email"], name="unique_client_email"),
+        ]
 
     def __str__(self):
         return f"{self.firstname} {self.lastname}, {self.email}, {self.phone}, {self.address}, {self.city}"
@@ -40,9 +44,24 @@ class Product(models.Model):
 
     class Meta:
         db_table = "product"
+        constraints = [
+            models.UniqueConstraint(fields=["name"], name="unique_product_name")
+        ]
 
     def __str__(self):
         return self.name
+
+
+class Inventory(models.Model):
+    prod = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    restock_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "inventory"
+
+    def __str__(self):
+        return f"{self.id},{self.prod}, {self.quantity}, {self.restock_date}"
 
 
 class Product_Categories(models.Model):
@@ -64,18 +83,6 @@ class Product_Names(models.Model):
 
     def __str__(self):
         return f"{self.product_name}, {self.category}"
-
-
-class Inventory(models.Model):
-    prod = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    restock_date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "inventory"
-
-    def __str__(self):
-        return f"{self.id},{self.prod}, {self.quantity}, {self.restock_date}"
 
 
 class Sales(models.Model):

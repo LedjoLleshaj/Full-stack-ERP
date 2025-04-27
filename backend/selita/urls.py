@@ -13,6 +13,7 @@ urlpatterns = [
     path("client/<str:pk>", clients.getClient),
     path("clients", clients.getClients),
     path("client-sales/<str:pk>", clients.getClientSales),
+    path("add-client", clients.addClient),
     path("create-user", users.createUser),
     path("update-user/<str:pk>", users.updateUser),
     path("delete-user/<str:pk>", users.deleteUser),
@@ -22,8 +23,12 @@ urlpatterns = [
     path("product-categories", products.getProductCategories),
     path("product-names", products.getProductNames),
     path("productbycategory/<str:category>", products.getProductsByCategory),
+    path(
+        "productbyname/<str:name>",
+        products.getProductByName,
+    ),
     path("filterbycategories", products.filterByCategories),
-    path("productbyname/<str:name>", products.getProductsByNames),
+    path("productbyname/<str:name>", products.getProductByNames),
     path("inventory", inventory.getInventory),
     path("productsfrominventory", inventory.getProductsFromInventory),
     path("sale/<str:pk>", sales.getSale),
@@ -33,4 +38,5 @@ urlpatterns = [
     path("pay-sale/<str:pk>", sales.paySale),
     path("checkdisponibility/<str:pk>", products.checkDisponibility),
     path("create-sale", sales.createSale),
+    path("update-inventory", inventory.addProductToInventory),
 ]

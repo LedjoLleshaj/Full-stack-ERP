@@ -55,13 +55,13 @@ def getClient(request, pk):
 
 @api_view(["POST"])
 # @permission_classes([permissions.AllowAny])
-def createClient(request):
+def addClient(request):
     try:
         data = request.data
         client = Clients.objects.create(
             firstname=data["firstname"],
             lastname=data["lastname"],
-            email=data["email"],
+            email=data["email"] if "email" in data else None,
             phone=data["phone"],
             address=data["address"],
             city=data["city"],
