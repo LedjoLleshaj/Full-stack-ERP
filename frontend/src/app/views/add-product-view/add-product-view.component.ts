@@ -4,6 +4,7 @@ import { ProductService } from "../../shared/services/product-api/product.servic
 import { Router } from "@angular/router";
 import { ProductCategory } from "../../models/product-category.model";
 import { ProductName } from "../../models/product-name.model";
+import { InventoryService } from "src/app/shared/services/inventory-api/inventory.service";
 
 @Component({
   selector: "app-add-product-view",
@@ -15,12 +16,17 @@ export class AddProductViewComponent implements OnInit {
   categories: ProductCategory[] = [];
   names: ProductName[] = [];
 
-  constructor(private fb: FormBuilder, private productService: ProductService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private productService: ProductService,
+    private inventoryService: InventoryService,
+    private router: Router
+  ) {
     this.productForm = this.fb.group({
       name: ["", Validators.required],
       category: ["", Validators.required],
-      price: [0, [Validators.required, Validators.min(0)]],
-      description: ["", Validators.required],
+      price: [0, [Validators.min(0)]],
+      quantity: [0, [Validators.required, Validators.min(0)]],
     });
   }
 
@@ -53,7 +59,7 @@ export class AddProductViewComponent implements OnInit {
 
   onSubmit() {
     if (this.productForm.valid) {
-      this.productService.addProduct(this.productForm.value).subscribe({
+      this.inventoryService.updateInventory(this.productForm.value).subscribe({
         next: (product) => {
           console.log("Product added:", product);
           this.router.navigate(["/products"]);
