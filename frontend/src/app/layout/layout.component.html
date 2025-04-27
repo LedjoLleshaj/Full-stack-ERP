@@ -64,17 +64,36 @@
         <div matListItemTitle>Shitjet</div>
       </button>
       <mat-divider></mat-divider>
+
       <button
+        class="flex flex-row"
         mat-list-item
         aria-label="Hap listen e klienteve"
         title="Hap listen e klienteve"
-        [activated]="this.router.url === '/clients'"
-        (click)="this.router.navigate(['/clients'])"
+        [activated]="this.router.url === '/clients' || this.router.url === '/add-client'"
+        (click)="navigateToClients()"
       >
         <mat-icon matListItemIcon>contacts</mat-icon>
-        <div matListItemTitle>Klientet</div>
+        <div matListItemTitle class="flex items-center">
+          Klientet
+          <mat-icon *ngIf="!isClientMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isClientMenuOpen">expand_more</mat-icon>
+        </div>
       </button>
-      <!-- Products button with submenu -->
+
+      <div *ngIf="isClientMenuOpen" class="submenu">
+        <button
+          mat-list-item
+          aria-label="Shto nje klient"
+          title="Shto nje klient"
+          [activated]="this.router.url === '/add-client'"
+          (click)="this.router.navigate(['/add-client'])"
+        >
+          <mat-icon matListItemIcon>add</mat-icon>
+          <div matListItemTitle>Shto nje klient</div>
+        </button>
+      </div>
+      <mat-divider></mat-divider>
     </mat-nav-list>
   </mat-sidenav>
 

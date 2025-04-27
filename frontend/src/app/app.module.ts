@@ -37,6 +37,7 @@ import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
 import { ClientTableComponent } from "./shared/components/client-table/client-table.component";
 import { ClientViewComponent } from "./views/clients-view/client-view.component";
 import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
+import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
 
 @NgModule({
   declarations: [
@@ -51,7 +52,7 @@ import { ClientDetailsViewComponent } from "./views/client-details-view/client-d
     ProductTableComponent,
     ClientTableComponent,
     ClientDetailsViewComponent,
-    AddProductViewComponent,
+    AddClientViewComponent,
     SalesViewComponent,
   ],
   imports: [

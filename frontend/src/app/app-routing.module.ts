@@ -9,6 +9,7 @@ import { PublicGuard } from "./shared/public.guard";
 import { SalesViewComponent } from "./views/sales-view/sales-view.component";
 import { ClientViewComponent } from "./views/clients-view/client-view.component";
 import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
+import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
 
 const routes: Routes = [
   {
@@ -41,6 +42,7 @@ const routes: Routes = [
         title: "Client Details - Selita",
       },
       { path: "add-product", component: AddProductViewComponent },
+      { path: "add-client", component: AddClientViewComponent },
     ],
     canActivate: [AuthGuard],
   },
