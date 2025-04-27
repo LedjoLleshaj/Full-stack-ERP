@@ -30,7 +30,7 @@ CREATE TABLE Product (
     name VARCHAR(255) UNIQUE NOT NULL, --has table with possible names
     category VARCHAR(255) NOT NULL, --has table with possible categories
     price DECIMAL(10, 2) NOT NULL, -- price per kg
-    description TEXT NOT NULL,
+    description TEXT NOT NULL
 );
 
 CREATE TABLE Product_Categories (
@@ -79,11 +79,11 @@ CREATE TABLE Restock (
 
 -- Inserting data
 INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('admin', 'pbkdf2_sha256$870000$4Q0rcQv0fwttnrAAWvqpfU$vzu7I2egFdnXYvsfrGna0Ee5PO2u5O+XeQ7z1avuyrI=', 'admin@selita_fish.com', 'Admin', 'Admin', 'admin'),('Ledjo', 'pbkdf2_sha256$870000$4Q0rcQv0fwttnrAAWvqpfU$vzu7I2egFdnXYvsfrGna0Ee5PO2u5O+XeQ7z1avuyrI=', 'ledjo@selita_fish.com', 'Ledjo', 'Lleshaj', 'admin');
-INSERT INTO Clients (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
+INSERT INTO Clients (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '0123456789', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
 INSERT INTO Product_Categories (category_name) VALUES ('Peshk'), ('Fruta Deti'), ('Gafforre'), ('Kallamar'), ('Midhje'),('Karkaleca'),('Peshk i eger');
 INSERT INTO Product_Names (product_name, category_id) VALUES 
 ('Salmon',1),('Karkaleca',5),('Koce',1),('Midhje',
-5),('Peshk i eger',1),('Peshk',1),('Fruta Deti',2),('Gafforre',3),('Kallamar',4),('Karkaleca',6),('Peshk i eger',7);
+5),('Peshk i eger',1),('Peshk',1),('Fruta Deti',2),('Gafforre',3),('Kallamar',4),('Karkaleca te vegjel',6),('Peshkaqen',7);
 INSERT INTO Product (name, category, price, description) VALUES 
 ('Salmon', 'Peshk', 10.00, 'Peshk Salmon'),
 ('Karkaleca', 'Fruta Deti', 15.00, 'Karkaleca nga Mesdheu'),

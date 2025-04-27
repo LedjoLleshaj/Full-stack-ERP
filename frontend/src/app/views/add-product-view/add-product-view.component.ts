@@ -26,7 +26,7 @@ export class AddProductViewComponent implements OnInit {
       name: ["", Validators.required],
       category: ["", Validators.required],
       price: [0, [Validators.min(0)]],
-      quantity: [0, [Validators.required, Validators.min(0)]],
+      quantity: [0, [Validators.required, Validators.min(1)]],
     });
   }
 
