@@ -38,6 +38,7 @@ import { ClientTableComponent } from "./shared/components/client-table/client-ta
 import { ClientViewComponent } from "./views/clients-view/client-view.component";
 import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
 import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
+import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
 
 @NgModule({
   declarations: [
@@ -54,6 +55,7 @@ import { AddClientViewComponent } from "./views/add-client-view/add-client-view.
     ClientDetailsViewComponent,
     AddClientViewComponent,
     SalesViewComponent,
+    ConfirmDialogComponent,
   ],
   imports: [
     BrowserModule,
