@@ -1,12 +1,13 @@
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
+import { MatDialog } from "@angular/material/dialog";
 
 import { Client } from "src/app/models/client.model";
 import { Product } from "src/app/models/product.model";
-import { Sale } from "src/app/models/sale.model";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
 import { ProductService } from "src/app/shared/services/product-api/product.service";
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
+import { ConfirmDialogComponent } from "src/app/dialogs/confirm-dialog/confirm-dialog.component";
 
 @Component({
   selector: "app-client-details-view",
@@ -26,7 +27,8 @@ export class ClientDetailsViewComponent implements OnInit {
     private route: ActivatedRoute,
     private clientService: ClientService,
     private productService: ProductService,
-    private saleService: SalesApiService
+    private saleService: SalesApiService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -65,11 +67,21 @@ export class ClientDetailsViewComponent implements OnInit {
   }
 
   confirmPaymentStatus(product: Product): void {
-    const userConfirmed = window.confirm("Did the client pay now? Click OK for Yes, Cancel for Pay Later.");
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: "300px",
+      data: {
+        title: "Pagesa",
+        message: "Ka paguar klienti?",
+      },
+    });
 
-    const isPaid = userConfirmed ? true : false;
-
-    this.addProductToSale(product, isPaid);
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.addProductToSale(product, true);
+      } else {
+        this.addProductToSale(product, false);
+      }
+    });
   }
 
   addProductToSale(product: Product, isPaid: boolean): void {
