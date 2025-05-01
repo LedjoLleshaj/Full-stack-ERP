@@ -55,6 +55,30 @@ def addProduct(request):
         )
 
 
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def updatePrice(request, pk):
+    print(request.data)
+    try:
+        product = Product.objects.get(id=pk)
+        serializer = ProductSerializer(instance=product, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Product price updated successfully!"}, status=200
+            )
+        return Response(serializer.errors, status=400)
+    except ObjectDoesNotExist:
+        return Response(
+            {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @api_view(["GET"])
 def getProduct(request, pk):
     try:

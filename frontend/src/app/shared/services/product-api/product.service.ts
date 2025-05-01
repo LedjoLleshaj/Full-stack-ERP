@@ -26,6 +26,10 @@ export class ProductService {
     return this.http.get<ProductCategory[]>(`${this.apiUrl}${environment.getProductCategories}`);
   }
 
+  updatePrice(productId: number, data: Product): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}${environment.updatePrice}${productId}`, data);
+  }
+
   filterByCategories(categories: string[]): Observable<Product[]> {
     const params = new HttpParams().set("categories", categories.join(","));
     return this.http.get<Product[]>(`${this.apiUrl}/filterbycategories`, { params });

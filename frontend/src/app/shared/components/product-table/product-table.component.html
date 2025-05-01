@@ -26,7 +26,11 @@
     <!-- Price Column -->
     <ng-container matColumnDef="price">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Cmimi</th>
-      <td mat-cell *matCellDef="let product">{{ product.price | currency }}</td>
+      <td mat-cell *matCellDef="let product">
+        <span class="clickable-price" (click)="openEditPriceDialog(product)">
+          {{ product.price | currency }}
+        </span>
+      </td>
     </ng-container>
 
     <!-- Disponibility Column -->

@@ -5,6 +5,7 @@ import { MatTableDataSource } from "@angular/material/table";
 import { ProductService } from "../../services/product-api/product.service";
 import { Product } from "src/app/models/product.model";
 import { ProductDetailDialogComponent } from "../dialogs/product-detail-dialog/product-detail-dialog.component";
+import { EditPriceDialogComponent } from "../../../dialogs/edit-price-dialog/edit-price-dialog.component";
 import { MatDialog } from "@angular/material/dialog";
 
 @Component({
@@ -38,6 +39,24 @@ export class ProductTableComponent implements OnInit {
     const dialogRef = this.dialog.open(ProductDetailDialogComponent, { data: product });
     dialogRef.afterClosed().subscribe((result) => {
       console.log("The dialog was closed", result);
+    });
+  }
+
+  openEditPriceDialog(product: Product) {
+    const dialogRef = this.dialog.open(EditPriceDialogComponent, {
+      width: "300px",
+      data: { ...product },
+    });
+    console.log("Product to edit", product);
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log("Dialog result:", result);
+        this.productService.updatePrice(result.id, result).subscribe((response) => {
+          console.log("Price updated successfully", response);
+          this.fetchProducts();
+        });
+      }
     });
   }
 
