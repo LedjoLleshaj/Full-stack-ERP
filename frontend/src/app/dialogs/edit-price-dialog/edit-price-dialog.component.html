@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Modifiko Cmimin</h2>
+
+<mat-dialog-content>
+  <p><strong>Produkti:</strong> {{ data.name }}</p>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Cmimi</mat-label>
+    <input matInput type="number" [(ngModel)]="data.price" />
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Anulloje</button>
+  <button mat-button [mat-dialog-close]="data" color="primary">Modifiko</button>
+</mat-dialog-actions>

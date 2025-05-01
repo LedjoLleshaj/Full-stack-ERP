@@ -39,6 +39,7 @@ import { ClientViewComponent } from "./views/clients-view/client-view.component"
 import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
 import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
 import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
+import { EditPriceDialogComponent } from "./dialogs/edit-price-dialog/edit-price-dialog.component";
 
 @NgModule({
   declarations: [
@@ -50,12 +51,14 @@ import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.
     AddProductViewComponent,
     ProductDetailDialogComponent,
     ProductBuyDialogComponent,
+    EditPriceDialogComponent,
     ProductTableComponent,
     ClientTableComponent,
     ClientDetailsViewComponent,
     AddClientViewComponent,
     SalesViewComponent,
     ConfirmDialogComponent,
+    EditPriceDialogComponent,
   ],
   imports: [
     BrowserModule,
