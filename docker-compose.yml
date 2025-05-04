@@ -1,7 +1,7 @@
 services:
   db:
     build: ./db
-    container_name: selita_fish
+    container_name: selita_fish_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: REDACTED
@@ -25,3 +25,15 @@ services:
       - db
     ports:
       - "8080:8080"
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: selita_fish_frontend
+    ports:
+      - "4200:4200"
+    volumes:
+      - /frontend/node_modules
+      - ./frontend:/frontend
+    depends_on:
+      - backend #optional
