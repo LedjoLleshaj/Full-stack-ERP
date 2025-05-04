@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+
+# Logs
+*.log
+
+# Static and media files (optional — depends on your Docker/static setup)
+staticfiles/
+media/
+
+# Editor/project files
+*.swp
+*.swo
+*.bak
+*.tmp
+*.orig
+*.DS_Store
+.idea/
+.vscode/
+*.code-workspace
+
+# Git
+.git/
+.gitignore
+
+# Coverage/test files
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+
+# Compiled files
+*.so
