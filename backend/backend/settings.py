@@ -71,7 +71,7 @@ DATABASES = {
         "NAME": "selita_fish",
         "USER": "postgres",
         "PASSWORD": "postgres",
-        "HOST": "0.0.0.0",
+        "HOST": "db",  # "0.0.0.0", # inside docker
         "PORT": "5432",
     }
 }
