@@ -1,6 +1,6 @@
 export const environment = {
-  production: false,
-  apiUrl: "http://0.0.0.0:8080/selita",
+  production: true,
+  apiUrl: "/api/selita",
   login: "/login",
   refreshToken: "/api/token/refresh/",
   addProduct: "/add-product",

@@ -1,10 +1,23 @@
-FROM node:23.11.0-alpine AS builder
-WORKDIR '/frontend'
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npx ng build --prod demo
+# Use Node to build and serve the app
+FROM node:22.15.0-alpine AS builder
 
-FROM nginx
-EXPOSE 80
-COPY --from=builder /frontend/dist/demo /usr/share/nginx/html
+# Set working directory
+WORKDIR /frontend
+
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm install --force
+# Copy source and build the Angular app
+COPY . .
+RUN npm run build -- --configuration production
+
+FROM nginx:alpine
+COPY --from=builder /frontend/dist/frontend /usr/share/nginx/html
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Expose port 4200
+EXPOSE 4200
+# Start nginx server
+CMD ["nginx", "-g", "daemon off;"]
+
+
