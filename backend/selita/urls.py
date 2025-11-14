@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .api import auth, users, clients, products, inventory, sales
+from .api import auth, users, clients, products, inventory, sales, reports
 
 
 urlpatterns = [
@@ -40,4 +40,5 @@ urlpatterns = [
     path("checkdisponibility/<str:pk>", products.checkDisponibility),
     path("create-sale", sales.createSale),
     path("update-inventory", inventory.addProductToInventory),
+    path("report/sales/", reports.sales_report),
 ]
