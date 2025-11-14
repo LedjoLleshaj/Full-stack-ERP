@@ -1,63 +1,230 @@
 .client-details-layout {
-  display: flex;
-  flex-direction: row;
-  height: calc(100vh - 64px);
-  overflow: hidden;
-}
-
-.client-details-full {
-  flex: 1;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.product-list-pane {
-  width: 550px;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 24px;
   padding: 24px;
-  border-left: 1px solid #ddd;
-  overflow-y: hidden;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Left Panel - Client Details */
+.client-details-full {
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 8px;
+  max-height: calc(100vh - 30vh);
+  position: sticky;
+  top: 24px;
+}
+
+.client-details-full h2 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  font-weight: 600;
+  border-bottom: 3px solid #1976d2;
+  padding-bottom: 12px;
+}
+
+.info-section,
+.stats-section {
+  margin-bottom: 24px;
+}
+
+.info-section p,
+.stats-section p {
+  margin: 12px 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.info-section p strong,
+.stats-section p strong {
+  display: inline-block;
+  min-width: 120px;
+  font-weight: 500;
+}
+
+.stats-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+.stats-section .debt {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+mat-divider {
+  margin: 20px 0 !important;
+}
+
+/* Right Panel - Products */
+.product-list-pane {
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 8px;
   display: flex;
   flex-direction: column;
+  max-height: calc(100vh - 30vh);
+}
+
+.product-list-pane h2 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  font-weight: 600;
+  border-bottom: 3px solid #1976d2;
+  padding-bottom: 12px;
 }
 
 .search-field {
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 16px !important;
 }
 
 .product-list-scroll {
   overflow-y: auto;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  padding-right: 8px;
 }
 
+.product-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.product-list-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.product-list-scroll::-webkit-scrollbar-thumb {
+  background: #bdbdbd;
+  border-radius: 4px;
+}
+
+.product-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: #9e9e9e;
+}
+
+/* Product Cards */
 .product-card {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  border-left-color: #1976d2;
+  transform: translateX(4px);
 }
 
 .product-info {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .product-text {
   flex: 1;
+  min-width: 0;
+}
+
+.product-text h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-text p {
+  margin: 4px 0;
+  font-size: 14px;
 }
 
 .product-action {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .qty-field {
-  width: 150px;
+  width: 100px !important;
+  margin: 0 !important;
+}
+
+.qty-field input {
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Action Button */
+.product-info button[mat-icon-button] {
+  flex-shrink: 0;
+}
+
+.product-info button[mat-icon-button]:disabled {
+  opacity: 0.4;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .client-details-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .client-details-full {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .client-details-layout {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .client-details-full,
+  .product-list-pane {
+    padding: 20px;
+  }
+
+  .product-info {
+    flex-wrap: wrap;
+  }
+
+  .product-action {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .qty-field {
+    width: 120px !important;
+  }
+}
+
+/* Additional Refinements */
+.info-section p:last-child,
+.stats-section p:last-child {
+  margin-bottom: 0;
+}
+
+/* Empty State */
+.product-card:empty::before {
+  content: "Nuk ka produkte të disponueshme";
+  display: block;
+  text-align: center;
+  padding: 40px;
+  font-style: italic;
+}
+
+/* Loading State Support */
+.product-list-pane.loading {
+  opacity: 0.6;
+  pointer-events: none;
 }

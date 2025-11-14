@@ -19,9 +19,7 @@
       <p><strong>Blerje Totale:</strong> {{ client.totalBought | currency }}</p>
       <p>
         <strong>Balance pa paguar:</strong>
-        <span [ngClass]="{ debt: client.unpaidBalance > 0 }">
-          {{ client.unpaidBalance | currency }}
-        </span>
+        <span [ngClass]="{ debt: client.unpaidBalance > 0 }"> - {{ client.unpaidBalance | currency }} </span>
       </p>
     </div>
 
