@@ -50,3 +50,14 @@ class RestockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restock
         fields = "__all__"
+
+
+class SalesReportSerializer(serializers.Serializer):
+    product = serializers.CharField()
+    quantity = serializers.IntegerField()
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    sale_date = serializers.DateTimeField()
+    client_name = serializers.CharField()
+    client_address = serializers.CharField()
+    total = serializers.DecimalField(max_digits=12, decimal_places=2)
+    is_paid = serializers.CharField()
