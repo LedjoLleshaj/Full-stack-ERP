@@ -8,9 +8,47 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class SupplierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Supplier
+        fields = "__all__"
+
+
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Clients
+        model = Client
+        fields = "__all__"
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    created_date = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = Account
+        fields = "__all__"
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    created_date = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = "__all__"
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    payment_date = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = Payment
+        fields = "__all__"
+
+
+class AccountTransactionSerializer(serializers.ModelSerializer):
+    transaction_date = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = AccountTransaction
         fields = "__all__"
 
 
@@ -41,12 +79,16 @@ class InventorySerializer(serializers.ModelSerializer):
 
 
 class SalesSerializer(serializers.ModelSerializer):
+    sale_date = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = Sales
         fields = "__all__"
 
 
 class RestockSerializer(serializers.ModelSerializer):
+    restock_date = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = Restock
         fields = "__all__"
