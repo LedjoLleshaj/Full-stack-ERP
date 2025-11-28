@@ -13,13 +13,20 @@ import { AddClientViewComponent } from "./views/add-client-view/add-client-view.
 
 const routes: Routes = [
   {
+    path: "login",
+    component: LoginComponent,
+    canActivate: [PublicGuard],
+    title: "Login - Selita",
+  },
+  {
     path: "",
     component: LayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       {
         path: "",
-        component: LoginComponent,
-        title: "- Selita -",
+        redirectTo: "sales",
+        pathMatch: "full",
       },
       {
         path: "sales",
@@ -44,13 +51,6 @@ const routes: Routes = [
       { path: "add-product", component: AddProductViewComponent },
       { path: "add-client", component: AddClientViewComponent },
     ],
-    canActivate: [AuthGuard],
-  },
-  {
-    path: "login",
-    component: LoginComponent,
-    canActivate: [PublicGuard],
-    title: "Login - Selita",
   },
 ];
 

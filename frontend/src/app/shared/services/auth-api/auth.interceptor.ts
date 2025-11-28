@@ -1,49 +1,83 @@
-// auth.interceptor.ts
 import { Injectable } from "@angular/core";
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
-import { Observable, of } from "rxjs";
-import { catchError, switchMap, tap } from "rxjs/operators";
+import {
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
+  HttpErrorResponse,
+} from "@angular/common/http";
+import { Observable, throwError, BehaviorSubject } from "rxjs";
+import { catchError, filter, take, switchMap } from "rxjs/operators";
 import { AuthApiService } from "./auth-api.service";
+import { environment } from "../../../../environment/environments";
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+  private isRefreshing = false;
+  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(
+    null
+  );
+
   constructor(private authService: AuthApiService) {}
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.authService.getToken();
-
+  intercept(
+    req: HttpRequest<any>,
+    next: HttpHandler
+  ): Observable<HttpEvent<any>> {
     let authReq = req;
-    if (token) {
-      // Clone the request and add the Authorization header with 'Bearer' prefix
+    
+    // We don't need to add the token manually anymore, but we must ensure credentials are sent
+    if (req.url.startsWith(environment.apiUrl)) {
       authReq = req.clone({
-        headers: req.headers.set("Authorization", `Bearer ${token}`),
+        withCredentials: true
       });
     }
 
     return next.handle(authReq).pipe(
       catchError((error) => {
-        // If the error is due to an expired token (401 or 403)s
-        if (error.status === 401 || error.status === 403) {
-          // Attempt to refresh the access token
-          return this.authService.refreshToken().pipe(
-            switchMap((newTokenResponse: any) => {
-              // Clone the original request and set the new access token
-              const newAuthReq = req.clone({
-                headers: req.headers.set("Authorization", `Bearer ${newTokenResponse.access}`),
-              });
-              // Retry the original request with the new access token
-              return next.handle(newAuthReq);
-            }),
-            catchError((err) => {
-              // If refreshing the token fails, you may want to log out the user
-              AuthApiService.logout();
-              return of(err); // Return the original error
-            })
-          );
+        if (
+          error instanceof HttpErrorResponse &&
+          (error.status === 401 || error.status === 403)
+        ) {
+          return this.handle401Error(authReq, next);
         } else {
-          return of(error); // If the error is not a 401 or 403, just return the error
+          return throwError(() => error);
         }
       })
     );
+  }
+
+  private handle401Error(request: HttpRequest<any>, next: HttpHandler) {
+    // If the failed request was a refresh token request, don't try to refresh again
+    if (request.url.includes(environment.refreshToken)) {
+      this.authService.logout();
+      return throwError(() => new Error("Refresh token expired"));
+    }
+
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshTokenSubject.next(null);
+
+      return this.authService.refreshToken().pipe(
+        switchMap(() => {
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(true); // Signal that refresh is done
+          return next.handle(request); // Retry the original request
+        }),
+        catchError((err) => {
+          this.isRefreshing = false;
+          this.authService.logout();
+          return throwError(() => err);
+        })
+      );
+    } else {
+      return this.refreshTokenSubject.pipe(
+        filter((token) => token != null),
+        take(1),
+        switchMap(() => {
+          return next.handle(request);
+        })
+      );
+    }
   }
 }
