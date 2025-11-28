@@ -1,77 +1,159 @@
-<div class="client-details-layout">
-  <!-- Left: Client Info -->
-  <div class="client-details-full">
-    <h2>Faqja e Klientit</h2>
-
-    <div class="info-section">
-      <p><strong>Emer:</strong> {{ client.firstname }}</p>
-      <p><strong>Mbiemer:</strong> {{ client.lastname }}</p>
-      <p><strong>Email:</strong> {{ client.email }}</p>
-      <p><strong>Num. Cel:</strong> {{ client.phone }}</p>
-      <p><strong>Adresa:</strong> {{ client.address }}</p>
-      <p><strong>Qyteti:</strong> {{ client.city }}</p>
+<div class="client-details-container">
+  <!-- Section 1: Client Info -->
+  <div class="client-info-section">
+    <div class="section-header">
+      <h2>Informacione mbi Klientin</h2>
+    </div>
+    
+    <div class="info-grid">
+      <div class="info-row">
+        <span class="info-label">Emer:</span>
+        <span class="info-value">{{ client?.firstname }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Mbiemer:</span>
+        <span class="info-value">{{ client?.lastname }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email:</span>
+        <span class="info-value">{{ client?.email }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Num. Cel:</span>
+        <span class="info-value">{{ client?.phone }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Adresa:</span>
+        <span class="info-value">{{ client?.address }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Qyteti:</span>
+        <span class="info-value">{{ client?.city }}</span>
+      </div>
     </div>
 
     <mat-divider></mat-divider>
 
-    <div class="stats-section">
-      <h3>Statistika</h3>
-      <p><strong>Blerje Totale:</strong> {{ client.totalBought | currency }}</p>
-      <p>
-        <strong>Balance pa paguar:</strong>
-        <span [ngClass]="{ debt: client.unpaidBalance > 0 }"> - {{ client.unpaidBalance | currency }} </span>
-      </p>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Blerje Totale</div>
+        <div class="stat-value">{{ client?.totalBought | currency }}</div>
+      </div>
+      <div class="stat-card debt-card">
+        <div class="stat-label">Balance pa paguar</div>
+        <div class="stat-value" [ngClass]="{ debt: (client?.unpaidBalance || 0) > 0 }">
+          {{ client?.unpaidBalance | currency }}
+        </div>
+      </div>
     </div>
-
-    <mat-divider></mat-divider>
-
-    <!-- <div class="action-section py-3">
-      <button mat-raised-button color="primary" (click)="onAddSale()">Shto Shitje</button>
-    </div> -->
   </div>
 
-  <!-- Right: Product List with Quantity Selector -->
-  <div class="product-list-pane">
-    <h2>Produkte ne Inventar</h2>
+  <!-- Section 2: Create Sale -->
+  <div class="create-sale-section">
+    <div class="section-header">
+      <h2>Krijo Shitje te Re</h2>
+    </div>
 
-    <mat-form-field appearance="outline" class="search-field">
-      <input matInput [(ngModel)]="searchText" placeholder="Kerko emrin e produktit" />
-    </mat-form-field>
+    <!-- Product Selection -->
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="search-filter">
+        <mat-label>Kerko Produktin</mat-label>
+        <input matInput [(ngModel)]="searchText" placeholder="Shkruaj emrin e produktit..." />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
 
-    <div class="product-list-scroll">
-      <mat-card *ngFor="let product of filteredProducts()" class="product-card">
-        <div class="product-info">
-          <div class="product-text">
-            <h4>{{ product.name }}</h4>
-            <p>Sasia Gjendje: {{ product.disponibility }}</p>
-            <p>Çmimi: {{ product.price | currency }}</p>
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Zgjidh Produktin</mat-label>
+        <mat-select [(ngModel)]="selectedProduct" (selectionChange)="onProductSelect()">
+          <mat-option *ngFor="let product of filteredProducts()" [value]="product">
+            {{ product.name }} - Disponibel: {{ product.disponibility }} - {{ product.price | currency }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Selected Product Details -->
+    <div class="selected-product-card" *ngIf="selectedProduct">
+      <div class="product-details">
+        <h3>{{ selectedProduct.name }}</h3>
+        <p class="stock-info">Sasia ne Inventar: {{ selectedProduct.disponibility }}</p>
+        <p class="price-info">Çmimi Bazik: {{ selectedProduct.price | currency }}</p>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Sale Form -->
+      <div class="sale-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Sasia</mat-label>
+            <input 
+              matInput 
+              type="number" 
+              min="1" 
+              [max]="selectedProduct.disponibility"
+              [(ngModel)]="saleQuantity"
+              placeholder="0"
+            />
+            <mat-hint>Max: {{ selectedProduct.disponibility }}</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Çmimi per Copë</mat-label>
+            <input 
+              matInput 
+              type="number" 
+              min="0" 
+              step="0.01"
+              [(ngModel)]="salePrice"
+              placeholder="0.00"
+            />
+            <mat-hint>Modifiko per zbritje/rritje</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <div class="total-display">
+            <span class="total-label">Totali:</span>
+            <span class="total-value">{{ getTotal() | currency }}</span>
           </div>
+        </div>
 
-          <div class="product-action">
-            <mat-form-field appearance="fill" class="qty-field">
-              <mat-label>Sasia</mat-label>
-              <input
-                matInput
-                type="number"
-                min="0"
-                [max]="product.disponibility"
-                [(ngModel)]="product.selectedQuantity"
-                placeholder="0"
-              />
-            </mat-form-field>
-          </div>
+        <div class="form-row">
+          <mat-radio-group [(ngModel)]="isPaid" class="payment-radio-group">
+            <mat-label class="payment-label">Status Pagese:</mat-label>
+            <mat-radio-button [value]="true" color="primary">Paguar</mat-radio-button>
+            <mat-radio-button [value]="false" color="warn">Pa Paguar (Borxh)</mat-radio-button>
+          </mat-radio-group>
+        </div>
 
-          <button
-            mat-icon-button
-            color="primary"
-            [disabled]="!product.disponibility"
-            (click)="confirmPaymentStatus(product)"
-            matTooltip="Shto në shitje"
+        <div class="form-actions">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="createSale()"
+            [disabled]="!canCreateSale()"
           >
             <mat-icon>add_shopping_cart</mat-icon>
+            Krijo Shitjen
+          </button>
+          <button 
+            mat-stroked-button 
+            (click)="clearSelection()"
+          >
+            <mat-icon>clear</mat-icon>
+            Pastro
           </button>
         </div>
-      </mat-card>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!selectedProduct">
+      <mat-icon>shopping_cart</mat-icon>
+      <p>Zgjidh nje produkt per te filluar shitjen</p>
     </div>
   </div>
 </div>

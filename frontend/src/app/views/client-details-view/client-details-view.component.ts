@@ -1,13 +1,12 @@
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { MatDialog } from "@angular/material/dialog";
+import { MatSnackBar } from "@angular/material/snack-bar";
 
 import { Client } from "src/app/models/client.model";
 import { Product } from "src/app/models/product.model";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
 import { ProductService } from "src/app/shared/services/product-api/product.service";
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
-import { ConfirmDialogComponent } from "src/app/dialogs/confirm-dialog/confirm-dialog.component";
 
 @Component({
   selector: "app-client-details-view",
@@ -15,20 +14,22 @@ import { ConfirmDialogComponent } from "src/app/dialogs/confirm-dialog/confirm-d
   styleUrls: ["./client-details-view.component.scss"],
 })
 export class ClientDetailsViewComponent implements OnInit {
-  client!: Client;
+  client: Client | undefined;
   clientId!: number;
-  totalBought = 0;
-  unpaidBalance = 0;
   searchText = "";
   availableProducts: Product[] = [];
-  currentUserId: number = 1; // ⚡ Set this properly, or get it from auth service
+  selectedProduct: Product | null = null;
+  saleQuantity: number = 1;
+  salePrice: number = 0;
+  isPaid: boolean = true;
+  currentUserId: number = 1; // ⚡ TODO: Get from auth service
 
   constructor(
     private route: ActivatedRoute,
     private clientService: ClientService,
     private productService: ProductService,
     private saleService: SalesApiService,
-    private dialog: MatDialog
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -43,10 +44,10 @@ export class ClientDetailsViewComponent implements OnInit {
     this.clientService.getClientById(clientId).subscribe({
       next: (data: Client) => {
         this.client = data;
-        // Optionally calculate totals here
       },
       error: (err) => {
         console.error("Failed to load client:", err);
+        this.snackBar.open("Gabim ne ngarkimin e klientit", "Mbyll", { duration: 3000 });
       },
     });
   }
@@ -58,54 +59,75 @@ export class ClientDetailsViewComponent implements OnInit {
       },
       error: (err) => {
         console.error("Failed to fetch products:", err);
+        this.snackBar.open("Gabim ne ngarkimin e produkteve", "Mbyll", { duration: 3000 });
       },
     });
   }
 
   filteredProducts(): Product[] {
-    return this.availableProducts.filter((p) => p.name.toLowerCase().includes(this.searchText.toLowerCase()));
+    if (!this.searchText) {
+      return this.availableProducts;
+    }
+    return this.availableProducts.filter((p) =>
+      p.name.toLowerCase().includes(this.searchText.toLowerCase())
+    );
   }
 
-  confirmPaymentStatus(product: Product): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: "300px",
-      data: {
-        title: "Pagesa",
-        message: "Ka paguar klienti?",
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.addProductToSale(product, true);
-      } else {
-        this.addProductToSale(product, false);
-      }
-    });
+  onProductSelect(): void {
+    if (this.selectedProduct) {
+      this.salePrice = this.selectedProduct.price;
+      this.saleQuantity = 1;
+    }
   }
 
-  addProductToSale(product: Product, isPaid: boolean): void {
-    console.log("Adding product to sale:", product, this.client, isPaid);
+  getTotal(): number {
+    return this.salePrice * this.saleQuantity;
+  }
+
+  canCreateSale(): boolean {
+    return (
+      this.selectedProduct != null &&
+      this.saleQuantity > 0 &&
+      this.saleQuantity <= this.selectedProduct.disponibility &&
+      this.salePrice > 0
+    );
+  }
+
+  createSale(): void {
+    if (!this.canCreateSale() || !this.selectedProduct) {
+      return;
+    }
 
     const newSale: any = {
-      prod: product.id,
-      prod_price: product.price,
-      quantity: product.selectedQuantity, // Default quantity
-      is_paid: isPaid,
-      user: this.currentUserId, // Adjust if you get user from AuthService
+      prod: this.selectedProduct.id,
+      prod_price: this.salePrice,
+      quantity: this.saleQuantity,
+      is_paid: this.isPaid,
+      user: this.currentUserId,
       client: this.clientId,
     };
-
-    console.log("Temporary Sale:", newSale);
 
     this.saleService.createSale(newSale).subscribe({
       next: (response) => {
         console.log("Sale created successfully:", response);
-        this.fetchProducts(); // Refresh product list after sale
+        this.snackBar.open("Shitja u krijua me sukses!", "Mbyll", { duration: 3000 });
+        this.clearSelection();
+        this.fetchProducts(); // Refresh product list
+        this.loadClient(this.clientId); // Refresh client stats
       },
       error: (error) => {
         console.error("Error creating sale:", error);
+        const errorMsg = error?.error?.error || "Gabim ne krijimin e shitjes";
+        this.snackBar.open(errorMsg, "Mbyll", { duration: 5000 });
       },
     });
+  }
+
+  clearSelection(): void {
+    this.selectedProduct = null;
+    this.saleQuantity = 1;
+    this.salePrice = 0;
+    this.isPaid = true;
+    this.searchText = "";
   }
 }
