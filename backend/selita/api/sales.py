@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Sales, Product, Users, Clients, Inventory
+from ..models import Sales, Product, Users, Client, Inventory
 from ..serializers import (
     SalesSerializer,
     ProductSerializer,
@@ -98,7 +98,7 @@ def getProductsFromSales(request):
             except Product.DoesNotExist:
                 sale_data["product"] = {"error": "Product not found"}
             try:
-                client = Clients.objects.get(id=client_id)
+                client = Client.objects.get(id=client_id)
                 client_serializer = ClientSerializer(client)
                 sale_data["client"] = {
                     "name": client_serializer.data["firstname"]
