@@ -29,6 +29,7 @@ import { MatSortModule } from "@angular/material/sort";
 import { AddProductViewComponent } from "./views/add-product-view/add-product-view.component";
 import { MatSelectModule } from "@angular/material/select";
 import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatRadioModule } from "@angular/material/radio";
 import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
@@ -84,6 +85,7 @@ import { EditPriceDialogComponent } from "./dialogs/edit-price-dialog/edit-price
     MatSortModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatRadioModule,
     SalesTableComponent,
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
