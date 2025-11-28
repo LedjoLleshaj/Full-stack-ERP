@@ -1,34 +1,32 @@
 import { Injectable } from "@angular/core";
+import { BehaviorSubject, Observable } from "rxjs";
 import { LOCAL_STORAGE_KEYS } from "../../constants";
 
 @Injectable({
   providedIn: "root",
 })
 export class DarkModeService {
-  public darkMode: boolean = false;
+  private darkModeSubject: BehaviorSubject<boolean>;
+  public darkMode$: Observable<boolean>;
 
-  initDarkModeSettings(): void {
-    this.loadDarkModeSetting();
-    this.applyDarkMode();
+  constructor() {
+    const isDark = localStorage.getItem(LOCAL_STORAGE_KEYS.DARK_MODE) === "true";
+    this.darkModeSubject = new BehaviorSubject<boolean>(isDark);
+    this.darkMode$ = this.darkModeSubject.asObservable();
   }
 
   toggleDarkMode(): void {
-    this.darkMode = !this.darkMode;
-    localStorage.setItem(
-      LOCAL_STORAGE_KEYS.DARK_MODE,
-      this.darkMode.toString()
-    );
-    this.applyDarkMode();
+    const newValue = !this.darkModeSubject.value;
+    this.darkModeSubject.next(newValue);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.DARK_MODE, newValue.toString());
   }
 
-  private loadDarkModeSetting(): void {
-    this.darkMode =
-      localStorage.getItem(LOCAL_STORAGE_KEYS.DARK_MODE) === "true";
+  isDarkMode(): boolean {
+    return this.darkModeSubject.value;
   }
 
-  private applyDarkMode(): void {
-    this.darkMode
-      ? document.body.classList.add("se-dark-theme")
-      : document.body.classList.remove("se-dark-theme");
+  setDarkMode(enabled: boolean): void {
+    this.darkModeSubject.next(enabled);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.DARK_MODE, enabled.toString());
   }
 }

@@ -116,10 +116,10 @@
         <button
           (click)="this.darkModeService.toggleDarkMode()"
           mat-stroked-button
-          [attr.aria-label]="this.darkModeService.darkMode ? 'Active dark mode' : 'Active light mode'"
-          [title]="this.darkModeService.darkMode ? 'Active dark mode' : 'Active light mode'"
+          [attr.aria-label]="(this.darkModeService.darkMode$ | async) ? 'Switch to light mode' : 'Switch to dark mode'"
+          [title]="(this.darkModeService.darkMode$ | async) ? 'Switch to light mode' : 'Switch to dark mode'"
         >
-          <mat-icon style="margin: 0">{{ this.darkModeService.darkMode ? "light_mode" : "dark_mode" }}</mat-icon>
+          <mat-icon style="margin: 0">{{ (this.darkModeService.darkMode$ | async) ? "light_mode" : "dark_mode" }}</mat-icon>
         </button>
         <!-- Shopping Menu button -->
         <!-- <button mat-stroked-button (click)="toggleRightNav()" title="Shopping Menu">

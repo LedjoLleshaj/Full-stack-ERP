@@ -61,9 +61,32 @@ $se-dark-theme: mat.define-dark-theme(
 
 @include mat.all-component-themes($se-default-theme);
 
-.se-dark-theme {
+// Global CSS Variables for consistent theming
+:root {
+  // Light mode colors
+  --surface-bg: #ffffff;
+  --card-bg: #f8f9fa;
+  --stat-card-bg: #f0f4f8;
+  --total-bg: #e3f2fd;
+  --border-color: #e0e0e0;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --primary-color: #1976d2;
+}
+
+.dark-mode {
   @include mat.typography-hierarchy($se-dark-theme);
   @include mat.all-component-colors($se-dark-theme);
+
+  // Dark mode colors
+  --surface-bg: #1e1e1e;
+  --card-bg: #2a2a2a;
+  --stat-card-bg: #252525;
+  --total-bg: #1a3a52;
+  --border-color: #3a3a3a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --primary-color: #42a5f5;
 
   .se-title {
     color: #00bcd4 !important;

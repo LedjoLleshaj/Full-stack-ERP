@@ -37,7 +37,6 @@ export class LayoutComponent {
     this.username = localStorage.getItem(LOCAL_STORAGE_KEYS.USERNAME) || "";
     this.firstName = localStorage.getItem(LOCAL_STORAGE_KEYS.FIRST_NAME) || "";
     this.lastName = localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_NAME) || "";
-    this.darkModeService.initDarkModeSettings();
     this.loadCartItems();
   }
 
@@ -47,7 +46,6 @@ export class LayoutComponent {
 
   logout() {
     this.authApiService.logout();
-    document.body.classList.remove("se-dark-theme");
     this.router.navigate(["/login"]);
   }
 
