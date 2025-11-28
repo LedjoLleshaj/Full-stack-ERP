@@ -25,6 +25,7 @@ export class LayoutComponent {
     public router: Router,
     changeDetectorRef: ChangeDetectorRef,
     media: MediaMatcher,
+    private authApiService: AuthApiService,
     public darkModeService: DarkModeService
   ) {
     this.mobileQuery = media.matchMedia("(max-width: 600px)");
@@ -45,7 +46,7 @@ export class LayoutComponent {
   }
 
   logout() {
-    AuthApiService.logout();
+    this.authApiService.logout();
     document.body.classList.remove("se-dark-theme");
     this.router.navigate(["/login"]);
   }
