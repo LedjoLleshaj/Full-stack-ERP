@@ -13,7 +13,7 @@
         <mat-error *ngIf="productForm.controls['name'].hasError('required')"> Name is required </mat-error>
       </mat-form-field>
 
-      <!-- Product Category -->
+      <!-- Product Category
       <mat-form-field class="full-width">
         <mat-label>Kategoria</mat-label>
         <mat-select formControlName="category" required>
@@ -22,7 +22,7 @@
           </mat-option>
         </mat-select>
         <mat-error *ngIf="productForm.controls['category'].hasError('required')"> Category is required </mat-error>
-      </mat-form-field>
+      </mat-form-field> -->
 
       <!-- Product Price -->
       <mat-form-field class="full-width">
@@ -32,12 +32,6 @@
         <mat-error *ngIf="productForm.controls['price'].hasError('min')">
           Price must be greater than or equal to 0
         </mat-error>
-      </mat-form-field>
-
-      <!-- Product Description -->
-      <mat-form-field class="full-width">
-        <mat-label>Pershkrimi</mat-label>
-        <textarea matInput></textarea>
       </mat-form-field>
 
       <!-- Product Quantity -->
