@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import permissions
-from ..models import Clients, Sales, Product
+from ..models import Client, Sales, Product
 from rest_framework.decorators import api_view, permission_classes
 from ..serializers import ClientSerializer, ProductSerializer, SalesSerializer
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,7 +14,7 @@ from rest_framework import status
 # @permission_classes([permissions.IsAuthenticated])
 def getClients(request):
     try:
-        clients = Clients.objects.all()
+        clients = Client.objects.all()
         # for each client get the balance by summing the amount they have to pay in unpaid sales
         serializer = ClientSerializer(clients, many=True)
         for client in serializer.data:
@@ -35,7 +35,7 @@ def getClients(request):
 # @permission_classes([permissions.IsAuthenticated])
 def getClient(request, pk):
     try:
-        client = Clients.objects.get(id=pk)
+        client = Client.objects.get(id=pk)
         serializer = ClientSerializer(client, many=False)
         client = serializer.data
         sales = Sales.objects.filter(client=client["id"])
@@ -58,7 +58,7 @@ def getClient(request, pk):
 def addClient(request):
     try:
         data = request.data
-        client = Clients.objects.create(
+        client = Client.objects.create(
             firstname=data["firstname"],
             lastname=data["lastname"],
             email=data["email"] if "email" in data else None,
@@ -80,7 +80,7 @@ def addClient(request):
 # @permission_classes([permissions.IsAuthenticated])
 def updateClient(request, pk):
     try:
-        client = Clients.objects.get(id=pk)
+        client = Client.objects.get(id=pk)
         data = request.data
         client.firstname = data["firstname"]
         client.lastname = data["lastname"]
@@ -104,8 +104,8 @@ def updateClient(request, pk):
 # @permission_classes([permissions.IsAuthenticated])
 def deleteClient(request, pk):
     try:
-        Client = Clients.objects.get(id=pk)
-        Client.delete()
+        client = Client.objects.get(id=pk)
+        client.delete()
         return Response("Client deleted successfully")
     except ObjectDoesNotExist:
         return Response({"error": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -120,7 +120,7 @@ def deleteClient(request, pk):
 # @permission_classes([permissions.IsAuthenticated])
 def getClientSales(request, pk):
     try:
-        client = Clients.objects.get(id=pk)
+        client = Client.objects.get(id=pk)
         sales = Sales.objects.filter(client=client)
         serializer = SalesSerializer(sales, many=True)
         # For each sale, retrieve and add the product data

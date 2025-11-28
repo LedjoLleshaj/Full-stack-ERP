@@ -75,11 +75,10 @@ def updateInventory(request, pk):
 def addProductToInventory(request):
     try:
         name = request.data.get("name")
-        category = request.data.get("category")
-        description = request.data.get("description")
+        # category = request.data.get("category")
         quantity = request.data.get("quantity")
         price = request.data.get("price")
-        print("addProductToInventory", name, category, description, quantity, price)
+        print("addProductToInventory", name, quantity, price)
         if quantity <= 0:
             return Response(
                 {"error": "Quantity must be greater than zero"},
@@ -96,9 +95,7 @@ def addProductToInventory(request):
             print("Product already exists", product)
         except ObjectDoesNotExist:
             # Create a new product if it doesn't exist
-            product = Product.objects.create(
-                name=name, category=category, description=description, price=price
-            )
+            product = Product.objects.create(name=name, price=price)
         # Check if the inventory item already exists
         try:
             inventory = Inventory.objects.get(prod=product)
