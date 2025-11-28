@@ -26,7 +26,6 @@ export class LoginComponent implements OnInit {
       username: new FormControl("", Validators.required),
       password: new FormControl("", Validators.minLength(4)),
     });
-    this.darkModeService.initDarkModeSettings();
   }
 
   get username() {
