@@ -15,7 +15,18 @@ CREATE TABLE Users   (
     role VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE Clients (
+-- Suppliers/Producers table (must be created before Transaction)
+CREATE TABLE Supplier (
+    id SERIAL PRIMARY KEY,
+    firstname VARCHAR(255) NOT NULL,
+    lastname VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    address VARCHAR(255) NOT NULL
+);
+
+-- Clients table (must be created before Transaction)
+CREATE TABLE Client (
     id SERIAL PRIMARY KEY,
     firstname VARCHAR(255) NOT NULL,
     lastname VARCHAR(255) NOT NULL,
@@ -23,7 +34,68 @@ CREATE TABLE Clients (
     phone VARCHAR(255) UNIQUE NOT NULL,
     address VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL
-    );
+);
+
+-- Account types (where money is stored)
+CREATE TABLE Account (
+    id SERIAL PRIMARY KEY,
+    account_name VARCHAR(100) NOT NULL,
+    account_type VARCHAR(20) NOT NULL CHECK (account_type IN ('CASH', 'BANK')),
+    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'ALL')),
+    current_balance DECIMAL(10, 2) DEFAULT 0.00,
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
+    UNIQUE(account_type, currency) -- One cash account per currency, one bank per currency
+);
+
+-- Main transaction table (purchases from suppliers or sales to clients)
+CREATE TABLE Transaction (
+    id SERIAL PRIMARY KEY,
+    transaction_type VARCHAR(20) NOT NULL CHECK (transaction_type IN ('PURCHASE', 'SALE')),
+    -- PURCHASE = buying from supplier (money OUT)
+    -- SALE = selling to client (money IN)
+    
+    supplier_id INTEGER REFERENCES Supplier(id) ON DELETE SET NULL,
+    client_id INTEGER REFERENCES Client(id) ON DELETE SET NULL,
+    
+    total_amount DECIMAL(10, 2) NOT NULL,
+    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'ALL')), -- ALL is Albanian Lek
+    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PARTIAL', 'COMPLETED', 'CANCELLED')),
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_date TIMESTAMP,
+    invoice_number VARCHAR(100),
+    notes TEXT,
+    
+    -- Ensure only one of supplier_id or client_id is set
+    CONSTRAINT check_transaction_party CHECK (
+        (transaction_type = 'PURCHASE' AND supplier_id IS NOT NULL AND client_id IS NULL) OR
+        (transaction_type = 'SALE' AND client_id IS NOT NULL AND supplier_id IS NULL)
+    )
+);
+
+-- Individual payments that can be linked to one transaction
+CREATE TABLE Payment (
+    id SERIAL PRIMARY KEY,
+    transaction_id INTEGER NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
+    account_id INTEGER NOT NULL REFERENCES Account(id), -- Which account was used
+    amount DECIMAL(10, 2) NOT NULL,
+    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'ALL')),
+    payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CASH', 'CARD')),
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT
+);
+
+-- Account transactions log (all money movements) - must be after Payment
+CREATE TABLE AccountTransaction (
+    id SERIAL PRIMARY KEY,
+    account_id INTEGER NOT NULL REFERENCES Account(id) ON DELETE CASCADE,
+    payment_id INTEGER REFERENCES Payment(id) ON DELETE SET NULL,
+    transaction_type VARCHAR(20) NOT NULL CHECK (transaction_type IN ('DEPOSIT', 'WITHDRAWAL', 'TRANSFER')),
+    amount DECIMAL(10, 2) NOT NULL,
+    balance_after DECIMAL(10, 2) NOT NULL,
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT
+);
 
 CREATE TABLE Product (
     id SERIAL PRIMARY KEY,
@@ -64,7 +136,7 @@ CREATE TABLE Sales (
     sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (prod_id) REFERENCES Product(id),
     FOREIGN KEY (user_id) REFERENCES Users(id),
-    FOREIGN KEY (client_id) REFERENCES Clients(id)
+    FOREIGN KEY (client_id) REFERENCES Client(id)
 
 );
 
@@ -72,14 +144,18 @@ CREATE TABLE Restock (
     id SERIAL PRIMARY KEY,
     prod_id INT NOT NULL,
     quantity INT NOT NULL,
+    restock_price DECIMAL(10, 2) NOT NULL,
+    payment_id INT NOT NULL,
     restock_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (prod_id) REFERENCES Product(id)
+    FOREIGN KEY (prod_id) REFERENCES Product(id),
+    FOREIGN KEY (payment_id) REFERENCES Payment(id)
+
 );
 
 
 -- Inserting data
 INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('adminselita', 'pbkdf2_sha256$870000$tympSs6asDt7DTV4Wyq2kt$/8MfeLLr5m6C+keQIonZhKzJmtsV2doXFl641T9pS1U=', 'admin@selita_fish.com', 'Admin', 'Selita', 'admin');
-INSERT INTO Clients (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '0123456789', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
+INSERT INTO Client (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '0123456789', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
 INSERT INTO Product_Categories (category_name) VALUES ('Peshk'), ('Fruta Deti'), ('Gafforre'), ('Kallamar'), ('Midhje'),('Karkaleca'),('Peshk i eger');
 INSERT INTO Product_Names (product_name, category_id) VALUES 
 ('Salmon',1),('Karkaleca',5),('Koce',1),('Midhje',
@@ -101,6 +177,76 @@ INSERT INTO Inventory (prod_id, quantity) VALUES
 INSERT INTO Sales (prod_id,prod_price,is_paid, user_id,client_id, quantity) VALUES 
 (1, 10.00, TRUE, 1, 1, 2), (2, 15.00, FALSE, 1, 2, 3), (3, 20.00, TRUE, 1, 1, 4), (4, 5.00, TRUE, 1, 2, 5), (5, 30.00, TRUE, 1, 1, 6), (6, 12.00, TRUE, 1, 2, 7), (7, 8.00, FALSE, 1, 1, 8), (8, 25.00, FALSE, 1, 2, 9), (9, 18.00, FALSE, 1, 1 ,10), (10 ,22.00 ,FALSE ,1 ,2 ,11), (11 ,35.00 ,TRUE ,1 ,1 ,12);
 
---INSERT INTO Restock (prod_id, quantity) VALUES 
---(1, 50), (2, 30), (3, 20), (4, 10), (5, 5), (6, 15), (7, 25), (8, 35), (9, 45), (10, 55), (11, 65);
+-- Insert Suppliers
+INSERT INTO Supplier (firstname, lastname, phone, email, address) VALUES 
+('Arben', 'Hoxha', '+355 69 123 4567', 'arben.hoxha@supplier.al', 'Rruga e Kavajes, Durres'),
+('Endrit', 'Kola', '+355 69 234 5678', 'endrit.kola@seafood.al', 'Rruga Pavarsia, Vlore'),
+('Sokol', 'Muca', '+355 69 345 6789', 'sokol.muca@fishmarket.al', 'Rruga e Portit, Sarande');
+
+-- Insert Accounts (Cash and Bank accounts in different currencies)
+INSERT INTO Account (account_name, account_type, currency, current_balance, notes) VALUES 
+('Cash EUR', 'CASH', 'EUR', 5000.00, 'Main cash account in Euros'),
+('Cash USD', 'CASH', 'USD', 3000.00, 'Cash account in US Dollars'),
+('Cash ALL', 'CASH', 'ALL', 150000.00, 'Cash account in Albanian Lek'),
+('Bank EUR', 'BANK', 'EUR', 25000.00, 'Bank account in Euros'),
+('Bank USD', 'BANK', 'USD', 15000.00, 'Bank account in US Dollars'),
+('Bank ALL', 'BANK', 'ALL', 500000.00, 'Bank account in Albanian Lek');
+
+-- Insert Transactions (both PURCHASE from suppliers and SALE to clients)
+INSERT INTO Transaction (transaction_type, supplier_id, client_id, total_amount, currency, status, invoice_number, notes, completed_date) VALUES 
+('PURCHASE', 1, NULL, 1500.00, 'EUR', 'COMPLETED', 'PUR-2025-001', 'Purchase of fresh salmon and koce', '2025-11-20 10:30:00'),
+('PURCHASE', 2, NULL, 800.00, 'EUR', 'PARTIAL', 'PUR-2025-002', 'Purchase of seafood assortment', NULL),
+('PURCHASE', 3, NULL, 2000.00, 'ALL', 'COMPLETED', 'PUR-2025-003', 'Bulk purchase wild fish', '2025-11-22 14:15:00'),
+('SALE', NULL, 1, 500.00, 'EUR', 'COMPLETED', 'SAL-2025-001', 'Sale to Ledjo Lleshaj', '2025-11-23 09:00:00'),
+('SALE', NULL, 2, 750.00, 'EUR', 'PARTIAL', 'SAL-2025-002', 'Sale to Kristjan Gjinaj', NULL),
+('SALE', NULL, 1, 300.00, 'USD', 'COMPLETED', 'SAL-2025-003', 'Additional sale to Ledjo', '2025-11-25 11:30:00');
+
+-- Insert Payments (linked to transactions)
+INSERT INTO Payment (transaction_id, account_id, amount, currency, payment_method, notes) VALUES 
+-- Payments for transaction 1 (PURCHASE, completed)
+(1, 4, 1500.00, 'EUR', 'CARD', 'Full payment for PUR-2025-001'),
+-- Payments for transaction 2 (PURCHASE, partial)
+(2, 1, 400.00, 'EUR', 'CASH', 'Partial payment for PUR-2025-002'),
+-- Payments for transaction 3 (PURCHASE, completed)
+(3, 6, 2000.00, 'ALL', 'CARD', 'Full payment for PUR-2025-003'),
+-- Payments for transaction 4 (SALE, completed)
+(4, 1, 500.00, 'EUR', 'CASH', 'Full payment from client Ledjo'),
+-- Payments for transaction 5 (SALE, partial)
+(5, 4, 400.00, 'EUR', 'CARD', 'Partial payment from client Kristjan'),
+-- Payments for transaction 6 (SALE, completed)
+(6, 2, 300.00, 'USD', 'CASH', 'Payment from Ledjo in USD');
+
+-- Insert Account Transactions (track all money movements)
+INSERT INTO AccountTransaction (account_id, payment_id, transaction_type, amount, balance_after, notes) VALUES 
+-- Cash EUR account movements
+(1, 4, 'DEPOSIT', 500.00, 5500.00, 'Received payment from sale SAL-2025-001'),
+(1, 2, 'WITHDRAWAL', 400.00, 5100.00, 'Payment to supplier for PUR-2025-002'),
+-- Cash USD account movements
+(2, 6, 'DEPOSIT', 300.00, 3300.00, 'Received payment from sale SAL-2025-003'),
+-- Bank EUR account movements
+(4, 5, 'DEPOSIT', 400.00, 25400.00, 'Received partial payment from client'),
+(4, 1, 'WITHDRAWAL', 1500.00, 23900.00, 'Payment to supplier for PUR-2025-001'),
+-- Bank ALL account movements
+(6, 3, 'WITHDRAWAL', 2000.00, 498000.00, 'Payment to supplier for PUR-2025-003'),
+-- Additional deposits (initial capital)
+(1, NULL, 'DEPOSIT', 5000.00, 5000.00, 'Initial cash deposit EUR'),
+(2, NULL, 'DEPOSIT', 3000.00, 3000.00, 'Initial cash deposit USD'),
+(3, NULL, 'DEPOSIT', 150000.00, 150000.00, 'Initial cash deposit ALL'),
+(4, NULL, 'DEPOSIT', 25000.00, 25000.00, 'Initial bank deposit EUR'),
+(5, NULL, 'DEPOSIT', 15000.00, 15000.00, 'Initial bank deposit USD'),
+(6, NULL, 'DEPOSIT', 500000.00, 500000.00, 'Initial bank deposit ALL');
+
+-- Insert Restock data (linked to Payment records)
+INSERT INTO Restock (prod_id, quantity, restock_price, payment_id) VALUES 
+(1, 50, 450.00, 1),  -- Salmon restock
+(3, 30, 550.00, 1),  -- Koce restock
+(2, 20, 280.00, 2),  -- Karkaleca restock
+(4, 40, 120.00, 2),  -- Midhje restock
+(5, 15, 420.00, 3),  -- Peshk i eger restock
+(6, 60, 660.00, 3),  -- Peshk restock
+(7, 25, 180.00, 3),  -- Fruta Deti restock
+(8, 10, 240.00, 1),  -- Gafforre restock
+(9, 35, 590.00, 2),  -- Kallamar restock
+(10, 20, 400.00, 3), -- Sepie restock
+(11, 8, 240.00, 1);  -- Peshkaqen restock
 
