@@ -1,15 +1,15 @@
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import { LOCAL_STORAGE_KEYS } from "./constants";
+import { AuthApiService } from "./services/auth-api/auth-api.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class PublicGuard {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthApiService) {}
 
   canActivate(): boolean {
-    if (localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN) !== null) {
+    if (this.authService.isAuthenticated()) {
       this.router.navigate(["/"]);
       return false;
     }
