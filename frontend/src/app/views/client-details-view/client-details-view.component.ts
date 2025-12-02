@@ -63,21 +63,42 @@ export class ClientDetailsViewComponent implements OnInit {
       },
     });
   }
+  enforceMax(event: any) {
+    const input = event.target as HTMLInputElement;
+    const max = this.selectedProduct?.disponibility ?? 0;
+
+    if (+input.value > max) {
+      input.value = String(max);
+      this.saleQuantity = max; // keep ngModel in sync
+    }
+
+    // Prevent typing more digits than the max allows
+    if (input.value.length > max.toString().length) {
+      input.value = input.value.slice(0, max.toString().length);
+    }
+  }
 
   filteredProducts(): Product[] {
     if (!this.searchText) {
       return this.availableProducts;
     }
-    return this.availableProducts.filter((p) =>
-      p.name.toLowerCase().includes(this.searchText.toLowerCase())
-    );
+    return this.availableProducts.filter((p) => p.name.toLowerCase().includes(this.searchText.toLowerCase()));
   }
 
-  onProductSelect(): void {
+  onProductSelect(event: any): void {
+    const product = event.option.value;
+    this.selectedProduct = product;
     if (this.selectedProduct) {
       this.salePrice = this.selectedProduct.price;
       this.saleQuantity = 1;
+      // Update searchText to show the selected product name
+      this.searchText = this.selectedProduct.name;
     }
+  }
+
+  displayProduct(product: Product | null): string {
+    // This function is used for displaying in the input field
+    return product ? product.name : "";
   }
 
   getTotal(): number {

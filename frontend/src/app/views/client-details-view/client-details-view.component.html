@@ -4,7 +4,7 @@
     <div class="section-header">
       <h2>Informacione mbi Klientin</h2>
     </div>
-    
+
     <div class="info-grid">
       <div class="info-row">
         <span class="info-label">Emer:</span>
@@ -54,23 +54,28 @@
       <h2>Krijo Shitje te Re</h2>
     </div>
 
-    <!-- Product Selection -->
+    <!-- Product Selection with Autocomplete -->
     <div class="form-row">
-      <mat-form-field appearance="outline" class="search-filter">
-        <mat-label>Kerko Produktin</mat-label>
-        <input matInput [(ngModel)]="searchText" placeholder="Shkruaj emrin e produktit..." />
+      <mat-form-field appearance="outline" class="full-width no-outline-gap">
+        <mat-label>Kerko dhe Zgjidh Produktin .</mat-label>
+        <input
+          type="text"
+          matInput
+          [(ngModel)]="searchText"
+          [matAutocomplete]="auto"
+          placeholder="Shkruaj produktin..."
+        />
         <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Zgjidh Produktin</mat-label>
-        <mat-select [(ngModel)]="selectedProduct" (selectionChange)="onProductSelect()">
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onProductSelect($event)">
           <mat-option *ngFor="let product of filteredProducts()" [value]="product">
-            {{ product.name }} - Disponibel: {{ product.disponibility }} - {{ product.price | currency }}
+            <div class="autocomplete-option">
+              <span class="product-name">{{ product.name }}</span>
+              <span class="product-info">
+                Disponibel: {{ product.disponibility }} | {{ product.price | currency }}
+              </span>
+            </div>
           </mat-option>
-        </mat-select>
+        </mat-autocomplete>
       </mat-form-field>
     </div>
 
@@ -89,27 +94,21 @@
         <div class="form-row">
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Sasia</mat-label>
-            <input 
-              matInput 
-              type="number" 
-              min="1" 
+            <input
+              matInput
+              type="number"
+              min="1"
               [max]="selectedProduct.disponibility"
               [(ngModel)]="saleQuantity"
               placeholder="0"
+              (input)="enforceMax($event)"
             />
             <mat-hint>Max: {{ selectedProduct.disponibility }}</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Çmimi per Copë</mat-label>
-            <input 
-              matInput 
-              type="number" 
-              min="0" 
-              step="0.01"
-              [(ngModel)]="salePrice"
-              placeholder="0.00"
-            />
+            <input matInput type="number" min="0" step="0.01" [(ngModel)]="salePrice" placeholder="0.00" />
             <mat-hint>Modifiko per zbritje/rritje</mat-hint>
           </mat-form-field>
         </div>
@@ -130,19 +129,11 @@
         </div>
 
         <div class="form-actions">
-          <button 
-            mat-raised-button 
-            color="primary" 
-            (click)="createSale()"
-            [disabled]="!canCreateSale()"
-          >
+          <button mat-raised-button color="primary" (click)="createSale()" [disabled]="!canCreateSale()">
             <mat-icon>add_shopping_cart</mat-icon>
             Krijo Shitjen
           </button>
-          <button 
-            mat-stroked-button 
-            (click)="clearSelection()"
-          >
+          <button mat-stroked-button (click)="clearSelection()">
             <mat-icon>clear</mat-icon>
             Pastro
           </button>

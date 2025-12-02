@@ -258,3 +258,51 @@ mat-divider {
   }
 }
 
+/* ========== Autocomplete Styling ========== */
+.autocomplete-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.product-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.product-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Global autocomplete panel styling */
+::ng-deep .mat-autocomplete-panel {
+  max-height: 400px !important;
+}
+
+::ng-deep .mat-option {
+  height: auto !important;
+  min-height: 48px !important;
+  line-height: 1.4 !important;
+  padding: 8px 16px !important;
+}
+
+/* Fix for outline notch cutting through text */
+::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline-thick {
+  color: var(--border-color);
+}
+
+::ng-deep .mat-form-field-appearance-outline.mat-focused .mat-form-field-outline-thick {
+  color: var(--primary-color);
+}
+
+/* Remove the notch gap that causes the blue line */
+::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline-gap {
+  border-top-color: transparent !important;
+}
+
+::ng-deep .no-outline-gap .mat-form-field-outline-gap {
+  border-top-width: 0 !important;
+}
