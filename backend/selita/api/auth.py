@@ -50,6 +50,16 @@ def login(request):
                 status=status.HTTP_200_OK,
             )
             
+            # Clear any existing cookies first to prevent stale cookie issues
+            response.delete_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/')
+            )
+            response.delete_cookie(
+                key=settings.SIMPLE_JWT['REFRESH_COOKIE'],
+                path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/')
+            )
+            
             # Set Access Token Cookie
             response.set_cookie(
                 key=settings.SIMPLE_JWT['AUTH_COOKIE'],
@@ -139,15 +149,31 @@ def refresh_token_view(request):
         return response
         
     except Exception as e:
-        return Response(
+        # Clear cookies on error to prevent stale cookie issues
+        response = Response(
             {"error": "Invalid refresh token", "details": str(e)},
             status=status.HTTP_401_UNAUTHORIZED
         )
+        response.delete_cookie(
+            key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+            path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/')
+        )
+        response.delete_cookie(
+            key=settings.SIMPLE_JWT['REFRESH_COOKIE'],
+            path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/')
+        )
+        return response
 
 
 @api_view(["POST"])
 def logout_view(request):
     response = Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
-    response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
-    response.delete_cookie(settings.SIMPLE_JWT['REFRESH_COOKIE'])
+    response.delete_cookie(
+        key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+        path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/')
+    )
+    response.delete_cookie(
+        key=settings.SIMPLE_JWT['REFRESH_COOKIE'],
+        path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/')
+    )
     return response

@@ -10,6 +10,7 @@ import { Observable, throwError, BehaviorSubject } from "rxjs";
 import { catchError, filter, take, switchMap } from "rxjs/operators";
 import { AuthApiService } from "./auth-api.service";
 import { environment } from "../../../../environment/environments";
+import { CookieService } from "../cookie.service";
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -50,6 +51,8 @@ export class AuthInterceptor implements HttpInterceptor {
   private handle401Error(request: HttpRequest<any>, next: HttpHandler) {
     // If the failed request was a refresh token request, don't try to refresh again
     if (request.url.includes(environment.refreshToken)) {
+      // Clear stale cookies when refresh fails
+      CookieService.clearAuthCookies();
       this.authService.logout();
       return throwError(() => new Error("Refresh token expired"));
     }
@@ -62,10 +65,14 @@ export class AuthInterceptor implements HttpInterceptor {
         switchMap(() => {
           this.isRefreshing = false;
           this.refreshTokenSubject.next(true); // Signal that refresh is done
-          return next.handle(request); // Retry the original request
+          // Clone the request with credentials to ensure cookies are included
+          const retryReq = request.clone({ withCredentials: true });
+          return next.handle(retryReq); // Retry the original request
         }),
         catchError((err) => {
           this.isRefreshing = false;
+          // Clear stale cookies when refresh fails
+          CookieService.clearAuthCookies();
           this.authService.logout();
           return throwError(() => err);
         })
@@ -75,7 +82,9 @@ export class AuthInterceptor implements HttpInterceptor {
         filter((token) => token != null),
         take(1),
         switchMap(() => {
-          return next.handle(request);
+          // Clone the request with credentials to ensure cookies are included
+          const retryReq = request.clone({ withCredentials: true });
+          return next.handle(retryReq);
         })
       );
     }
