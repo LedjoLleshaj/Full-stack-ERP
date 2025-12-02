@@ -5,6 +5,7 @@ import { LOCAL_STORAGE_KEYS } from "../../shared/constants";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { DarkModeService } from "../../shared/services/dark-mode/dark-mode.service";
 import { AuthApiService } from "../../shared/services/auth-api/auth-api.service";
+import { CookieService } from "../../shared/services/cookie.service";
 
 @Component({
   selector: "app-login",
@@ -22,6 +23,9 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Clear any stale cookies from previous sessions
+    CookieService.clearAuthCookies();
+    
     this.loginForm = new FormGroup({
       username: new FormControl("", Validators.required),
       password: new FormControl("", Validators.minLength(4)),
@@ -39,11 +43,8 @@ export class LoginComponent implements OnInit {
   confirm() {
     this.authService.login(this.username?.value, this.password?.value).subscribe({
       next: (response) => {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN, response.access_token);
-        localStorage.setItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN, response.refresh_token);
-        localStorage.setItem(LOCAL_STORAGE_KEYS.USERNAME, response.username);
-        localStorage.setItem(LOCAL_STORAGE_KEYS.FIRST_NAME, response.first_name);
-        localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_NAME, response.last_name);
+        // Tokens are now stored as HttpOnly cookies by the backend
+        // User info is stored in localStorage by the auth service
         this.router.navigate(["/products"]);
       },
       error: (error) => {
