@@ -30,6 +30,7 @@ import { AddProductViewComponent } from "./views/add-product-view/add-product-vi
 import { MatSelectModule } from "@angular/material/select";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatRadioModule } from "@angular/material/radio";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
@@ -86,6 +87,7 @@ import { EditPriceDialogComponent } from "./dialogs/edit-price-dialog/edit-price
     MatSelectModule,
     MatFormFieldModule,
     MatRadioModule,
+    MatAutocompleteModule,
     SalesTableComponent,
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
