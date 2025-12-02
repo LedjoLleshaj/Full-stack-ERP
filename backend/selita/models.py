@@ -30,6 +30,14 @@ class Users(models.Model):
 
     def __str__(self):
         return self.username
+    
+    @property
+    def is_authenticated(self):
+        """
+        Always return True for authenticated users from the JWT token.
+        This is required for Django REST Framework's IsAuthenticated permission class.
+        """
+        return True
 
 
 class Supplier(models.Model):
