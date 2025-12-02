@@ -23,17 +23,25 @@ export class ChipsComponent implements OnInit {
   }
 
   onChipSelectionChange(event: any): void {
-    const cat = parseInt(event.source.value);
+    const categoryId = parseInt(event.source.value);
+    
+    // Find the category object by ID (not by array index!)
+    const category = this.categories.find(cat => cat.id === categoryId);
+    
+    if (!category) {
+      console.error('Category not found for ID:', categoryId);
+      return;
+    }
 
     if (event.source.selected) {
-      if (!this.selected.includes(this.categories[cat - 1].category_name)) {
-        this.selected.push(this.categories[cat - 1].category_name);
+      if (!this.selected.includes(category.category_name)) {
+        this.selected.push(category.category_name);
       }
     } else {
-      this.selected = this.selected.filter((category) => category !== this.categories[cat - 1].category_name);
+      this.selected = this.selected.filter((catName) => catName !== category.category_name);
     }
 
     this.selectedCategories.emit(this.selected);
-    console.log(this.selected);
+    console.log('Selected categories:', this.selected);
   }
 }
