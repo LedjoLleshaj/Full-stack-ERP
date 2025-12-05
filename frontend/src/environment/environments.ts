@@ -19,4 +19,5 @@ export const environment = {
   getClientById: "/client/",
   addClient: "/add-client",
   getLastSoldPrice: "/last-sold-price",
+  salesReport: "/report/sales/",
 };
