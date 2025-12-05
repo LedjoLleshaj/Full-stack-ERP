@@ -43,6 +43,11 @@ import { AddClientViewComponent } from "./views/add-client-view/add-client-view.
 import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
 import { EditPriceDialogComponent } from "./dialogs/edit-price-dialog/edit-price-dialog.component";
 import { ReportsViewComponent } from "./views/reports-view/reports-view.component";
+import { RevenueViewComponent } from "./views/revenue-view/revenue-view.component";
+import { PaidVsUnpaidViewComponent } from "./views/paid-vs-unpaid-view/paid-vs-unpaid-view.component";
+import { TopProductsViewComponent } from "./views/top-products-view/top-products-view.component";
+import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
+import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
 
 @NgModule({
   declarations: [
@@ -61,6 +66,11 @@ import { ReportsViewComponent } from "./views/reports-view/reports-view.componen
     AddClientViewComponent,
     SalesViewComponent,
     ReportsViewComponent,
+    RevenueViewComponent,
+    PaidVsUnpaidViewComponent,
+    TopProductsViewComponent,
+    ProfitByCategoryViewComponent,
+    AlertsViewComponent,
     ConfirmDialogComponent,
     EditPriceDialogComponent,
   ],
