@@ -11,7 +11,7 @@ from rest_framework import status
 
 
 @api_view(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def getAccounts(request):
     try:
         accounts = Account.objects.all()
@@ -25,22 +25,26 @@ def getAccounts(request):
 
 
 @api_view(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def getAccount(request, pk):
     try:
         account = Account.objects.get(id=pk)
         serializer = AccountSerializer(account, many=False)
-        
+
         # Get recent transactions for this account
-        transactions = AccountTransaction.objects.filter(account=account).order_by('-transaction_date')[:10]
+        transactions = AccountTransaction.objects.filter(account=account).order_by(
+            "-transaction_date"
+        )[:10]
         trans_serializer = AccountTransactionSerializer(transactions, many=True)
-        
+
         response_data = serializer.data
-        response_data['recent_transactions'] = trans_serializer.data
-        
+        response_data["recent_transactions"] = trans_serializer.data
+
         return Response(response_data)
     except ObjectDoesNotExist:
-        return Response({"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
@@ -49,7 +53,7 @@ def getAccount(request, pk):
 
 
 @api_view(["POST"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def addAccount(request):
     try:
         serializer = AccountSerializer(data=request.data)
@@ -65,7 +69,7 @@ def addAccount(request):
 
 
 @api_view(["PUT"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def updateAccount(request, pk):
     try:
         account = Account.objects.get(id=pk)
@@ -75,7 +79,9 @@ def updateAccount(request, pk):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist:
-        return Response({"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
@@ -84,14 +90,16 @@ def updateAccount(request, pk):
 
 
 @api_view(["DELETE"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def deleteAccount(request, pk):
     try:
         account = Account.objects.get(id=pk)
         account.delete()
         return Response("Account deleted successfully")
     except ObjectDoesNotExist:
-        return Response({"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
