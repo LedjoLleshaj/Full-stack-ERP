@@ -23,6 +23,7 @@ export class ClientDetailsViewComponent implements OnInit {
   salePrice: number = 0;
   isPaid: boolean = true;
   currentUserId: number = 1; // ⚡ TODO: Get from auth service
+  lastSoldPrice: number | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -93,6 +94,19 @@ export class ClientDetailsViewComponent implements OnInit {
       this.saleQuantity = 1;
       // Update searchText to show the selected product name
       this.searchText = this.selectedProduct.name;
+
+      // Fetch last sold price
+      if (this.selectedProduct.id) {
+        this.saleService.getLastSoldPrice(this.clientId, this.selectedProduct.id).subscribe({
+          next: (response) => {
+            this.lastSoldPrice = response.price;
+          },
+          error: (err) => {
+            console.error("Failed to fetch last sold price:", err);
+            this.lastSoldPrice = null;
+          },
+        });
+      }
     }
   }
 
@@ -150,5 +164,6 @@ export class ClientDetailsViewComponent implements OnInit {
     this.salePrice = 0;
     this.isPaid = true;
     this.searchText = "";
+    this.lastSoldPrice = null;
   }
 }

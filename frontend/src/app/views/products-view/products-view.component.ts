@@ -40,7 +40,7 @@ export class ProductsViewComponent implements OnInit {
   }
 
   filterByCategories(category: string[]) {
-    // filter the data source by categories id in the inoput array
+    // filter the data source by categories id in the input array
 
     if (this.categories.length === 0) {
       this.productService.getProducts().subscribe((products) => {

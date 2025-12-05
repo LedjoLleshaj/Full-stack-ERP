@@ -18,4 +18,5 @@ export const environment = {
   checkdisponibility: "/checkdisponibility/",
   getClientById: "/client/",
   addClient: "/add-client",
+  getLastSoldPrice: "/last-sold-price",
 };
