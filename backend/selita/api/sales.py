@@ -80,7 +80,7 @@ def getSale(request, pk):
 
 
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getProductsFromSales(request):
     try:
         sales = Sales.objects.all()
@@ -179,7 +179,7 @@ def paySale(request, pk):
 
 
 @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def createSale(request):
     quantity = request.data.get("quantity")
     print("Quantity from request:", quantity)
@@ -220,6 +220,38 @@ def createSale(request):
                 status=201,
             )
         return Response(serializer.errors, status=400)
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def getLastSoldPrice(request):
+    client_id = request.query_params.get("client_id")
+    product_id = request.query_params.get("product_id")
+
+    if not client_id or not product_id:
+        return Response(
+            {"error": "client_id and product_id are required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        # Get the latest sale for this client and product
+        last_sale = (
+            Sales.objects.filter(client_id=client_id, prod_id=product_id)
+            .order_by("-sale_date")
+            .first()
+        )
+
+        if last_sale:
+            return Response({"price": last_sale.prod_price})
+        else:
+            return Response({"price": None})  # No previous sale found
+
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
