@@ -1,4 +1,38 @@
 <div class="flex flex-col items-stretch justify-start">
+  <!-- Export Section -->
+  <mat-card class="mb-6">
+    <mat-card-content>
+      <h2 class="text-xl font-semibold mb-4">Eksporto Raportin e Shitjeve</h2>
+
+      <div class="flex flex-nowrap gap-6 items-center">
+        <!-- Start Date -->
+        <mat-form-field appearance="outline" class="flex-1 min-w-[120px] mt-2" subscriptSizing="dynamic">
+          <mat-label>Data fillestare ..</mat-label>
+          <input matInput [matDatepicker]="startPicker" [formControl]="startDateControl" placeholder="Zgjidh datën " />
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- End Date -->
+        <mat-form-field appearance="outline" class="flex-1 min-w-[120px] mt-2" subscriptSizing="dynamic">
+          <mat-label>Data përfundimtare .</mat-label>
+          <input matInput [matDatepicker]="endPicker" [formControl]="endDateControl" placeholder="Zgjidh datën" />
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Export Button -->
+        <button mat-raised-button color="primary" (click)="exportToCSV()" [disabled]="isExporting" class="px-8 flex-shrink-0 mt-2" style="min-height: 50px; font-size: 18px;">
+          <mat-icon>download</mat-icon>
+          {{ isExporting ? "Duke eksportuar..." : "Eksporto CSV" }}
+        </button>
+      </div>
+
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Lër datat bosh për të eksportuar të gjitha shitjet</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Sales Table -->
   <div class="pb-16 py-6 rounded-md" *ngIf="data; else elseBlock">
     <app-sales-table [data]="data" [total]="total"></app-sales-table>
   </div>

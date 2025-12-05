@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from ..models import Sales
 from ..serializers import SalesReportSerializer
 from django.db.models import F, ExpressionWrapper, DecimalField
+from datetime import date
 
 
 @api_view(["GET"])
@@ -13,8 +14,15 @@ def sales_report(request):
 
     sales_qs = Sales.objects.select_related("prod", "client")
 
+    # Handle date filtering with smart defaults
     if start_date and end_date:
         sales_qs = sales_qs.filter(sale_date__range=[start_date, end_date])
+    elif start_date:
+        # Only start_date provided - use today as end_date
+        sales_qs = sales_qs.filter(sale_date__range=[start_date, date.today()])
+    elif end_date:
+        # Only end_date provided - filter up to end_date
+        sales_qs = sales_qs.filter(sale_date__lte=end_date)
 
     # Annotate total per sale
     sales_qs = sales_qs.annotate(

@@ -31,6 +31,8 @@ import { MatSelectModule } from "@angular/material/select";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
+import { MatDatepickerModule } from "@angular/material/datepicker";
+import { MatNativeDateModule } from "@angular/material/core";
 import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
@@ -100,6 +102,8 @@ import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
     MatFormFieldModule,
     MatRadioModule,
     MatAutocompleteModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     SalesTableComponent,
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],

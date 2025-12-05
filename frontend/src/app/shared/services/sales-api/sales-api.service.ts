@@ -40,4 +40,23 @@ export class SalesApiService {
       `${environment.apiUrl}${environment.getLastSoldPrice}?client_id=${clientId}&product_id=${productId}`
     );
   }
+
+  getSalesReport(startDate?: string, endDate?: string): Observable<any[]> {
+    let url = `${environment.apiUrl}${environment.salesReport}`;
+    const params: string[] = [];
+
+    if (startDate) {
+      params.push(`start_date=${startDate}`);
+    }
+    if (endDate) {
+      params.push(`end_date=${endDate}`);
+    }
+
+    if (params.length > 0) {
+      url += `?${params.join("&")}`;
+    }
+
+
+    return this.http.get<any[]>(url);
+  }
 }
