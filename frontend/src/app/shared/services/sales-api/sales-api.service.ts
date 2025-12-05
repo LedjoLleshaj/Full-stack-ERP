@@ -34,4 +34,10 @@ export class SalesApiService {
     console.log("Creating sale", sale);
     return this.http.post<Sale>(`${environment.apiUrl}${environment.createSale}`, sale);
   }
+
+  getLastSoldPrice(clientId: number, productId: number): Observable<{ price: number | null }> {
+    return this.http.get<{ price: number | null }>(
+      `${environment.apiUrl}${environment.getLastSoldPrice}?client_id=${clientId}&product_id=${productId}`
+    );
+  }
 }
