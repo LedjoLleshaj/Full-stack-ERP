@@ -11,6 +11,11 @@ import { ClientViewComponent } from "./views/clients-view/client-view.component"
 import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
 import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
 import { ReportsViewComponent } from "./views/reports-view/reports-view.component";
+import { RevenueViewComponent } from "./views/revenue-view/revenue-view.component";
+import { PaidVsUnpaidViewComponent } from "./views/paid-vs-unpaid-view/paid-vs-unpaid-view.component";
+import { TopProductsViewComponent } from "./views/top-products-view/top-products-view.component";
+import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
+import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
 
 const routes: Routes = [
   {
@@ -48,6 +53,31 @@ const routes: Routes = [
         path: "reports",
         component: ReportsViewComponent,
         title: "Reports - Selita",
+      },
+      {
+        path: "reports/revenue",
+        component: RevenueViewComponent,
+        title: "Revenue Trend - Selita",
+      },
+      {
+        path: "reports/paid-vs-unpaid",
+        component: PaidVsUnpaidViewComponent,
+        title: "Paid vs Unpaid - Selita",
+      },
+      {
+        path: "reports/top-products",
+        component: TopProductsViewComponent,
+        title: "Top Products - Selita",
+      },
+      {
+        path: "reports/profit-by-category",
+        component: ProfitByCategoryViewComponent,
+        title: "Profit By Category - Selita",
+      },
+      {
+        path: "alerts",
+        component: AlertsViewComponent,
+        title: "Alerts - Selita",
       },
       {
         path: "client/:id",
