@@ -11,7 +11,7 @@ from rest_framework import status
 
 
 @api_view(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def getSuppliers(request):
     try:
         suppliers = Supplier.objects.all()
@@ -32,7 +32,9 @@ def getSupplier(request, pk):
         serializer = SupplierSerializer(supplier, many=False)
         return Response(serializer.data)
     except ObjectDoesNotExist:
-        return Response({"error": "Supplier not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Supplier not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
@@ -63,7 +65,7 @@ def addSupplier(request):
 
 
 @api_view(["PUT"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def updateSupplier(request, pk):
     try:
         supplier = Supplier.objects.get(id=pk)
@@ -77,7 +79,9 @@ def updateSupplier(request, pk):
         serializer = SupplierSerializer(supplier, many=False)
         return Response(serializer.data)
     except ObjectDoesNotExist:
-        return Response({"error": "Supplier not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Supplier not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
@@ -86,14 +90,16 @@ def updateSupplier(request, pk):
 
 
 @api_view(["DELETE"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def deleteSupplier(request, pk):
     try:
         supplier = Supplier.objects.get(id=pk)
         supplier.delete()
         return Response("Supplier deleted successfully")
     except ObjectDoesNotExist:
-        return Response({"error": "Supplier not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Supplier not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},

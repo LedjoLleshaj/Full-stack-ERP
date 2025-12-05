@@ -100,6 +100,7 @@ urlpatterns = [
     path("usersfromsales", sales.getUsersFromSales),
     path("create-sale", sales.createSale),
     path("pay-sale/<str:pk>", sales.paySale),
+    path("last-sold-price", sales.getLastSoldPrice),
     
     # ======== RESTOCKS ========
     path("restocks", restocks.getRestocks),

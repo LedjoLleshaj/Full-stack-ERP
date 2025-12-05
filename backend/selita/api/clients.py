@@ -11,7 +11,7 @@ from rest_framework import status
 
 
 @api_view(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def getClients(request):
     try:
         clients = Client.objects.all()
@@ -32,7 +32,7 @@ def getClients(request):
 
 
 @api_view(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def getClient(request, pk):
     try:
         client = Client.objects.get(id=pk)
@@ -77,7 +77,7 @@ def addClient(request):
 
 
 @api_view(["POST"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def updateClient(request, pk):
     try:
         client = Client.objects.get(id=pk)
@@ -101,7 +101,7 @@ def updateClient(request, pk):
 
 
 @api_view(["DELETE"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def deleteClient(request, pk):
     try:
         client = Client.objects.get(id=pk)
@@ -117,7 +117,7 @@ def deleteClient(request, pk):
 
 
 @api_view(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def getClientSales(request, pk):
     try:
         client = Client.objects.get(id=pk)
