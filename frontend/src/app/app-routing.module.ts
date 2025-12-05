@@ -10,6 +10,7 @@ import { SalesViewComponent } from "./views/sales-view/sales-view.component";
 import { ClientViewComponent } from "./views/clients-view/client-view.component";
 import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
 import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
+import { ReportsViewComponent } from "./views/reports-view/reports-view.component";
 
 const routes: Routes = [
   {
@@ -42,6 +43,11 @@ const routes: Routes = [
         path: "products",
         component: ProductsViewComponent,
         title: "Products - Selita",
+      },
+      {
+        path: "reports",
+        component: ReportsViewComponent,
+        title: "Reports - Selita",
       },
       {
         path: "client/:id",

@@ -1,0 +1,201 @@
+<div class="flex flex-col items-stretch justify-start gap-6">
+  <!-- Page Header -->
+  <div class="py-2">
+    <h1 class="text-3xl font-bold">Raportet</h1>
+  </div>
+
+  <!-- Metrics Row 1: Revenue Today, Month Revenue, Profit -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Revenue Today -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Te ardhura sot
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold">€0.00</p>
+          <mat-icon class="text-green-500">trending_up</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Month Revenue -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Te ardhura te muajit
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold">€0.00</p>
+          <mat-icon class="text-blue-500">attach_money</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Profit -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Fitimi
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold">€0.00</p>
+          <mat-icon class="text-purple-500">show_chart</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Metrics Row 2: Cash Balance, Bank Balance, Debt -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Cash Balance -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Bilanci Cash
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold">€0.00</p>
+          <mat-icon class="text-green-600">payments</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Bank Balance -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Bilanci Bank
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold">€0.00</p>
+          <mat-icon class="text-blue-600">account_balance</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Debt -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Borxhet
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold text-red-500">€0.00</p>
+          <mat-icon class="text-red-500">account_balance_wallet</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Charts and Reports Section -->
+  <mat-divider></mat-divider>
+  
+  <h2 class="text-2xl font-semibold mt-4">Grafiqet dhe Raportet</h2>
+
+  <!-- Revenue Trend Chart -->
+  <mat-card class="chart-card cursor-pointer hover:shadow-lg transition-shadow">
+    <mat-card-header>
+      <mat-card-title class="flex items-center gap-2">
+        <mat-icon>timeline</mat-icon>
+        Grafiku i te ardhurave
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="text-gray-600 dark:text-gray-400">Shiko trendin e te ardhurave per periudhen e zgjedhur</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Paid vs Unpaid Chart -->
+  <mat-card class="chart-card cursor-pointer hover:shadow-lg transition-shadow">
+    <mat-card-header>
+      <mat-card-title class="flex items-center gap-2">
+        <mat-icon>pie_chart</mat-icon>
+        Paguar vs Pa Paguar
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="text-gray-600 dark:text-gray-400">Krahasimi i shitjeve te paguara dhe pa paguar</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Two Column Grid for Charts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Top 5 Products -->
+    <mat-card class="chart-card cursor-pointer hover:shadow-lg transition-shadow">
+      <mat-card-header>
+        <mat-card-title class="flex items-center gap-2">
+          <mat-icon>bar_chart</mat-icon>
+          Top 5 Produktet
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="text-gray-600 dark:text-gray-400">Produktet me te shitura</p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Profit By Category -->
+    <mat-card class="chart-card cursor-pointer hover:shadow-lg transition-shadow">
+      <mat-card-header>
+        <mat-card-title class="flex items-center gap-2">
+          <mat-icon>donut_large</mat-icon>
+          Fitimi sipas kategorise
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="text-gray-600 dark:text-gray-400">Shperndarja e fitimit neper kategori</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Inventory Cards -->
+  <mat-card class="chart-card cursor-pointer hover:shadow-lg transition-shadow">
+    <mat-card-header>
+      <mat-card-title class="flex items-center gap-2">
+        <mat-icon>inventory_2</mat-icon>
+        Kartat e Inventarit
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="text-gray-600 dark:text-gray-400">Pasqyre e plote e inventarit aktual</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Stock & Debt Alerts Table -->
+  <mat-card class="chart-card cursor-pointer hover:shadow-lg transition-shadow">
+    <mat-card-header>
+      <mat-card-title class="flex items-center gap-2">
+        <mat-icon class="text-orange-500">warning</mat-icon>
+        Paralajmerimet e Stokut dhe Borxheve
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="text-gray-600 dark:text-gray-400">Produktet me stok te ulet dhe borxhet aktive</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Top Clients -->
+  <mat-card class="chart-card cursor-pointer hover:shadow-lg transition-shadow">
+    <mat-card-header>
+      <mat-card-title class="flex items-center gap-2">
+        <mat-icon>emoji_events</mat-icon>
+        Top Klientet
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="text-gray-600 dark:text-gray-400">Klientet me te devotshem dhe me bleres te medhenje</p>
+    </mat-card-content>
+  </mat-card>
+</div>

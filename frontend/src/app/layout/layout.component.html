@@ -64,6 +64,17 @@
         <div matListItemTitle>Shitjet</div>
       </button>
       <mat-divider></mat-divider>
+      <button
+        mat-list-item
+        aria-label="Hap raportet"
+        title="Hap raportet"
+        [activated]="this.router.url === '/reports'"
+        (click)="this.router.navigate(['/reports'])"
+      >
+        <mat-icon matListItemIcon>assessment</mat-icon>
+        <div matListItemTitle>Raportet</div>
+      </button>
+      <mat-divider></mat-divider>
 
       <button
         class="flex flex-row"
