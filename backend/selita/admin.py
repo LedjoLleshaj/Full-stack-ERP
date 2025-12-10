@@ -111,16 +111,30 @@ class InventoryAdmin(admin.ModelAdmin):
 # ======== SALES ========
 @admin.register(Sales)
 class SalesAdmin(admin.ModelAdmin):
-    list_display = ('id', 'prod', 'client', 'quantity', 'prod_price', 'is_paid', 'sale_date')
-    search_fields = ('prod__name', 'client__firstname', 'client__lastname')
-    list_filter = ('is_paid', 'sale_date')
+    list_display = ('id', 'prod', 'get_client', 'quantity', 'prod_price', 'get_payment_status', 'sale_date')
+    search_fields = ('prod__name', 'transaction__client__firstname', 'transaction__client__lastname')
+    list_filter = ('transaction__status', 'sale_date')
     readonly_fields = ('sale_date',)
+    
+    def get_client(self, obj):
+        if obj.transaction and obj.transaction.client:
+            return f"{obj.transaction.client.firstname} {obj.transaction.client.lastname}"
+        return "-"
+    get_client.short_description = 'Client'
+    
+    def get_payment_status(self, obj):
+        return obj.transaction.status if obj.transaction else "-"
+    get_payment_status.short_description = 'Payment Status'
 
 
 # ======== RESTOCKS ========
 @admin.register(Restock)
 class RestockAdmin(admin.ModelAdmin):
-    list_display = ('id', 'prod', 'quantity', 'restock_price', 'payment', 'restock_date')
+    list_display = ('id', 'prod', 'quantity', 'restock_price', 'get_payment_status', 'restock_date')
     search_fields = ('prod__name',)
-    list_filter = ('restock_date',)
+    list_filter = ('transaction__status', 'restock_date')
     readonly_fields = ('restock_date',)
+    
+    def get_payment_status(self, obj):
+        return obj.transaction.status if obj.transaction else "-"
+    get_payment_status.short_description = 'Payment Status'

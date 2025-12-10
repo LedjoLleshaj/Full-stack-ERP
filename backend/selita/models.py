@@ -310,11 +310,12 @@ class Product_Names(models.Model):
 
 
 class Sales(models.Model):
+    transaction = models.ForeignKey(
+        Transaction, on_delete=models.CASCADE, related_name="sales"
+    )
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sales")
     prod_price = models.DecimalField(max_digits=10, decimal_places=2)
-    is_paid = models.BooleanField(default=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="sales")
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="sales")
     quantity = models.IntegerField()
     sale_date = models.DateTimeField(auto_now_add=True)
 
@@ -324,7 +325,7 @@ class Sales(models.Model):
         verbose_name_plural = "Sales"
         ordering = ["-sale_date"]
         indexes = [
-            models.Index(fields=["is_paid"], name="sales_paid_idx"),
+            models.Index(fields=["transaction"], name="sales_transaction_idx"),
             models.Index(fields=["-sale_date"], name="sales_date_idx"),
         ]
 
@@ -333,12 +334,12 @@ class Sales(models.Model):
 
 
 class Restock(models.Model):
+    transaction = models.ForeignKey(
+        Transaction, on_delete=models.CASCADE, related_name="restocks"
+    )
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="restocks")
     quantity = models.IntegerField()
     restock_price = models.DecimalField(max_digits=10, decimal_places=2)
-    payment = models.ForeignKey(
-        Payment, on_delete=models.CASCADE, related_name="restocks"
-    )
     restock_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -347,6 +348,7 @@ class Restock(models.Model):
         verbose_name_plural = "Restocks"
         ordering = ["-restock_date"]
         indexes = [
+            models.Index(fields=["transaction"], name="restock_transaction_idx"),
             models.Index(fields=["-restock_date"], name="restock_date_idx"),
         ]
 
