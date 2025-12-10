@@ -26,7 +26,7 @@ import { SalesApiService } from "../../services/sales-api/sales-api.service";
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SalesTableComponent implements AfterViewInit, OnChanges {
-  columns: string[] = ["product", "quantity", "product_price", "sale_date", "client", "address", "amount", "is_paid"];
+  columns: string[] = ["product", "quantity", "product_price", "sale_date", "client", "address", "amount", "payment_status"];
 
   @Input() data: SaleResponse[] = [];
   @Input() total: number = 0;
@@ -72,17 +72,32 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
   }
 
   markAsPaid(sale: any): void {
-    // Replace with your actual API service
-    console.log("Marking as paid", sale.id);
-    this.saleService.paySale(sale.id).subscribe(
+    // ⚡ TODO: Implement payment dialog to collect payment details
+    // For now, this functionality is disabled until we add a payment form
+    console.log("Payment functionality requires payment details (amount, account, method)");
+    console.log("Sale ID:", sale.id, "Transaction status:", sale.payment_status);
+    
+    /* Example implementation:
+    const payment = {
+      account_id: 1,
+      amount: sale.prod_price * sale.quantity,
+      currency: "EUR",
+      payment_method: "CASH",
+      notes: "Payment via sales table"
+    };
+    
+    this.saleService.paySale(sale.id, payment).subscribe(
       (response) => {
-        console.log("Sale marked as paid", response);
-        // Optionally, refresh the data or update the UI
-        this.dataSource.data = this.dataSource.data.map((s) => (s.id === sale.id ? { ...s, is_paid: true } : s));
+        console.log("Payment added", response);
+        // Update the sale's payment status in the table
+        this.dataSource.data = this.dataSource.data.map((s) =>
+          s.id === sale.id ? { ...s, payment_status: response.transaction_status } : s
+        );
       },
       (error) => {
-        console.error("Error marking sale as paid", error);
+        console.error("Error adding payment", error);
       }
     );
+    */
   }
 }

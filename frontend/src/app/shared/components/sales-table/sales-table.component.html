@@ -93,18 +93,20 @@
       </td>
     </ng-container>
 
-    <!-- Status -->
+    <!-- Payment Status -->
 
-    <ng-container matColumnDef="is_paid">
+    <ng-container matColumnDef="payment_status">
       <th mat-header-cell *matHeaderCellDef scope="col">Statusi i Pageses</th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
-        <span *ngIf="sale.is_paid">E paguar</span>
+        <span *ngIf="sale.payment_status === 'COMPLETED'" class="text-green-600">✓ E paguar</span>
+        <span *ngIf="sale.payment_status === 'PARTIAL'" class="text-yellow-600">⊙ Pjeserisht e paguar</span>
         <button
-          *ngIf="!sale.is_paid"
-          class="text-red underline cursor-pointer bg-transparent border-none p-0 m-0"
+          *ngIf="sale.payment_status === 'PENDING'"
+          class="text-red-600 underline cursor-pointer bg-transparent border-none p-0 m-0"
           (click)="markAsPaid(sale)"
+          title="Shto pagese"
         >
-          Nuk eshte paguar
+          ✗ Nuk eshte paguar
         </button>
       </td>
     </ng-container>

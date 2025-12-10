@@ -133,19 +133,33 @@ export class ClientDetailsViewComponent implements OnInit {
       return;
     }
 
+    const total = this.getTotal();
+
     const newSale: any = {
       prod: this.selectedProduct.id,
       prod_price: this.salePrice,
       quantity: this.saleQuantity,
-      is_paid: this.isPaid,
       user: this.currentUserId,
-      client: this.clientId,
+      client_id: this.clientId, // Changed from 'client'
+      currency: "EUR",
     };
+
+    // If isPaid is true, add payment data
+    if (this.isPaid) {
+      newSale.payment = {
+        account_id: 1, // ⚡ TODO: Allow user to select account
+        amount: total,
+        currency: "EUR",
+        payment_method: "CASH", // ⚡ TODO: Allow user to select payment method
+        notes: `Payment for sale of ${this.saleQuantity} ${this.selectedProduct.name}`,
+      };
+    }
 
     this.saleService.createSale(newSale).subscribe({
       next: (response) => {
         console.log("Sale created successfully:", response);
-        this.snackBar.open("Shitja u krijua me sukses!", "Mbyll", { duration: 3000 });
+        const statusMsg = response.transaction_status === 'COMPLETED' ? 'dhe u pagua' : '';
+        this.snackBar.open(`Shitja u krijua me sukses ${statusMsg}!`, "Mbyll", { duration: 3000 });
         this.clearSelection();
         this.fetchProducts(); // Refresh product list
         this.loadClient(this.clientId); // Refresh client stats
