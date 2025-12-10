@@ -58,13 +58,7 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width no-outline-gap">
         <mat-label>Kerko dhe Zgjidh Produktin .</mat-label>
-        <input
-          type="text"
-          matInput
-          [(ngModel)]="searchText"
-          [matAutocomplete]="auto"
-          placeholder="Shkruaj produktin..."
-        />
+        <input type="text" matInput [(ngModel)]="searchText" [matAutocomplete]="auto" placeholder="Shkruaj produktin" />
         <mat-icon matSuffix>search</mat-icon>
         <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onProductSelect($event)">
           <mat-option *ngFor="let product of filteredProducts()" [value]="product">
@@ -85,9 +79,7 @@
         <h3>{{ selectedProduct.name }}</h3>
         <p class="stock-info">Sasia ne Inventar: {{ selectedProduct.disponibility }}</p>
         <p class="price-info">Çmimi aktual: {{ selectedProduct.price | currency }}</p>
-        <p class="price-info" *ngIf="lastSoldPrice !== null">
-          Cmimi i fundit: {{ lastSoldPrice | currency }}
-        </p>
+        <p class="price-info" *ngIf="lastSoldPrice !== null">Cmimi i fundit: {{ lastSoldPrice | currency }}</p>
       </div>
 
       <mat-divider></mat-divider>
