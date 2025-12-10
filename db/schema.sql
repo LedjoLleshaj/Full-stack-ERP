@@ -127,29 +127,24 @@ CREATE TABLE Inventory (
 
 CREATE TABLE Sales (
     id SERIAL PRIMARY KEY,
+    transaction_id INT NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
     prod_id INT NOT NULL,
     prod_price DECIMAL(10, 2) NOT NULL,
-    is_paid BOOLEAN DEFAULT FALSE,
     user_id INT NOT NULL,
-    client_id INT NOT NULL,
     quantity INT NOT NULL,
     sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (prod_id) REFERENCES Product(id),
-    FOREIGN KEY (user_id) REFERENCES Users(id),
-    FOREIGN KEY (client_id) REFERENCES Client(id)
-
+    FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
 CREATE TABLE Restock (
     id SERIAL PRIMARY KEY,
+    transaction_id INT NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
     prod_id INT NOT NULL,
     quantity INT NOT NULL,
     restock_price DECIMAL(10, 2) NOT NULL,
-    payment_id INT NOT NULL,
     restock_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (prod_id) REFERENCES Product(id),
-    FOREIGN KEY (payment_id) REFERENCES Payment(id)
-
+    FOREIGN KEY (prod_id) REFERENCES Product(id)
 );
 
 
@@ -174,8 +169,6 @@ INSERT INTO Product (name, category, price, description) VALUES
 ('Peshkaqen', 'Peshk i eger', 35.00, 'Pesh i eger nga Mesdheu');
 INSERT INTO Inventory (prod_id, quantity) VALUES 
 (1, 10), (2, 15), (3, 20), (4, 5), (5, 30), (6, 50), (7, 10), (8, 10), (9, 10), (10, 10), (11, 10);
-INSERT INTO Sales (prod_id,prod_price,is_paid, user_id,client_id, quantity) VALUES 
-(1, 10.00, TRUE, 1, 1, 2), (2, 15.00, FALSE, 1, 2, 3), (3, 20.00, TRUE, 1, 1, 4), (4, 5.00, TRUE, 1, 2, 5), (5, 30.00, TRUE, 1, 1, 6), (6, 12.00, TRUE, 1, 2, 7), (7, 8.00, FALSE, 1, 1, 8), (8, 25.00, FALSE, 1, 2, 9), (9, 18.00, FALSE, 1, 1 ,10), (10 ,22.00 ,FALSE ,1 ,2 ,11), (11 ,35.00 ,TRUE ,1 ,1 ,12);
 
 -- Insert Suppliers
 INSERT INTO Supplier (firstname, lastname, phone, email, address) VALUES 
@@ -236,17 +229,31 @@ INSERT INTO AccountTransaction (account_id, payment_id, transaction_type, amount
 (5, NULL, 'DEPOSIT', 15000.00, 15000.00, 'Initial bank deposit USD'),
 (6, NULL, 'DEPOSIT', 500000.00, 500000.00, 'Initial bank deposit LEK');
 
--- Insert Restock data (linked to Payment records)
-INSERT INTO Restock (prod_id, quantity, restock_price, payment_id) VALUES 
-(1, 50, 450.00, 1),  -- Salmon restock
-(3, 30, 550.00, 1),  -- Koce restock
-(2, 20, 280.00, 2),  -- Karkaleca restock
-(4, 40, 120.00, 2),  -- Midhje restock
-(5, 15, 420.00, 3),  -- Peshk i eger restock
-(6, 60, 660.00, 3),  -- Peshk restock
-(7, 25, 180.00, 3),  -- Fruta Deti restock
-(8, 10, 240.00, 1),  -- Gafforre restock
-(9, 35, 590.00, 2),  -- Kallamar restock
-(10, 20, 400.00, 3), -- Sepie restock
-(11, 8, 240.00, 1);  -- Peshkaqen restock
+-- Sales data linked to transactions
+INSERT INTO Sales (transaction_id, prod_id, prod_price, user_id, quantity) VALUES 
+-- Sales for transaction 4 (SAL-2025-001, completed)
+(4, 1, 10.00, 1, 20),
+(4, 3, 20.00, 1, 15),
+-- Sales for transaction 5 (SAL-2025-002, partial payment)
+(5, 2, 15.00, 1, 30),
+(5, 7, 8.00, 1, 40),
+-- Sales for transaction 6 (SAL-2025-003, completed)
+(6, 5, 30.00, 1, 10);
+
+-- Insert Restock data (linked to Transaction records)
+INSERT INTO Restock (transaction_id, prod_id, quantity, restock_price) VALUES 
+-- Restocks for transaction 1 (PUR-2025-001)
+(1, 1, 50, 450.00),  -- Salmon restock
+(1, 3, 30, 550.00),  -- Koce restock
+(1, 8, 10, 240.00),  -- Gafforre restock
+(1, 11, 8, 240.00),  -- Peshkaqen restock
+-- Restocks for transaction 2 (PUR-2025-002, partial payment)
+(2, 2, 20, 280.00),  -- Karkaleca restock
+(2, 4, 40, 120.00),  -- Midhje restock
+(2, 9, 35, 590.00),  -- Kallamar restock
+-- Restocks for transaction 3 (PUR-2025-003)
+(3, 5, 15, 420.00),  -- Peshk i eger restock
+(3, 6, 60, 660.00),  -- Peshk restock
+(3, 7, 25, 180.00),  -- Fruta Deti restock
+(3, 10, 20, 400.00); -- Sepie restock
 
