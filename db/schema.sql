@@ -41,7 +41,7 @@ CREATE TABLE Account (
     id SERIAL PRIMARY KEY,
     account_name VARCHAR(100) NOT NULL,
     account_type VARCHAR(20) NOT NULL CHECK (account_type IN ('CASH', 'BANK')),
-    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'ALL')),
+    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'LEK')),
     current_balance DECIMAL(10, 2) DEFAULT 0.00,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
@@ -59,7 +59,7 @@ CREATE TABLE Transaction (
     client_id INTEGER REFERENCES Client(id) ON DELETE SET NULL,
     
     total_amount DECIMAL(10, 2) NOT NULL,
-    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'ALL')), -- ALL is Albanian Lek
+    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'LEK')), -- LEK is Albanian Lek
     status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PARTIAL', 'COMPLETED', 'CANCELLED')),
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_date TIMESTAMP,
@@ -79,7 +79,7 @@ CREATE TABLE Payment (
     transaction_id INTEGER NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
     account_id INTEGER NOT NULL REFERENCES Account(id), -- Which account was used
     amount DECIMAL(10, 2) NOT NULL,
-    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'ALL')),
+    currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'LEK')),
     payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CASH', 'CARD')),
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     notes TEXT
@@ -187,16 +187,16 @@ INSERT INTO Supplier (firstname, lastname, phone, email, address) VALUES
 INSERT INTO Account (account_name, account_type, currency, current_balance, notes) VALUES 
 ('Cash EUR', 'CASH', 'EUR', 5000.00, 'Main cash account in Euros'),
 ('Cash USD', 'CASH', 'USD', 3000.00, 'Cash account in US Dollars'),
-('Cash ALL', 'CASH', 'ALL', 150000.00, 'Cash account in Albanian Lek'),
+('Cash LEK', 'CASH', 'LEK', 150000.00, 'Cash account in Albanian Lek'),
 ('Bank EUR', 'BANK', 'EUR', 25000.00, 'Bank account in Euros'),
 ('Bank USD', 'BANK', 'USD', 15000.00, 'Bank account in US Dollars'),
-('Bank ALL', 'BANK', 'ALL', 500000.00, 'Bank account in Albanian Lek');
+('Bank LEK', 'BANK', 'LEK', 500000.00, 'Bank account in Albanian Lek');
 
 -- Insert Transactions (both PURCHASE from suppliers and SALE to clients)
 INSERT INTO Transaction (transaction_type, supplier_id, client_id, total_amount, currency, status, invoice_number, notes, completed_date) VALUES 
 ('PURCHASE', 1, NULL, 1500.00, 'EUR', 'COMPLETED', 'PUR-2025-001', 'Purchase of fresh salmon and koce', '2025-11-20 10:30:00'),
 ('PURCHASE', 2, NULL, 800.00, 'EUR', 'PARTIAL', 'PUR-2025-002', 'Purchase of seafood assortment', NULL),
-('PURCHASE', 3, NULL, 2000.00, 'ALL', 'COMPLETED', 'PUR-2025-003', 'Bulk purchase wild fish', '2025-11-22 14:15:00'),
+('PURCHASE', 3, NULL, 2000.00, 'LEK', 'COMPLETED', 'PUR-2025-003', 'Bulk purchase wild fish', '2025-11-22 14:15:00'),
 ('SALE', NULL, 1, 500.00, 'EUR', 'COMPLETED', 'SAL-2025-001', 'Sale to Ledjo Lleshaj', '2025-11-23 09:00:00'),
 ('SALE', NULL, 2, 750.00, 'EUR', 'PARTIAL', 'SAL-2025-002', 'Sale to Kristjan Gjinaj', NULL),
 ('SALE', NULL, 1, 300.00, 'USD', 'COMPLETED', 'SAL-2025-003', 'Additional sale to Ledjo', '2025-11-25 11:30:00');
@@ -208,7 +208,7 @@ INSERT INTO Payment (transaction_id, account_id, amount, currency, payment_metho
 -- Payments for transaction 2 (PURCHASE, partial)
 (2, 1, 400.00, 'EUR', 'CASH', 'Partial payment for PUR-2025-002'),
 -- Payments for transaction 3 (PURCHASE, completed)
-(3, 6, 2000.00, 'ALL', 'CARD', 'Full payment for PUR-2025-003'),
+(3, 6, 2000.00, 'LEK', 'CARD', 'Full payment for PUR-2025-003'),
 -- Payments for transaction 4 (SALE, completed)
 (4, 1, 500.00, 'EUR', 'CASH', 'Full payment from client Ledjo'),
 -- Payments for transaction 5 (SALE, partial)
@@ -231,10 +231,10 @@ INSERT INTO AccountTransaction (account_id, payment_id, transaction_type, amount
 -- Additional deposits (initial capital)
 (1, NULL, 'DEPOSIT', 5000.00, 5000.00, 'Initial cash deposit EUR'),
 (2, NULL, 'DEPOSIT', 3000.00, 3000.00, 'Initial cash deposit USD'),
-(3, NULL, 'DEPOSIT', 150000.00, 150000.00, 'Initial cash deposit ALL'),
+(3, NULL, 'DEPOSIT', 150000.00, 150000.00, 'Initial cash deposit LEK'),
 (4, NULL, 'DEPOSIT', 25000.00, 25000.00, 'Initial bank deposit EUR'),
 (5, NULL, 'DEPOSIT', 15000.00, 15000.00, 'Initial bank deposit USD'),
-(6, NULL, 'DEPOSIT', 500000.00, 500000.00, 'Initial bank deposit ALL');
+(6, NULL, 'DEPOSIT', 500000.00, 500000.00, 'Initial bank deposit LEK');
 
 -- Insert Restock data (linked to Payment records)
 INSERT INTO Restock (prod_id, quantity, restock_price, payment_id) VALUES 
