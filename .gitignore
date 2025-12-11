@@ -10,3 +10,4 @@ venv/
 # Optional: Ignore compiled bytecode files
 *.pyo
 *.pyd
+db/tempo.sql
