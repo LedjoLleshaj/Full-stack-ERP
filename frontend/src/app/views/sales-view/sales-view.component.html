@@ -25,13 +25,13 @@
         <button
           mat-raised-button
           color="primary"
-          (click)="exportToCSV()"
+          (click)="exportToExcel()"
           [disabled]="isExporting"
           class="px-8 flex-shrink-0 mt-2"
           style="min-height: 50px; font-size: 18px"
         >
           <mat-icon>download</mat-icon>
-          {{ isExporting ? "Duke eksportuar..." : "Eksporto CSV" }}
+          {{ isExporting ? "Duke eksportuar..." : "Eksporto Excel" }}
         </button>
       </div>
 
