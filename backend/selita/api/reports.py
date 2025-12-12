@@ -11,7 +11,8 @@ def sales_report(request):
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
 
-    sales_qs = Sales.objects.select_related("prod", "client")
+    # Fix: Access client through transaction, not directly on sale
+    sales_qs = Sales.objects.select_related("prod", "transaction", "transaction__client")
 
     # Handle date filtering with smart defaults
     if start_date and end_date:
@@ -31,19 +32,36 @@ def sales_report(request):
         )
     )
 
-    report_data = [
-        {
+    report_data = []
+    
+    # Status labels in Albanian with emoji indicators
+    status_map = {
+        "COMPLETED": "✅ Paguar",
+        "PARTIAL": "⚠️ Paguar pjeserisht",
+        "PENDING": "❌ Pa paguar",
+        "CANCELLED": "🚫 Anuluar"
+    }
+    
+    for sale in sales_qs:
+        # Get client from transaction (may be null)
+        client = sale.transaction.client if sale.transaction else None
+        client_name = f"{client.firstname} {client.lastname}" if client else "N/A"
+        client_address = client.address if client else "N/A"
+        
+        # Get payment status from transaction
+        transaction_status = sale.transaction.status if sale.transaction else "PENDING"
+        payment_status = status_map.get(transaction_status, "N/A")
+        
+        report_data.append({
             "Produkti": sale.prod.name,
             "Sasia": sale.quantity,
             "Cmimi shitje": float(sale.prod_price),
             "Totali": float(sale.total),
-            "Data e shitjes": sale.sale_date.date().isoformat(),  # <-- keep only date
-            "Klienti": f"{sale.client.firstname} {sale.client.lastname}",
-            "Adresa e klientit": sale.client.address,
-            "Paguar": "po" if getattr(sale, 'is_paid', False) else "jo",
-        }
-        for sale in sales_qs
-    ]
+            "Data e shitjes": sale.sale_date.date().isoformat(),
+            "Klienti": client_name,
+            "Adresa e klientit": client_address,
+            "Statusi i pageses": payment_status,
+        })
 
     serializer = SalesReportSerializer(report_data, many=True)
     return Response(report_data)
