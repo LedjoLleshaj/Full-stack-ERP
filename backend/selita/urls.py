@@ -111,4 +111,5 @@ urlpatterns = [
     
     # ======== REPORTS ========
     path("report/sales/", reports.sales_report),
+    path("dashboard-stats", reports.dashboard_stats),
 ]

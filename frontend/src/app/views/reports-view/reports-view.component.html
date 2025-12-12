@@ -13,7 +13,7 @@
       </mat-card-header>
       <mat-card-content>
         <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">€0.00</p>
+          <p class="text-2xl font-bold">{{ stats.revenue_today | currency:'EUR':'symbol':'1.2-2' }}</p>
           <mat-icon class="text-green-500">trending_up</mat-icon>
         </div>
       </mat-card-content>
@@ -28,7 +28,7 @@
       </mat-card-header>
       <mat-card-content>
         <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">€0.00</p>
+          <p class="text-2xl font-bold">{{ stats.revenue_month | currency:'EUR':'symbol':'1.2-2' }}</p>
           <mat-icon class="text-blue-500">attach_money</mat-icon>
         </div>
       </mat-card-content>
@@ -41,7 +41,7 @@
       </mat-card-header>
       <mat-card-content>
         <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">€0.00</p>
+          <p class="text-2xl font-bold">{{ stats.profit | currency:'EUR':'symbol':'1.2-2' }}</p>
           <mat-icon class="text-purple-500">show_chart</mat-icon>
         </div>
       </mat-card-content>
@@ -57,7 +57,7 @@
       </mat-card-header>
       <mat-card-content>
         <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">€0.00</p>
+          <p class="text-2xl font-bold">{{ stats.cash_balance | currency:'EUR':'symbol':'1.2-2' }}</p>
           <mat-icon class="text-green-600">payments</mat-icon>
         </div>
       </mat-card-content>
@@ -70,7 +70,7 @@
       </mat-card-header>
       <mat-card-content>
         <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">€0.00</p>
+          <p class="text-2xl font-bold">{{ stats.bank_balance | currency:'EUR':'symbol':'1.2-2' }}</p>
           <mat-icon class="text-blue-600">account_balance</mat-icon>
         </div>
       </mat-card-content>
@@ -83,7 +83,7 @@
       </mat-card-header>
       <mat-card-content>
         <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold text-red-500">€0.00</p>
+          <p class="text-2xl font-bold text-red-500">{{ stats.debt | currency:'EUR':'symbol':'1.2-2' }}</p>
           <mat-icon class="text-red-500">account_balance_wallet</mat-icon>
         </div>
       </mat-card-content>
