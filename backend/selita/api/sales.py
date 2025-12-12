@@ -318,12 +318,32 @@ def createSale(request):
         if payment_data:
             payment_amount = Decimal(str(payment_data.get("amount", 0)))
             if payment_amount > 0:
+                payment_method = payment_data.get("payment_method", "CASH")
+                payment_currency = payment_data.get("currency", currency)
+                
+                # Determine account type based on payment method
+                # CASH payment → CASH account, CARD payment → BANK account
+                account_type = "CASH" if payment_method == "CASH" else "BANK"
+                
+                # Find the appropriate account based on type and currency
+                from ..models import Account
+                try:
+                    account = Account.objects.get(
+                        account_type=account_type,
+                        currency=payment_currency
+                    )
+                except Account.DoesNotExist:
+                    return Response(
+                        {"error": f"No {account_type} account found for currency {payment_currency}"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
                 payment = Payment.objects.create(
                     transaction=transaction,
-                    account_id=payment_data.get("account_id"),
+                    account=account,
                     amount=payment_amount,
-                    currency=payment_data.get("currency", currency),
-                    payment_method=payment_data.get("payment_method", "CASH"),
+                    currency=payment_currency,
+                    payment_method=payment_method,
                     notes=payment_data.get("notes", ""),
                 )
 

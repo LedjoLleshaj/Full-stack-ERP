@@ -123,6 +123,29 @@
           </mat-radio-group>
         </div>
 
+        <!-- Payment Method and Currency Selection (only shown when paid) -->
+        <div class="form-row payment-options" *ngIf="isPaid">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Metoda e Pagesës</mat-label>
+            <mat-select [(ngModel)]="paymentMethod">
+              <mat-option *ngFor="let method of paymentMethods" [value]="method">
+                {{ method === 'CASH' ? 'Cash' : 'Kartë' }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>{{ paymentMethod === 'CASH' ? 'payments' : 'credit_card' }}</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Monedha</mat-label>
+            <mat-select [(ngModel)]="currency">
+              <mat-option *ngFor="let curr of currencies" [value]="curr">
+                {{ curr }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>attach_money</mat-icon>
+          </mat-form-field>
+        </div>
+
         <div class="form-actions">
           <button mat-raised-button color="primary" (click)="createSale()" [disabled]="!canCreateSale()">
             <mat-icon>add_shopping_cart</mat-icon>

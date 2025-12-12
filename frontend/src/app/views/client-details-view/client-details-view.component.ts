@@ -25,6 +25,12 @@ export class ClientDetailsViewComponent implements OnInit {
   currentUserId: number = 1; // ⚡ TODO: Get from auth service
   lastSoldPrice: number | null = null;
 
+  // Payment method and currency options
+  paymentMethod: string = "CASH";
+  paymentMethods: string[] = ["CASH", "CARD"];
+  currency: string = "LEK";
+  currencies: string[] = ["LEK", "EUR", "USD"];
+
   constructor(
     private route: ActivatedRoute,
     private clientService: ClientService,
@@ -141,16 +147,15 @@ export class ClientDetailsViewComponent implements OnInit {
       quantity: this.saleQuantity,
       user: this.currentUserId,
       client_id: this.clientId, // Changed from 'client'
-      currency: "EUR",
+      currency: this.currency,
     };
 
     // If isPaid is true, add payment data
     if (this.isPaid) {
       newSale.payment = {
-        account_id: 1, // ⚡ TODO: Allow user to select account
         amount: total,
-        currency: "EUR",
-        payment_method: "CASH", // ⚡ TODO: Allow user to select payment method
+        currency: this.currency,
+        payment_method: this.paymentMethod,
         notes: `Payment for sale of ${this.saleQuantity} ${this.selectedProduct.name}`,
       };
     }
@@ -179,5 +184,7 @@ export class ClientDetailsViewComponent implements OnInit {
     this.isPaid = true;
     this.searchText = "";
     this.lastSoldPrice = null;
+    this.paymentMethod = "CASH";
+    this.currency = "LEK";
   }
 }

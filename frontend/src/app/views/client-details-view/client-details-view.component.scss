@@ -176,20 +176,22 @@ mat-divider {
 
 .payment-radio-group {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .payment-label {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-right: 8px;
 }
 
 ::ng-deep .payment-radio-group .mat-radio-button {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .form-actions {

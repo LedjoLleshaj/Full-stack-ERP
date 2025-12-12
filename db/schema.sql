@@ -176,14 +176,23 @@ INSERT INTO Supplier (firstname, lastname, phone, email, address) VALUES
 ('Endrit', 'Kola', '+355 69 234 5678', 'endrit.kola@seafood.al', 'Rruga Pavarsia, Vlore'),
 ('Sokol', 'Muca', '+355 69 345 6789', 'sokol.muca@fishmarket.al', 'Rruga e Portit, Sarande');
 
--- Insert Accounts (Cash and Bank accounts in different currencies)
+-- =====================================================================================
+-- CRITICAL: REQUIRED ACCOUNT RECORDS - DO NOT DELETE!
+-- These 6 accounts are NECESSARY for the payment system to function.
+-- The backend auto-selects the correct account based on payment_method and currency:
+--   - CASH payment → CASH account
+--   - CARD payment → BANK account
+-- Each combination of (CASH/BANK) × (EUR/USD/LEK) must exist.
+-- Without these records, creating paid sales will fail with error:
+-- "No CASH/BANK account found for currency EUR/USD/LEK"
+-- =====================================================================================
 INSERT INTO Account (account_name, account_type, currency, current_balance, notes) VALUES 
-('Cash EUR', 'CASH', 'EUR', 5000.00, 'Main cash account in Euros'),
-('Cash USD', 'CASH', 'USD', 3000.00, 'Cash account in US Dollars'),
-('Cash LEK', 'CASH', 'LEK', 150000.00, 'Cash account in Albanian Lek'),
-('Bank EUR', 'BANK', 'EUR', 25000.00, 'Bank account in Euros'),
-('Bank USD', 'BANK', 'USD', 15000.00, 'Bank account in US Dollars'),
-('Bank LEK', 'BANK', 'LEK', 500000.00, 'Bank account in Albanian Lek');
+('Cash EUR', 'CASH', 'EUR', 0.00, 'Main cash account in Euros'),
+('Cash USD', 'CASH', 'USD', 0.00, 'Cash account in US Dollars'),
+('Cash LEK', 'CASH', 'LEK', 0.00, 'Cash account in Albanian Lek'),
+('Bank EUR', 'BANK', 'EUR', 0.00, 'Bank account in Euros'),
+('Bank USD', 'BANK', 'USD', 0.00, 'Bank account in US Dollars'),
+('Bank LEK', 'BANK', 'LEK', 0.00, 'Bank account in Albanian Lek');
 
 -- Insert Transactions (both PURCHASE from suppliers and SALE to clients)
 INSERT INTO Transaction (transaction_type, supplier_id, client_id, total_amount, currency, status, invoice_number, notes, completed_date) VALUES 
