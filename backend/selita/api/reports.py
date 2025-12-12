@@ -1,9 +1,8 @@
-# views.py
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from ..models import Sales
+from ..models import Sales, Transaction, Account, Payment
 from ..serializers import SalesReportSerializer
-from django.db.models import F, ExpressionWrapper, DecimalField
+from django.db.models import F, ExpressionWrapper, DecimalField, Sum
 from datetime import date
 
 
@@ -41,10 +40,77 @@ def sales_report(request):
             "Data e shitjes": sale.sale_date.date().isoformat(),  # <-- keep only date
             "Klienti": f"{sale.client.firstname} {sale.client.lastname}",
             "Adresa e klientit": sale.client.address,
-            "Paguar": "po" if sale.is_paid else "jo",
+            "Paguar": "po" if getattr(sale, 'is_paid', False) else "jo",
         }
         for sale in sales_qs
     ]
 
     serializer = SalesReportSerializer(report_data, many=True)
     return Response(report_data)
+
+
+@api_view(["GET"])
+def dashboard_stats(request):
+    today = date.today()
+
+    # 1. Revenue Today
+    revenue_today = Transaction.objects.filter(
+        transaction_type="SALE",
+        created_date__date=today
+    ).exclude(status="CANCELLED").aggregate(sum_val=Sum("total_amount"))["sum_val"] or 0
+
+    # 2. Revenue Month
+    revenue_month = Transaction.objects.filter(
+        transaction_type="SALE",
+        created_date__year=today.year,
+        created_date__month=today.month
+    ).exclude(status="CANCELLED").aggregate(sum_val=Sum("total_amount"))["sum_val"] or 0
+
+    # 3. Profit (Total Sales - Total Purchases)
+    # Note: This is a simplified "Cash Flow" profit.
+    total_sales = Transaction.objects.filter(
+        transaction_type="SALE"
+    ).exclude(status="CANCELLED").aggregate(sum_val=Sum("total_amount"))["sum_val"] or 0
+
+    total_purchases = Transaction.objects.filter(
+        transaction_type="PURCHASE"
+    ).exclude(status="CANCELLED").aggregate(sum_val=Sum("total_amount"))["sum_val"] or 0
+
+    profit = total_sales - total_purchases
+
+    # 4. Cash Balance
+    cash_balance = Account.objects.filter(
+        account_type="CASH"
+    ).aggregate(sum_val=Sum("current_balance"))["sum_val"] or 0
+
+    # 5. Bank Balance
+    bank_balance = Account.objects.filter(
+        account_type="BANK"
+    ).aggregate(sum_val=Sum("current_balance"))["sum_val"] or 0
+
+    # 6. Debt (Total pending/partial sales amount - Total paid for those sales)
+    pending_sales = Transaction.objects.filter(
+        transaction_type="SALE",
+        status__in=["PENDING", "PARTIAL"]
+    )
+    
+    # Calculate total expected from pending sales
+    total_pending_amount = pending_sales.aggregate(sum_val=Sum("total_amount"))["sum_val"] or 0
+    
+    # Calculate what has been paid so far for these specific transactions
+    paid_towards_pending = Payment.objects.filter(
+        transaction__in=pending_sales
+    ).aggregate(sum_val=Sum("amount"))["sum_val"] or 0
+    
+    debt = total_pending_amount - paid_towards_pending
+
+    data = {
+        "revenue_today": revenue_today,
+        "revenue_month": revenue_month,
+        "profit": profit,
+        "cash_balance": cash_balance,
+        "bank_balance": bank_balance,
+        "debt": debt,
+    }
+
+    return Response(data)
