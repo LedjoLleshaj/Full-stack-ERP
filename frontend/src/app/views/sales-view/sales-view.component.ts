@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { Sale, SaleResponse } from "../../models/sale.model";
 import { SalesApiService } from "../../shared/services/sales-api/sales-api.service";
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: "app-sales-view",
@@ -33,7 +34,7 @@ export class SalesViewComponent implements OnInit, OnDestroy {
     });
   }
 
-  exportToCSV() {
+  exportToExcel() {
     this.isExporting = true;
     
     // Format dates to YYYY-MM-DD if they exist
@@ -52,21 +53,22 @@ export class SalesViewComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Convert JSON to CSV
-        const csv = this.convertToCSV(data);
+        // Create workbook and worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
         
-        // Create blob and download
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
+        // Auto-size columns
+        const columnWidths = this.getColumnWidths(data);
+        worksheet['!cols'] = columnWidths;
         
-        link.setAttribute('href', url);
-        link.setAttribute('download', `sales_report_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Raporti i Shitjeve');
         
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Generate filename with date
+        const filename = `raporti_shitjeve_${new Date().toISOString().split('T')[0]}.xlsx`;
+        
+        // Write and download
+        XLSX.writeFile(workbook, filename);
         
         this.isExporting = false;
       },
@@ -85,35 +87,19 @@ export class SalesViewComponent implements OnInit, OnDestroy {
     return `${year}-${month}-${day}`;
   }
 
-  private convertToCSV(data: any[]): string {
-    if (!data || data.length === 0) {
-      return '';
-    }
-
-    // Get headers from first object
+  private getColumnWidths(data: any[]): { wch: number }[] {
+    if (!data || data.length === 0) return [];
+    
     const headers = Object.keys(data[0]);
-    
-    // Create CSV header row
-    const csvHeaders = headers.join(',');
-    
-    // Create CSV data rows
-    const csvRows = data.map(row => {
-      return headers.map(header => {
-        const value = row[header];
-        // Escape values containing commas or quotes
-        if (value === null || value === undefined) {
-          return '';
-        }
-        const stringValue = String(value);
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-          return `"${stringValue.replace(/"/g, '""')}"`;
-        }
-        return stringValue;
-      }).join(',');
+    return headers.map(header => {
+      // Find max length of content in this column (including header)
+      const maxLength = Math.max(
+        header.length,
+        ...data.map(row => String(row[header] || '').length)
+      );
+      // Add some padding
+      return { wch: Math.min(maxLength + 2, 50) };
     });
-    
-    // Combine headers and rows
-    return [csvHeaders, ...csvRows].join('\n');
   }
 
   ngOnDestroy() {
