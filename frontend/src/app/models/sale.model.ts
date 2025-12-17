@@ -59,3 +59,71 @@ export interface PaymentResponse {
   total_paid: number;
   remaining: number;
 }
+
+// Detailed sale view interfaces
+export interface TransactionInfo {
+  id: number;
+  transaction_type: string;
+  supplier?: number;
+  client?: number;
+  total_amount: string;
+  currency: string;
+  status: string;
+  created_date: string;
+  completed_date?: string;
+  invoice_number?: string;
+  notes?: string;
+}
+
+export interface PaymentInfo {
+  id: number;
+  transaction: number;
+  account: number;
+  amount: string;
+  currency: string;
+  payment_method: string;
+  payment_date: string;
+  notes?: string;
+}
+
+export interface PaymentSummary {
+  total_amount: number;
+  total_paid: number;
+  remaining: number;
+  payment_count: number;
+}
+
+export interface ClientInfo {
+  id: number;
+  name: string;
+  firstname: string;
+  lastname: string;
+  phone: string;
+  address: string;
+  city: string;
+}
+
+export interface UserInfo {
+  id: number;
+  firstname: string;
+  lastname: string;
+}
+
+export interface SaleDetails {
+  id: number;
+  quantity: number;
+  sale_date: string;
+  prod_price: number;
+  product: {
+    id: number;
+    name: string;
+    category: string;
+    price: string;
+    description: string;
+  };
+  user?: UserInfo;
+  client?: ClientInfo;
+  transaction?: TransactionInfo;
+  payments: PaymentInfo[];
+  payment_summary?: PaymentSummary;
+}
