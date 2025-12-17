@@ -403,3 +403,81 @@ def getLastSoldPrice(request):
             {"error": "An unexpected error occurred", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def getSaleDetails(request, pk):
+    """Get detailed sale information including transaction and payment history"""
+    try:
+        # Retrieve sale with related transaction
+        sale = Sales.objects.select_related(
+            "transaction", "transaction__client", "prod"
+        ).get(id=pk)
+        
+        # Build response data
+        response_data = {
+            "id": sale.id,
+            "quantity": sale.quantity,
+            "sale_date": sale.sale_date,
+            "prod_price": float(sale.prod_price),
+        }
+        
+        # Add product info
+        if sale.prod:
+            product_serializer = ProductSerializer(sale.prod)
+            response_data["product"] = product_serializer.data
+        
+        # Add user info
+        try:
+            user = Users.objects.get(id=sale.user_id)
+            response_data["user"] = {
+                "id": user.id,
+                "firstname": user.firstname,
+                "lastname": user.lastname,
+            }
+        except Users.DoesNotExist:
+            response_data["user"] = None
+        
+        # Add transaction and client info
+        transaction = sale.transaction
+        if transaction:
+            transaction_serializer = TransactionSerializer(transaction)
+            response_data["transaction"] = transaction_serializer.data
+            
+            # Add client info from transaction
+            if transaction.client:
+                client_serializer = ClientSerializer(transaction.client)
+                response_data["client"] = {
+                    "id": transaction.client.id,
+                    "name": f"{client_serializer.data['firstname']} {client_serializer.data['lastname']}",
+                    "firstname": client_serializer.data["firstname"],
+                    "lastname": client_serializer.data["lastname"],
+                    "phone": client_serializer.data["phone"],
+                    "address": client_serializer.data["address"],
+                    "city": client_serializer.data.get("city", ""),
+                }
+            
+            # Get all payments for this transaction
+            payments = Payment.objects.filter(transaction=transaction).order_by("payment_date")
+            payment_serializer = PaymentSerializer(payments, many=True)
+            response_data["payments"] = payment_serializer.data
+            
+            # Calculate payment summary
+            total_paid = sum(float(p.amount) for p in payments)
+            response_data["payment_summary"] = {
+                "total_amount": float(transaction.total_amount),
+                "total_paid": total_paid,
+                "remaining": float(transaction.total_amount) - total_paid,
+                "payment_count": len(payments),
+            }
+        
+        return Response(response_data)
+    
+    except Sales.DoesNotExist:
+        return Response({"error": "Sale not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
