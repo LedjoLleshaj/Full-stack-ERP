@@ -21,4 +21,5 @@ export const environment = {
   getLastSoldPrice: "/last-sold-price",
   salesReport: "/report/sales/",
   dashboardStats: "/dashboard-stats",
+  getSaleDetails: "/sale-details/",
 };

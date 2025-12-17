@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "src/environment/environments";
-import { Sale, SaleResponse, SaleCreateResponse, PaymentRequest, PaymentResponse } from "src/app/models/sale.model";
+import { Sale, SaleResponse, SaleCreateResponse, PaymentRequest, PaymentResponse, SaleDetails } from "src/app/models/sale.model";
 
 @Injectable({
   providedIn: "root",
@@ -71,4 +71,15 @@ export class SalesApiService {
 
     return this.http.get<any[]>(url);
   }
+
+  /**
+   * Get detailed sale information including transaction and payment history
+   * @param saleId - ID of the sale
+   */
+  getSaleDetails(saleId: number): Observable<SaleDetails> {
+    return this.http.get<SaleDetails>(
+      `${environment.apiUrl}${environment.getSaleDetails}${saleId}`
+    );
+  }
 }
+
