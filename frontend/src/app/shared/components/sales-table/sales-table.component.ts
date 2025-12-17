@@ -8,12 +8,15 @@ import {
   CUSTOM_ELEMENTS_SCHEMA,
 } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
+import { Router } from "@angular/router";
+import { RouterModule } from "@angular/router";
 import { MatTableModule } from "@angular/material/table";
 import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatSortModule } from "@angular/material/sort";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
+import { MatTooltipModule } from "@angular/material/tooltip";
 import { DatePipe, NgClass, NgFor, NgIf } from "@angular/common";
 import { Sale, SaleResponse } from "../../../models/sale.model";
 import { SalesApiService } from "../../services/sales-api/sales-api.service";
@@ -22,7 +25,8 @@ import { SalesApiService } from "../../services/sales-api/sales-api.service";
   selector: "app-sales-table",
   templateUrl: "./sales-table.component.html",
   standalone: true,
-  imports: [MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, NgIf, DatePipe],
+  imports: [MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, NgIf, DatePipe, RouterModule, MatTooltipModule],
+  styleUrls: ["./sales-table.component.scss"],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SalesTableComponent implements AfterViewInit, OnChanges {
@@ -31,7 +35,10 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
   @Input() data: SaleResponse[] = [];
   @Input() total: number = 0;
 
-  constructor(private saleService: SalesApiService) {}
+  constructor(
+    private saleService: SalesApiService,
+    private router: Router
+  ) {}
 
   dataSource = new MatTableDataSource<SaleResponse>();
 
@@ -99,5 +106,13 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
       }
     );
     */
+  }
+
+  /**
+   * Navigate to the sale details page
+   * @param sale - The sale to view details for
+   */
+  goToSaleDetails(sale: SaleResponse): void {
+    this.router.navigate(['/sale', sale.id]);
   }
 }
