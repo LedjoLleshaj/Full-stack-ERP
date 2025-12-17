@@ -33,6 +33,7 @@ import { MatRadioModule } from "@angular/material/radio";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatDatepickerModule } from "@angular/material/datepicker";
 import { MatNativeDateModule } from "@angular/material/core";
+import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
@@ -50,6 +51,7 @@ import { PaidVsUnpaidViewComponent } from "./views/paid-vs-unpaid-view/paid-vs-u
 import { TopProductsViewComponent } from "./views/top-products-view/top-products-view.component";
 import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
 import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
+import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
 
 @NgModule({
   declarations: [
@@ -75,6 +77,7 @@ import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
     AlertsViewComponent,
     ConfirmDialogComponent,
     EditPriceDialogComponent,
+    SaleDetailsViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -105,6 +108,7 @@ import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
     MatDatepickerModule,
     MatNativeDateModule,
     SalesTableComponent,
+    MatProgressBarModule,
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],

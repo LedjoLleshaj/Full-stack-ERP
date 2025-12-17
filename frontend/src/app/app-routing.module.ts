@@ -16,6 +16,7 @@ import { PaidVsUnpaidViewComponent } from "./views/paid-vs-unpaid-view/paid-vs-u
 import { TopProductsViewComponent } from "./views/top-products-view/top-products-view.component";
 import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
 import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
+import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
 
 const routes: Routes = [
   {
@@ -86,6 +87,11 @@ const routes: Routes = [
       },
       { path: "add-product", component: AddProductViewComponent },
       { path: "add-client", component: AddClientViewComponent },
+      {
+        path: "sale/:id",
+        component: SaleDetailsViewComponent,
+        title: "Sale Details - Selita",
+      },
     ],
   },
 ];
