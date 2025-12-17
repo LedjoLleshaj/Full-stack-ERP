@@ -1,0 +1,179 @@
+<div class="sale-details-container">
+  <!-- Loading spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Duke ngarkuar detajet...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="!isLoading && errorMessage" class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="goBack()">Kthehu te Shitjet</button>
+  </div>
+
+  <!-- Sale details content -->
+  <div *ngIf="!isLoading && saleDetails" class="content">
+    <!-- Header -->
+    <div class="header">
+      <button mat-icon-button (click)="goBack()" class="back-button" matTooltip="Kthehu">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1>Shitja #{{ saleDetails.id }}</h1>
+        <span class="status-badge" [ngClass]="getStatusClass(saleDetails.transaction?.status || 'PENDING')">
+          {{ getStatusLabel(saleDetails.transaction?.status || 'PENDING') }}
+        </span>
+      </div>
+      <span class="sale-date">{{ formatDate(saleDetails.sale_date) }}</span>
+    </div>
+
+    <!-- Main grid -->
+    <div class="details-grid">
+      <!-- Product Info Card -->
+      <mat-card class="info-card product-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>inventory_2</mat-icon>
+          <mat-card-title>Produkti</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Emri:</span>
+            <span class="value">{{ saleDetails.product.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Kategoria:</span>
+            <span class="value">{{ saleDetails.product.category }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Sasia:</span>
+            <span class="value highlight">{{ saleDetails.quantity }} kg</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Çmimi/kg:</span>
+            <span class="value">{{ formatCurrency(saleDetails.prod_price, saleDetails.transaction?.currency || 'LEK') }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Client Info Card -->
+      <mat-card class="info-card client-card" *ngIf="saleDetails.client">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>person</mat-icon>
+          <mat-card-title>Klienti</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Emri:</span>
+            <span class="value clickable" (click)="goToClient()">{{ saleDetails.client.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Telefoni:</span>
+            <span class="value">{{ saleDetails.client.phone }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Adresa:</span>
+            <span class="value">{{ saleDetails.client.address }}</span>
+          </div>
+          <div class="info-row" *ngIf="saleDetails.client.city">
+            <span class="label">Qyteti:</span>
+            <span class="value">{{ saleDetails.client.city }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Transaction Summary Card -->
+      <mat-card class="info-card transaction-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>receipt_long</mat-icon>
+          <mat-card-title>Përmbledhje Transaksioni</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row total-row">
+            <span class="label">Totali:</span>
+            <span class="value total">{{ formatCurrency(saleDetails.payment_summary?.total_amount || 0, saleDetails.transaction?.currency || 'LEK') }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Paguar:</span>
+            <span class="value paid">{{ formatCurrency(saleDetails.payment_summary?.total_paid || 0, saleDetails.transaction?.currency || 'LEK') }}</span>
+          </div>
+          <div class="info-row" *ngIf="(saleDetails.payment_summary?.remaining || 0) > 0">
+            <span class="label">Mbetur:</span>
+            <span class="value remaining">{{ formatCurrency(saleDetails.payment_summary?.remaining || 0, saleDetails.transaction?.currency || 'LEK') }}</span>
+          </div>
+          
+          <!-- Payment progress bar -->
+          <div class="progress-container">
+            <mat-progress-bar mode="determinate" [value]="getPaymentProgress()" 
+              [color]="getPaymentProgress() >= 100 ? 'primary' : 'warn'">
+            </mat-progress-bar>
+            <span class="progress-label">{{ getPaymentProgress() | number:'1.0-0' }}% paguar</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Payments Section -->
+    <mat-card class="payments-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>payments</mat-icon>
+        <mat-card-title>Historiku i Pagesave ({{ saleDetails.payments.length }})</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="saleDetails.payments.length === 0" class="no-payments">
+          <mat-icon>money_off</mat-icon>
+          <p>Nuk ka pagesa të regjistruara</p>
+        </div>
+
+        <table mat-table [dataSource]="saleDetails.payments" *ngIf="saleDetails.payments.length > 0" class="payments-table">
+          <!-- Payment Date Column -->
+          <ng-container matColumnDef="payment_date">
+            <th mat-header-cell *matHeaderCellDef>Data</th>
+            <td mat-cell *matCellDef="let payment">{{ formatDate(payment.payment_date) }}</td>
+          </ng-container>
+
+          <!-- Amount Column -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>Shuma</th>
+            <td mat-cell *matCellDef="let payment" class="amount-cell">
+              {{ formatCurrency(payment.amount, payment.currency) }}
+            </td>
+          </ng-container>
+
+          <!-- Payment Method Column -->
+          <ng-container matColumnDef="payment_method">
+            <th mat-header-cell *matHeaderCellDef>Mënyra</th>
+            <td mat-cell *matCellDef="let payment">
+              <mat-chip [class.cash-chip]="payment.payment_method === 'CASH'" 
+                        [class.card-chip]="payment.payment_method === 'CARD'">
+                <mat-icon class="chip-icon">{{ payment.payment_method === 'CASH' ? 'money' : 'credit_card' }}</mat-icon>
+                {{ getPaymentMethodLabel(payment.payment_method) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Currency Column -->
+          <ng-container matColumnDef="currency">
+            <th mat-header-cell *matHeaderCellDef>Valuta</th>
+            <td mat-cell *matCellDef="let payment">{{ payment.currency }}</td>
+          </ng-container>
+
+          <!-- Notes Column -->
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef>Shënime</th>
+            <td mat-cell *matCellDef="let payment">{{ payment.notes || '-' }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- User Info -->
+    <!-- <div class="footer-info" *ngIf="saleDetails.user">
+      <mat-icon>person_outline</mat-icon>
+      <span>Shitje kryer nga: {{ saleDetails.user.firstname }} {{ saleDetails.user.lastname }}</span>
+    </div> -->
+  </div>
+</div>
