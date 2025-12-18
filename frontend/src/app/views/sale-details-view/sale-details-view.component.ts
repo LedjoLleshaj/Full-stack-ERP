@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { MatSnackBar } from "@angular/material/snack-bar";
 
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
-import { SaleDetails } from "src/app/models/sale.model";
+import { SaleDetails, PaymentRequest } from "src/app/models/sale.model";
 
 @Component({
   selector: "app-sale-details-view",
@@ -18,6 +18,16 @@ export class SaleDetailsViewComponent implements OnInit {
 
   // Table columns for payments
   displayedColumns: string[] = ["payment_date", "amount", "payment_method", "currency", "notes"];
+
+  // Payment form fields
+  showPaymentForm = false;
+  isSubmittingPayment = false;
+  paymentAmount: number = 0;
+  paymentMethod: string = "CASH";
+  paymentMethods: string[] = ["CASH", "CARD"];
+  paymentCurrency: string = "LEK";
+  currencies: string[] = ["LEK", "EUR", "USD"];
+  paymentNotes: string = "";
 
   constructor(
     private route: ActivatedRoute,
@@ -42,6 +52,14 @@ export class SaleDetailsViewComponent implements OnInit {
       next: (data) => {
         this.saleDetails = data;
         this.isLoading = false;
+        // Set default payment currency to match transaction currency
+        if (data.transaction?.currency) {
+          this.paymentCurrency = data.transaction.currency;
+        }
+        // Set default payment amount to remaining balance
+        if (data.payment_summary?.remaining) {
+          this.paymentAmount = data.payment_summary.remaining;
+        }
       },
       error: (err) => {
         console.error("Failed to load sale details:", err);
@@ -50,6 +68,60 @@ export class SaleDetailsViewComponent implements OnInit {
         this.snackBar.open(this.errorMessage, "Mbyll", { duration: 5000 });
       },
     });
+  }
+
+  // Payment form methods
+  togglePaymentForm(): void {
+    this.showPaymentForm = !this.showPaymentForm;
+    if (this.showPaymentForm && this.saleDetails?.payment_summary?.remaining) {
+      this.paymentAmount = this.saleDetails.payment_summary.remaining;
+    }
+  }
+
+  canSubmitPayment(): boolean {
+    return (
+      this.paymentAmount > 0 &&
+      this.paymentAmount <= (this.saleDetails?.payment_summary?.remaining || 0) &&
+      this.paymentMethod !== "" &&
+      this.paymentCurrency !== ""
+    );
+  }
+
+  submitPayment(): void {
+    if (!this.canSubmitPayment()) {
+      return;
+    }
+
+    this.isSubmittingPayment = true;
+
+    const payment: PaymentRequest = {
+      account_id: 0, // Will be auto-selected by backend based on payment method and currency
+      amount: this.paymentAmount,
+      currency: this.paymentCurrency,
+      payment_method: this.paymentMethod as "CASH" | "CARD",
+      notes: this.paymentNotes || `Pagesë për shitjen #${this.saleId}`,
+    };
+
+    this.salesService.paySale(this.saleId, payment).subscribe({
+      next: (response) => {
+        this.snackBar.open("Pagesa u regjistrua me sukses!", "Mbyll", { duration: 3000 });
+        this.isSubmittingPayment = false;
+        this.showPaymentForm = false;
+        this.paymentNotes = "";
+        // Reload sale details to show updated payment info
+        this.loadSaleDetails();
+      },
+      error: (err) => {
+        console.error("Failed to submit payment:", err);
+        const errorMsg = err?.error?.error || "Gabim në regjistrimin e pagesës";
+        this.snackBar.open(errorMsg, "Mbyll", { duration: 5000 });
+        this.isSubmittingPayment = false;
+      },
+    });
+  }
+
+  hasRemainingBalance(): boolean {
+    return (this.saleDetails?.payment_summary?.remaining || 0) > 0;
   }
 
   getStatusClass(status: string): string {
@@ -79,7 +151,7 @@ export class SaleDetailsViewComponent implements OnInit {
   }
 
   getPaymentMethodLabel(method: string): string {
-    return method === "CASH" ? "Para në dorë" : "Kartë";
+    return method === "CASH" ? "Cash" : "Kartë";
   }
 
   formatDate(dateString: string): string {
