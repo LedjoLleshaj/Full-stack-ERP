@@ -22,7 +22,7 @@
       <div class="header-info">
         <h1>Shitja #{{ saleDetails.id }}</h1>
         <span class="status-badge" [ngClass]="getStatusClass(saleDetails.transaction?.status || 'PENDING')">
-          {{ getStatusLabel(saleDetails.transaction?.status || 'PENDING') }}
+          {{ getStatusLabel(saleDetails.transaction?.status || "PENDING") }}
         </span>
       </div>
       <span class="sale-date">{{ formatDate(saleDetails.sale_date) }}</span>
@@ -51,7 +51,9 @@
           </div>
           <div class="info-row">
             <span class="label">Çmimi/kg:</span>
-            <span class="value">{{ formatCurrency(saleDetails.prod_price, saleDetails.transaction?.currency || 'LEK') }}</span>
+            <span class="value">{{
+              formatCurrency(saleDetails.prod_price, saleDetails.transaction?.currency || "LEK")
+            }}</span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -91,23 +93,32 @@
         <mat-card-content>
           <div class="info-row total-row">
             <span class="label">Totali:</span>
-            <span class="value total">{{ formatCurrency(saleDetails.payment_summary?.total_amount || 0, saleDetails.transaction?.currency || 'LEK') }}</span>
+            <span class="value total">{{
+              formatCurrency(saleDetails.payment_summary?.total_amount || 0, saleDetails.transaction?.currency || "LEK")
+            }}</span>
           </div>
           <div class="info-row">
             <span class="label">Paguar:</span>
-            <span class="value paid">{{ formatCurrency(saleDetails.payment_summary?.total_paid || 0, saleDetails.transaction?.currency || 'LEK') }}</span>
+            <span class="value paid">{{
+              formatCurrency(saleDetails.payment_summary?.total_paid || 0, saleDetails.transaction?.currency || "LEK")
+            }}</span>
           </div>
           <div class="info-row" *ngIf="(saleDetails.payment_summary?.remaining || 0) > 0">
             <span class="label">Mbetur:</span>
-            <span class="value remaining">{{ formatCurrency(saleDetails.payment_summary?.remaining || 0, saleDetails.transaction?.currency || 'LEK') }}</span>
+            <span class="value remaining">{{
+              formatCurrency(saleDetails.payment_summary?.remaining || 0, saleDetails.transaction?.currency || "LEK")
+            }}</span>
           </div>
-          
+
           <!-- Payment progress bar -->
           <div class="progress-container">
-            <mat-progress-bar mode="determinate" [value]="getPaymentProgress()" 
-              [color]="getPaymentProgress() >= 100 ? 'primary' : 'warn'">
+            <mat-progress-bar
+              mode="determinate"
+              [value]="getPaymentProgress()"
+              [color]="getPaymentProgress() >= 100 ? 'primary' : 'warn'"
+            >
             </mat-progress-bar>
-            <span class="progress-label">{{ getPaymentProgress() | number:'1.0-0' }}% paguar</span>
+            <span class="progress-label">{{ getPaymentProgress() | number : "1.0-0" }}% paguar</span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -125,7 +136,12 @@
           <p>Nuk ka pagesa të regjistruara</p>
         </div>
 
-        <table mat-table [dataSource]="saleDetails.payments" *ngIf="saleDetails.payments.length > 0" class="payments-table">
+        <table
+          mat-table
+          [dataSource]="saleDetails.payments"
+          *ngIf="saleDetails.payments.length > 0"
+          class="payments-table"
+        >
           <!-- Payment Date Column -->
           <ng-container matColumnDef="payment_date">
             <th mat-header-cell *matHeaderCellDef>Data</th>
@@ -144,9 +160,11 @@
           <ng-container matColumnDef="payment_method">
             <th mat-header-cell *matHeaderCellDef>Mënyra</th>
             <td mat-cell *matCellDef="let payment">
-              <mat-chip [class.cash-chip]="payment.payment_method === 'CASH'" 
-                        [class.card-chip]="payment.payment_method === 'CARD'">
-                <mat-icon class="chip-icon">{{ payment.payment_method === 'CASH' ? 'money' : 'credit_card' }}</mat-icon>
+              <mat-chip
+                [class.cash-chip]="payment.payment_method === 'CASH'"
+                [class.card-chip]="payment.payment_method === 'CARD'"
+              >
+                <mat-icon class="chip-icon">{{ payment.payment_method === "CASH" ? "money" : "credit_card" }}</mat-icon>
                 {{ getPaymentMethodLabel(payment.payment_method) }}
               </mat-chip>
             </td>
@@ -161,12 +179,96 @@
           <!-- Notes Column -->
           <ng-container matColumnDef="notes">
             <th mat-header-cell *matHeaderCellDef>Shënime</th>
-            <td mat-cell *matCellDef="let payment">{{ payment.notes || '-' }}</td>
+            <td mat-cell *matCellDef="let payment">{{ payment.notes || "-" }}</td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Add Payment Section (only if there's remaining balance) -->
+    <mat-card class="payment-form-card" *ngIf="hasRemainingBalance()">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>add_circle</mat-icon>
+        <mat-card-title>Shto Pagesë</mat-card-title>
+        <button mat-icon-button (click)="togglePaymentForm()" class="toggle-form-btn">
+          <mat-icon>{{ showPaymentForm ? "expand_less" : "expand_more" }}</mat-icon>
+        </button>
+      </mat-card-header>
+
+      <mat-card-content *ngIf="showPaymentForm">
+        <div class="payment-form">
+          <!-- Amount Field -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Shuma</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="paymentAmount"
+              [max]="saleDetails.payment_summary?.remaining || 0"
+              min="0.01"
+              step="0.01"
+            />
+            <span matTextSuffix>{{ paymentCurrency }}</span>
+            <mat-hint
+              >Maksimumi: {{ formatCurrency(saleDetails.payment_summary?.remaining || 0, paymentCurrency) }}</mat-hint
+            >
+          </mat-form-field>
+
+          <!-- Payment Method -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Mënyra e Pagesës</mat-label>
+            <mat-select [(ngModel)]="paymentMethod">
+              <mat-option *ngFor="let method of paymentMethods" [value]="method">
+                <mat-icon>{{ method === "CASH" ? "money" : "credit_card" }}</mat-icon>
+                {{ getPaymentMethodLabel(method) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Currency -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Valuta</mat-label>
+            <mat-select [(ngModel)]="paymentCurrency">
+              <mat-option *ngFor="let curr of currencies" [value]="curr">{{ curr }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Notes -->
+          <mat-form-field appearance="outline" class="form-field notes-field">
+            <mat-label>Shënime (opsionale)</mat-label>
+            <textarea matInput [(ngModel)]="paymentNotes" rows="2"></textarea>
+          </mat-form-field>
+
+          <!-- Submit Button -->
+          <div class="form-actions">
+            <button mat-button (click)="togglePaymentForm()">Anulo</button>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="submitPayment()"
+              [disabled]="!canSubmitPayment() || isSubmittingPayment"
+            >
+              <mat-icon *ngIf="!isSubmittingPayment">payment</mat-icon>
+              <mat-spinner *ngIf="isSubmittingPayment" diameter="20"></mat-spinner>
+              {{ isSubmittingPayment ? "Duke regjistruar..." : "Regjistro Pagesën" }}
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <!-- Quick pay button when form is collapsed -->
+      <mat-card-content *ngIf="!showPaymentForm" class="quick-pay-content">
+        <button mat-raised-button color="accent" (click)="togglePaymentForm()">
+          <mat-icon>add</mat-icon>
+          Shto Pagesë të Re
+        </button>
+        <span class="remaining-hint">
+          Mbetur:
+          {{ formatCurrency(saleDetails.payment_summary?.remaining || 0, saleDetails.transaction?.currency || "LEK") }}
+        </span>
       </mat-card-content>
     </mat-card>
 
