@@ -22,4 +22,5 @@ export const environment = {
   salesReport: "/report/sales/",
   dashboardStats: "/dashboard-stats",
   getSaleDetails: "/sale-details/",
+  dailyProfit: "/daily-profit",
 };
