@@ -78,8 +78,8 @@
       <div class="product-details">
         <h3>{{ selectedProduct.name }}</h3>
         <p class="stock-info">Sasia ne Inventar: {{ selectedProduct.disponibility }}</p>
-        <p class="price-info">Çmimi aktual: {{ selectedProduct.price | currency }}</p>
-        <p class="price-info" *ngIf="lastSoldPrice !== null">Cmimi i fundit: {{ lastSoldPrice | currency }}</p>
+        <p class="price-info">Çmimi aktual: {{ salePrice | currency:currency }}</p>
+        <p class="price-info" *ngIf="lastSoldPrice !== null">Cmimi i fundit: {{ lastSoldPrice | currency:currency }}</p>
       </div>
 
       <mat-divider></mat-divider>
@@ -111,7 +111,7 @@
         <div class="form-row">
           <div class="total-display">
             <span class="total-label">Totali:</span>
-            <span class="total-value">{{ getTotal() | currency }}</span>
+            <span class="total-value">{{ getTotal() | currency:currency }}</span>
           </div>
         </div>
 
@@ -137,7 +137,7 @@
 
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Monedha</mat-label>
-            <mat-select [(ngModel)]="currency">
+            <mat-select [(ngModel)]="currency" (selectionChange)="onCurrencyChange()">
               <mat-option *ngFor="let curr of currencies" [value]="curr">
                 {{ curr }}
               </mat-option>
