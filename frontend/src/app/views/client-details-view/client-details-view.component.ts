@@ -7,6 +7,7 @@ import { Product } from "src/app/models/product.model";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
 import { ProductService } from "src/app/shared/services/product-api/product.service";
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
+import { CurrencyExchangeService } from "src/app/shared/services/currency-exchange/currency-exchange.service";
 
 @Component({
   selector: "app-client-details-view",
@@ -21,22 +22,25 @@ export class ClientDetailsViewComponent implements OnInit {
   selectedProduct: Product | null = null;
   saleQuantity: number = 1;
   salePrice: number = 0;
+  basePriceEUR: number = 0; // Base product price in EUR for conversion
   isPaid: boolean = true;
   currentUserId: number = 1; // ⚡ TODO: Get from auth service
   lastSoldPrice: number | null = null;
+  baseLastSoldPriceEUR: number | null = null; // Base last sold price in EUR for conversion
 
   // Payment method and currency options
   paymentMethod: string = "CASH";
   paymentMethods: string[] = ["CASH", "CARD"];
-  currency: string = "LEK";
-  currencies: string[] = ["LEK", "EUR", "USD"];
+  currency: string = "EUR"; // Default to EUR since product prices are in EUR
+  currencies: string[] = ["EUR", "USD", "LEK"];
 
   constructor(
     private route: ActivatedRoute,
     private clientService: ClientService,
     private productService: ProductService,
     private saleService: SalesApiService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private currencyExchange: CurrencyExchangeService
   ) {}
 
   ngOnInit() {
@@ -97,6 +101,8 @@ export class ClientDetailsViewComponent implements OnInit {
     this.selectedProduct = product;
     if (this.selectedProduct) {
       this.salePrice = this.selectedProduct.price;
+      this.basePriceEUR = this.selectedProduct.price; // Store base price for currency conversion
+      this.currency = "EUR"; // Reset to EUR when selecting new product
       this.saleQuantity = 1;
       // Update searchText to show the selected product name
       this.searchText = this.selectedProduct.name;
@@ -106,13 +112,43 @@ export class ClientDetailsViewComponent implements OnInit {
         this.saleService.getLastSoldPrice(this.clientId, this.selectedProduct.id).subscribe({
           next: (response) => {
             this.lastSoldPrice = response.price;
+            this.baseLastSoldPriceEUR = response.price; // Store base price for currency conversion
           },
           error: (err) => {
             console.error("Failed to fetch last sold price:", err);
             this.lastSoldPrice = null;
+            this.baseLastSoldPriceEUR = null;
           },
         });
       }
+    }
+  }
+
+  /**
+   * Called when currency dropdown changes - convert price from EUR to selected currency
+   */
+  onCurrencyChange(): void {
+    if (!this.selectedProduct || this.basePriceEUR === 0) return;
+
+    if (this.currency === "EUR") {
+      // Reset to base EUR prices
+      this.salePrice = this.basePriceEUR;
+      if (this.baseLastSoldPriceEUR !== null) {
+        this.lastSoldPrice = this.baseLastSoldPriceEUR;
+      }
+    } else {
+      // Convert EUR to selected currency
+      this.currencyExchange.getExchangeRate("EUR", this.currency).subscribe({
+        next: (rate) => {
+          this.salePrice = Math.round(this.basePriceEUR * rate * 100) / 100;
+          if (this.baseLastSoldPriceEUR !== null) {
+            this.lastSoldPrice = Math.round(this.baseLastSoldPriceEUR * rate * 100) / 100;
+          }
+        },
+        error: () => {
+          this.snackBar.open("Gabim në marrjen e kursit të këmbimit", "Mbyll", { duration: 3000 });
+        },
+      });
     }
   }
 
@@ -184,7 +220,8 @@ export class ClientDetailsViewComponent implements OnInit {
     this.isPaid = true;
     this.searchText = "";
     this.lastSoldPrice = null;
+    this.baseLastSoldPriceEUR = null;
     this.paymentMethod = "CASH";
-    this.currency = "LEK";
+    this.currency = "EUR"; // Reset to EUR (matches product prices)
   }
 }
