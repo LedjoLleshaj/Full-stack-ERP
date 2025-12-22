@@ -4,90 +4,113 @@
     <h1 class="text-3xl font-bold">Raportet</h1>
   </div>
 
-  <!-- Metrics Row 1: Revenue Today, Month Revenue, Profit -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-    <!-- Revenue Today -->
-    <mat-card class="metric-card">
-      <mat-card-header>
-        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Te ardhura sot </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">{{ stats.revenue_today | currency:'EUR':'symbol':'1.2-2' }}</p>
-          <mat-icon class="text-green-500">trending_up</mat-icon>
-        </div>
-      </mat-card-content>
-    </mat-card>
+  <!-- Main Metrics Grid: 2 Columns (50/50) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Left Column: Stats -->
+    <div class="space-y-6">
+      <!-- Row 1: Revenue Today, Month Revenue -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Revenue Today -->
+        <mat-card class="metric-card">
+          <mat-card-header>
+            <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Te ardhura sot </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="flex items-center justify-between">
+              <p class="text-2xl font-bold">{{ stats.revenue_today | currency:'EUR':'symbol':'1.2-2' }}</p>
+              <mat-icon class="text-green-500">trending_up</mat-icon>
+            </div>
+          </mat-card-content>
+        </mat-card>
 
-    <!-- Month Revenue -->
-    <mat-card class="metric-card">
-      <mat-card-header>
-        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
-          Te ardhura te muajit
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">{{ stats.revenue_month | currency:'EUR':'symbol':'1.2-2' }}</p>
-          <mat-icon class="text-blue-500">attach_money</mat-icon>
-        </div>
-      </mat-card-content>
-    </mat-card>
+        <!-- Month Revenue -->
+        <mat-card class="metric-card">
+          <mat-card-header>
+            <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+              Te ardhura te muajit
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="flex items-center justify-between">
+              <p class="text-2xl font-bold">{{ stats.revenue_month | currency:'EUR':'symbol':'1.2-2' }}</p>
+              <mat-icon class="text-blue-500">attach_money</mat-icon>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
 
-    <!-- Profit -->
-    <mat-card class="metric-card">
-      <mat-card-header>
-        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Fitimi </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">{{ stats.profit | currency:'EUR':'symbol':'1.2-2' }}</p>
-          <mat-icon class="text-purple-500">show_chart</mat-icon>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+      <!-- Row 2: Profit, Debt -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Profit -->
+        <mat-card class="metric-card">
+          <mat-card-header>
+            <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Fitimi </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="flex items-center justify-between">
+              <p class="text-2xl font-bold">{{ stats.profit | currency:'EUR':'symbol':'1.2-2' }}</p>
+              <mat-icon class="text-purple-500">show_chart</mat-icon>
+            </div>
+          </mat-card-content>
+        </mat-card>
 
-  <!-- Metrics Row 2: Cash Balance, Bank Balance, Debt -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-    <!-- Cash Balance -->
-    <mat-card class="metric-card">
-      <mat-card-header>
-        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Bilanci Cash </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">{{ stats.cash_balance | currency:'EUR':'symbol':'1.2-2' }}</p>
-          <mat-icon class="text-green-600">payments</mat-icon>
-        </div>
-      </mat-card-content>
-    </mat-card>
+        <!-- Debt -->
+        <mat-card class="metric-card">
+          <mat-card-header>
+            <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Borxhet </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="flex items-center justify-between">
+              <p class="text-2xl font-bold text-red-500">{{ stats.debt | currency:'EUR':'symbol':'1.2-2' }}</p>
+              <mat-icon class="text-red-500">account_balance_wallet</mat-icon>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
 
-    <!-- Bank Balance -->
-    <mat-card class="metric-card">
-      <mat-card-header>
-        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Bilanci Bank </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold">{{ stats.bank_balance | currency:'EUR':'symbol':'1.2-2' }}</p>
-          <mat-icon class="text-blue-600">account_balance</mat-icon>
+    <!-- Right Column: Account Balances -->
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Cash Balance Card -->
+      <mat-card class="metric-card">
+        <div class='row'>
+          <mat-card-header>
+            <mat-card-title class="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center">
+              <mat-icon class="text-green-600">payments</mat-icon>
+              Bilanci Cash
+            </mat-card-title>
+          </mat-card-header>
         </div>
-      </mat-card-content>
-    </mat-card>
+        <div class='row'>
+          <mat-card-content style='margin-top: -1rem'>
+            <div *ngFor="let account of cashAccounts" class="flex justify-between items-center">
+              <span class="text-base text-gray-500 dark:text-gray-400">{{ account.currency }}</span>
+              <span class="text-xl font-bold">{{ account.balance | number:'1.2-2' }}</span>
+            </div>
+          </mat-card-content>
+        </div>
+      </mat-card>
 
-    <!-- Debt -->
-    <mat-card class="metric-card">
-      <mat-card-header>
-        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400"> Borxhet </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="flex items-center justify-between">
-          <p class="text-2xl font-bold text-red-500">{{ stats.debt | currency:'EUR':'symbol':'1.2-2' }}</p>
-          <mat-icon class="text-red-500">account_balance_wallet</mat-icon>
+      <!-- Bank Balance Card -->
+      <mat-card class="metric-card">
+        <div class='row'>
+          <mat-card-header>
+            <mat-card-title class="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center ">
+              <mat-icon class="text-blue-600">account_balance</mat-icon>
+              Bilanci Bank
+            </mat-card-title>
+          </mat-card-header>
         </div>
-      </mat-card-content>
-    </mat-card>
+        <div class='row'>
+          <mat-card-content style='margin-top: -1rem'>
+            <div *ngFor="let account of bankAccounts" class="flex justify-between items-center">
+              <span class="text-base text-gray-500 dark:text-gray-400">{{ account.currency }}</span>
+              <span class="text-xl font-bold">{{ account.balance | number:'1.2-2' }}</span>
+            </div>
+          </mat-card-content>
+        </div>
+      </mat-card>
+    </div>
   </div>
 
   <!-- Charts and Reports Section -->
