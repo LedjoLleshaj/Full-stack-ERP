@@ -4,14 +4,14 @@ import { ReportsApiService, DashboardStats } from "src/app/shared/services/repor
 @Component({
   selector: "app-reports-view",
   templateUrl: "./reports-view.component.html",
+  styleUrls: ["./reports-view.component.scss"],
 })
 export class ReportsViewComponent implements OnInit {
   stats: DashboardStats = {
     revenue_today: 0,
     revenue_month: 0,
     profit: 0,
-    cash_balance: 0,
-    bank_balance: 0,
+    accounts: [],
     debt: 0
   };
 
@@ -21,5 +21,13 @@ export class ReportsViewComponent implements OnInit {
     this.reportsService.getDashboardStats().subscribe(data => {
       this.stats = data;
     });
+  }
+
+  get cashAccounts() {
+    return this.stats.accounts.filter(a => a.type === 'CASH');
+  }
+
+  get bankAccounts() {
+    return this.stats.accounts.filter(a => a.type === 'BANK');
   }
 }
