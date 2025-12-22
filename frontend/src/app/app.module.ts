@@ -52,6 +52,7 @@ import { TopProductsViewComponent } from "./views/top-products-view/top-products
 import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
 import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
 import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
+import { NgxEchartsModule } from "ngx-echarts";
 
 @NgModule({
   declarations: [
@@ -109,6 +110,9 @@ import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details
     MatNativeDateModule,
     SalesTableComponent,
     MatProgressBarModule,
+    NgxEchartsModule.forRoot({
+      echarts: () => import('echarts')
+    }),
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],

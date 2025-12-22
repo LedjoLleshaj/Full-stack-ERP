@@ -37,12 +37,12 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Blerje Totale</div>
-        <div class="stat-value">{{ client?.totalBought | currency }}</div>
+        <div class="stat-value">{{ client?.totalBought | currency:'EUR' }}</div>
       </div>
       <div class="stat-card debt-card">
         <div class="stat-label">Balance pa paguar</div>
         <div class="stat-value" [ngClass]="{ debt: (client?.unpaidBalance || 0) > 0 }">
-          {{ client?.unpaidBalance | currency }}
+          {{ client?.unpaidBalance | currency:'EUR' }}
         </div>
       </div>
     </div>
