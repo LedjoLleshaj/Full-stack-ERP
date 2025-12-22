@@ -15,6 +15,7 @@ from .api import (
     payments,
     account_transactions,
     restocks,
+    exchange_rates,
 )
 
 
@@ -113,4 +114,10 @@ urlpatterns = [
     # ======== REPORTS ========
     path("report/sales/", reports.sales_report),
     path("dashboard-stats", reports.dashboard_stats),
+    path("daily-profit", reports.daily_profit),
+    
+    # ======== EXCHANGE RATES ========
+    path("exchange-rates", exchange_rates.get_exchange_rates),
+    path("exchange-rate/<str:from_currency>/<str:to_currency>", exchange_rates.get_exchange_rate),
+    path("convert-currency", exchange_rates.convert_currency),
 ]

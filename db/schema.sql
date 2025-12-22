@@ -48,6 +48,19 @@ CREATE TABLE Account (
     UNIQUE(account_type, currency) -- One cash account per currency, one bank per currency
 );
 
+-- Exchange rates table (synced weekly from external API)
+CREATE TABLE exchange_rate (
+    id SERIAL PRIMARY KEY,
+    from_currency VARCHAR(3) NOT NULL CHECK (from_currency IN ('EUR', 'USD', 'LEK')),
+    to_currency VARCHAR(3) NOT NULL CHECK (to_currency IN ('EUR', 'USD', 'LEK')),
+    rate DECIMAL(12, 6) NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(from_currency, to_currency)
+);
+
+-- Create index for faster rate lookups
+CREATE INDEX exchange_rate_pair_idx ON exchange_rate(from_currency, to_currency);
+
 -- Main transaction table (purchases from suppliers or sales to clients)
 CREATE TABLE Transaction (
     id SERIAL PRIMARY KEY,
@@ -80,6 +93,10 @@ CREATE TABLE Payment (
     account_id INTEGER NOT NULL REFERENCES Account(id), -- Which account was used
     amount DECIMAL(10, 2) NOT NULL,
     currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'LEK')),
+    -- Original payment details (before currency conversion)
+    original_amount DECIMAL(10, 2),
+    original_currency VARCHAR(3) CHECK (original_currency IN ('EUR', 'USD', 'LEK')),
+    exchange_rate DECIMAL(12, 6),  -- Rate used for conversion
     payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CASH', 'CARD')),
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     notes TEXT
@@ -193,6 +210,25 @@ INSERT INTO Account (account_name, account_type, currency, current_balance, note
 ('Bank EUR', 'BANK', 'EUR', 0.00, 'Bank account in Euros'),
 ('Bank USD', 'BANK', 'USD', 0.00, 'Bank account in US Dollars'),
 ('Bank LEK', 'BANK', 'LEK', 0.00, 'Bank account in Albanian Lek');
+
+-- =====================================================================================
+-- EXCHANGE RATES - Synced from ExchangeRate-API (Dec 2025)
+-- These rates should be updated weekly using: python manage.py sync_exchange_rates
+-- Rates are stored as from_currency -> to_currency conversions
+-- =====================================================================================
+INSERT INTO exchange_rate (from_currency, to_currency, rate) VALUES 
+-- EUR rates
+('EUR', 'EUR', 1.000000),
+('EUR', 'USD', 1.163900),
+('EUR', 'LEK', 95.373500),
+-- USD rates
+('USD', 'EUR', 0.851900),
+('USD', 'USD', 1.000000),
+('USD', 'LEK', 82.234800),
+-- LEK rates
+('LEK', 'EUR', 0.010380),
+('LEK', 'USD', 0.012160),
+('LEK', 'LEK', 1.000000);
 
 -- Insert Transactions (both PURCHASE from suppliers and SALE to clients)
 INSERT INTO Transaction (transaction_type, supplier_id, client_id, total_amount, currency, status, invoice_number, notes, completed_date) VALUES 
