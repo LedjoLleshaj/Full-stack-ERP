@@ -58,24 +58,39 @@ def getClient(request, pk):
             transaction__client_id=client_data["id"]
         ).select_related('transaction')
         
-        from ..models import Payment
+        from ..models import Payment, ExchangeRate
         from django.db.models import Sum
+        from decimal import Decimal
         
-        unpaidBalance = 0
-        totalBought = 0
+        def convert_to_eur(amount, currency):
+            """Convert amount from any currency to EUR"""
+            if currency == "EUR":
+                return Decimal(str(amount))
+            try:
+                rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
+                return Decimal(str(amount)) * rate.rate
+            except ExchangeRate.DoesNotExist:
+                # Fallback: return as-is if no rate found
+                return Decimal(str(amount))
+        
+        unpaidBalance = Decimal("0")
+        totalBought = Decimal("0")
         
         for sale in sales:
-            sale_total = sale.prod_price * sale.quantity
-            totalBought += sale_total
+            sale_total = Decimal(str(sale.prod_price)) * sale.quantity
+            # Convert sale total to EUR using the transaction's currency
+            currency = sale.transaction.currency if sale.transaction else "EUR"
+            totalBought += convert_to_eur(sale_total, currency)
             
             # Calculate how much is still owed for this transaction
             total_paid = Payment.objects.filter(
                 transaction=sale.transaction
             ).aggregate(total=Sum('amount'))['total'] or 0
             
-            remaining = sale.transaction.total_amount - total_paid
+            remaining = Decimal(str(sale.transaction.total_amount)) - Decimal(str(total_paid))
             if remaining > 0:
-                unpaidBalance += remaining
+                # Convert remaining balance to EUR
+                unpaidBalance += convert_to_eur(remaining, currency)
         
         client_data["unpaidBalance"] = float(unpaidBalance)
         client_data["totalBought"] = float(totalBought)
