@@ -9,6 +9,38 @@ CURRENCY_CHOICES = [
 ]
 
 
+class ExchangeRate(models.Model):
+    """
+    Stores currency exchange rates.
+    Rates are stored relative to a base currency.
+    Updated weekly via management command.
+    """
+    from_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    to_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    rate = models.DecimalField(max_digits=12, decimal_places=6)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "exchange_rate"
+        verbose_name = "Exchange Rate"
+        verbose_name_plural = "Exchange Rates"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["from_currency", "to_currency"],
+                name="unique_currency_pair"
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["from_currency", "to_currency"],
+                name="exchange_rate_pair_idx"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.from_currency} → {self.to_currency}: {self.rate}"
+
+
 # Create your models here.
 class Users(models.Model):
     username = models.CharField(max_length=200)
@@ -180,8 +212,12 @@ class Payment(models.Model):
     account = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="payments"
     )
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Amount in transaction currency
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)  # Transaction currency
+    # Original payment details (before currency conversion)
+    original_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    original_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, null=True, blank=True)
+    exchange_rate = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)  # Rate used for conversion
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     payment_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
