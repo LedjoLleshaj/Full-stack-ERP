@@ -24,9 +24,9 @@
         <mat-error *ngIf="productForm.controls['category'].hasError('required')"> Category is required </mat-error>
       </mat-form-field> -->
 
-      <!-- Product Price -->
+      <!-- Product Price (per unit) -->
       <mat-form-field class="full-width">
-        <mat-label>Cmimi</mat-label>
+        <mat-label>Cmimi blerje për njësi (€/kg)</mat-label>
         <input matInput type="number" formControlName="price" required />
 
         <mat-error *ngIf="productForm.controls['price'].hasError('min')">
