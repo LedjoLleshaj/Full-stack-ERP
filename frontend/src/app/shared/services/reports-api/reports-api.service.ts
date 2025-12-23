@@ -23,6 +23,22 @@ export interface DailyProfit {
   profit: number;
 }
 
+export interface PaidVsUnpaidCategory {
+  amount: number;
+  count: number;
+  label: string;
+}
+
+export interface PaidVsUnpaidStats {
+  paid: PaidVsUnpaidCategory;
+  partial: PaidVsUnpaidCategory;
+  unpaid: PaidVsUnpaidCategory;
+  total: {
+    amount: number;
+    count: number;
+  };
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -35,6 +51,10 @@ export class ReportsApiService {
 
   getDailyProfit(): Observable<DailyProfit[]> {
     return this.http.get<DailyProfit[]>(`${environment.apiUrl}${environment.dailyProfit}`);
+  }
+
+  getPaidVsUnpaid(): Observable<PaidVsUnpaidStats> {
+    return this.http.get<PaidVsUnpaidStats>(`${environment.apiUrl}/paid-vs-unpaid`);
   }
 }
 

@@ -115,6 +115,7 @@ urlpatterns = [
     path("report/sales/", reports.sales_report),
     path("dashboard-stats", reports.dashboard_stats),
     path("daily-profit", reports.daily_profit),
+    path("paid-vs-unpaid", reports.paid_vs_unpaid),
     
     # ======== EXCHANGE RATES ========
     path("exchange-rates", exchange_rates.get_exchange_rates),

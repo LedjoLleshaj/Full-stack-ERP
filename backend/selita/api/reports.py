@@ -227,3 +227,92 @@ def daily_profit(request):
     
     return Response(result)
 
+
+@api_view(["GET"])
+def paid_vs_unpaid(request):
+    """
+    Get paid vs unpaid sales statistics for pie chart visualization.
+    
+    Categories:
+    - Paid: Completed sales total + paid portions of partial sales
+    - Partial: Remaining debt on partial sales only
+    - Unpaid: Pending sales total (nothing paid yet)
+    """
+    from ..models import ExchangeRate
+    from decimal import Decimal
+    from django.db.models import Sum
+    
+    def convert_to_eur(amount, currency):
+        """Convert amount from any currency to EUR"""
+        if currency == "EUR":
+            return amount
+        try:
+            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
+            return amount * rate.rate
+        except ExchangeRate.DoesNotExist:
+            return amount
+    
+    # Get all sales transactions (excluding cancelled)
+    all_sales = Transaction.objects.filter(
+        transaction_type="SALE"
+    ).exclude(status="CANCELLED")
+    
+    # Initialize counters
+    paid_amount = Decimal("0")
+    paid_count = 0  # Count of fully paid sales
+    unpaid_amount = Decimal("0")
+    unpaid_count = 0  # Count of pending sales
+    partial_remaining = Decimal("0")  # Remaining debt on partial sales
+    partial_count = 0  # Count of partial sales
+    
+    for sale in all_sales:
+        amount_eur = convert_to_eur(sale.total_amount, sale.currency)
+        
+        if sale.status == "COMPLETED":
+            # Fully paid - entire amount goes to "Paid"
+            paid_amount += amount_eur
+            paid_count += 1
+        elif sale.status == "PARTIAL":
+            # Get total payments made for this sale
+            payments_made = Payment.objects.filter(transaction=sale).aggregate(
+                total=Sum("amount")
+            )["total"] or Decimal("0")
+            
+            # Convert payments to EUR (assuming payments are in same currency as sale)
+            payments_eur = convert_to_eur(payments_made, sale.currency)
+            
+            # Add paid portion to "Paid"
+            paid_amount += payments_eur
+            
+            # Calculate remaining debt for "Partial"
+            remaining = amount_eur - payments_eur
+            partial_remaining += remaining
+            partial_count += 1
+        else:  # PENDING - nothing paid yet
+            unpaid_amount += amount_eur
+            unpaid_count += 1
+    
+    data = {
+        "paid": {
+            "amount": float(paid_amount),
+            "count": paid_count,
+            "label": "Paguar"
+        },
+        "partial": {
+            "amount": float(partial_remaining),
+            "count": partial_count,
+            "label": "Pjesërisht"
+        },
+        "unpaid": {
+            "amount": float(unpaid_amount),
+            "count": unpaid_count,
+            "label": "Pa Paguar"
+        },
+        "total": {
+            "amount": float(paid_amount + partial_remaining + unpaid_amount),
+            "count": paid_count + partial_count + unpaid_count
+        }
+    }
+    
+    return Response(data)
+
