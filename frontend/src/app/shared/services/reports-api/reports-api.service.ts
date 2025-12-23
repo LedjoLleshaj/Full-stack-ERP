@@ -39,6 +39,11 @@ export interface PaidVsUnpaidStats {
   };
 }
 
+export interface TopProduct {
+  name: string;
+  quantity: number;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -55,6 +60,10 @@ export class ReportsApiService {
 
   getPaidVsUnpaid(): Observable<PaidVsUnpaidStats> {
     return this.http.get<PaidVsUnpaidStats>(`${environment.apiUrl}/paid-vs-unpaid`);
+  }
+
+  getTopProducts(): Observable<TopProduct[]> {
+    return this.http.get<TopProduct[]>(`${environment.apiUrl}/top-products`);
   }
 }
 

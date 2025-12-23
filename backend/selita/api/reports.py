@@ -316,3 +316,30 @@ def paid_vs_unpaid(request):
     
     return Response(data)
 
+
+@api_view(["GET"])
+def top_products(request):
+    """
+    Get the top 5 best-selling products by quantity sold.
+    Returns product names and their total quantities sold.
+    """
+    from django.db.models import Sum
+    
+    # Get all sales, group by product, sum quantities, order by total quantity
+    top_products_data = (
+        Sales.objects
+        .exclude(transaction__status="CANCELLED")
+        .values('prod__name')
+        .annotate(total_quantity=Sum('quantity'))
+        .order_by('-total_quantity')[:5]
+    )
+    
+    result = []
+    for item in top_products_data:
+        result.append({
+            "name": item['prod__name'],
+            "quantity": float(item['total_quantity'])
+        })
+    
+    return Response(result)
+
