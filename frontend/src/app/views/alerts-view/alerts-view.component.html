@@ -1,13 +1,147 @@
 <div class="flex flex-col items-stretch justify-start gap-6">
+  <!-- Header -->
   <div class="py-2">
     <h1 class="text-3xl font-bold">Paralajmerimet e Stokut dhe Borxheve</h1>
     <p class="text-gray-600 dark:text-gray-400 mt-1">Produktet me stok te ulet dhe borxhet aktive</p>
   </div>
 
-  <mat-card>
-    <mat-card-content>
-      <p>Stock and debt alerts table will be displayed here.</p>
-      <!-- TODO: Add alerts table -->
+  <!-- Low Stock Alerts Section -->
+  <mat-card class="overflow-hidden">
+    <mat-card-header class=" border-b dark:border-orange-800">
+      <mat-card-title class="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+        <mat-icon class="text-orange-500">inventory_2</mat-icon>
+        Stoku i Ulet
+        <span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">(nen {{ lowStockThreshold }} njesi)</span>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="p-0">
+      <div *ngIf="lowStockProducts.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
+        <mat-icon class="text-5xl text-green-500 mb-2">check_circle</mat-icon>
+        <p>Nuk ka produkte me stok te ulet!</p>
+      </div>
+
+      <table mat-table [dataSource]="lowStockProducts" *ngIf="lowStockProducts.length > 0" class="w-full">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Produkti</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="font-medium">{{ product.name }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Category Column -->
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef>Kategoria</th>
+          <td mat-cell *matCellDef="let product">{{ product.category }}</td>
+        </ng-container>
+
+        <!-- Stock Column -->
+        <ng-container matColumnDef="disponibility">
+          <th mat-header-cell *matHeaderCellDef>Stoku</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-semibold"
+                  [ngClass]="{
+                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': product.disponibility === 0,
+                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400': product.disponibility > 0 && product.disponibility < lowStockThreshold
+                  }">
+              <mat-icon class="text-sm" style="font-size: 16px; width: 16px; height: 16px;">
+                {{ product.disponibility === 0 ? 'error' : 'warning' }}
+              </mat-icon>
+              {{ product.disponibility }} kg
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Price Column -->
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef>Cmimi</th>
+          <td mat-cell *matCellDef="let product">{{ product.price | currency:'EUR':'symbol':'1.2-2' }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="stockColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: stockColumns;"
+            class="hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors"></tr>
+      </table>
     </mat-card-content>
   </mat-card>
+
+  <!-- Clients with Debt Section -->
+  <mat-card class="overflow-hidden">
+    <mat-card-header class="border-b border-red-200 dark:border-red-800">
+      <mat-card-title class="flex items-center gap-2 text-red-700 dark:text-red-400">
+        <mat-icon class="text-red-500">account_balance_wallet</mat-icon>
+        Borxhet Aktive
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="p-0">
+      <div *ngIf="clientsWithDebt.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
+        <mat-icon class="text-5xl text-green-500 mb-2">check_circle</mat-icon>
+        <p>Nuk ka klient me borxhe aktive!</p>
+      </div>
+
+      <table mat-table [dataSource]="clientsWithDebt" *ngIf="clientsWithDebt.length > 0" class="w-full">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Klienti</th>
+          <td mat-cell *matCellDef="let client">
+            <span class="font-medium">{{ client.firstname }} {{ client.lastname }}</span>
+          </td>
+        </ng-container>
+
+        <!-- City Column -->
+        <ng-container matColumnDef="city">
+          <th mat-header-cell *matHeaderCellDef>Qyteti</th>
+          <td mat-cell *matCellDef="let client">{{ client.city }}</td>
+        </ng-container>
+
+        <!-- Phone Column -->
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Telefoni</th>
+          <td mat-cell *matCellDef="let client">{{ client.phone }}</td>
+        </ng-container>
+
+        <!-- Unpaid Balance Column -->
+        <ng-container matColumnDef="unpaidBalance">
+          <th mat-header-cell *matHeaderCellDef>Borxhi</th>
+          <td mat-cell *matCellDef="let client">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              {{ client.unpaidBalance | currency:'EUR':'symbol':'1.2-2' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="debtColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: debtColumns;"
+            class="hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors cursor-pointer"
+            [routerLink]="['/clients', row.id]"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <mat-card class="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+      <mat-card-content class="py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm opacity-80">Produkte me Stok te Ulet</p>
+            <p class="text-3xl font-bold">{{ lowStockProducts.length }}</p>
+          </div>
+          <mat-icon class="text-5xl opacity-80">inventory_2</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="bg-gradient-to-br from-red-500 to-red-600 text-white">
+      <mat-card-content class="py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm opacity-80">Klient me Borxhe</p>
+            <p class="text-3xl font-bold">{{ clientsWithDebt.length }}</p>
+          </div>
+          <mat-icon class="text-5xl opacity-80">account_balance_wallet</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>
