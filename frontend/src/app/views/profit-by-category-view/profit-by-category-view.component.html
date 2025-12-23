@@ -1,13 +1,109 @@
 <div class="flex flex-col items-stretch justify-start gap-6">
+  <!-- Page Header -->
   <div class="py-2">
-    <h1 class="text-3xl font-bold">Fitimi sipas kategorise</h1>
-    <p class="text-gray-600 dark:text-gray-400 mt-1">Shperndarja e fitimit neper kategori</p>
+    <h1 class="text-3xl font-bold">Fitimi sipas kategorisë</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-1">Shpërndarja e fitimit nëpër kategori produktesh</p>
   </div>
 
-  <mat-card>
+  <!-- Stats Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6" *ngIf="categories.length > 0 && !isLoading">
+    <!-- Total Revenue Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">Të ardhura totale</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ formatCurrency(getTotalRevenue()) }}</p>
+          <mat-icon class="text-blue-500">trending_up</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Total Cost Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">Kosto totale</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ formatCurrency(getTotalCost()) }}</p>
+          <mat-icon class="text-orange-500">shopping_cart</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Total Profit Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">Fitimi total</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold" [ngClass]="getTotalProfit() >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            {{ formatCurrency(getTotalProfit()) }}
+          </p>
+          <mat-icon [class]="getTotalProfit() >= 0 ? 'text-green-500' : 'text-red-500'">
+            {{ getTotalProfit() >= 0 ? 'trending_up' : 'trending_down' }}
+          </mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Chart Card -->
+  <mat-card class="chart-card" [ngClass]="{'dark-card': isDarkMode}">
     <mat-card-content>
-      <p>Profit by category chart will be displayed here.</p>
-      <!-- TODO: Add profit by category chart -->
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p class="text-gray-500 mt-4">Duke ngarkuar të dhënat...</p>
+      </div>
+
+      <!-- No Data Message -->
+      <div *ngIf="!isLoading && categories.length === 0" class="loading-container">
+        <mat-icon class="text-gray-400" style="font-size: 64px; width: 64px; height: 64px;">donut_large</mat-icon>
+        <p class="text-gray-500 mt-4">Nuk ka të dhëna për kategorinë</p>
+      </div>
+
+      <!-- Chart -->
+      <div
+        *ngIf="!isLoading && categories.length > 0"
+        echarts
+        [options]="chartOptions"
+        class="chart-container"
+      ></div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Category Breakdown Table -->
+  <mat-card *ngIf="categories.length > 0 && !isLoading" class="breakdown-card">
+    <mat-card-header>
+      <mat-card-title class="text-lg font-semibold">Detajet sipas kategorisë</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Kategoria</th>
+              <th class="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Të ardhura</th>
+              <th class="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Kosto</th>
+              <th class="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Fitimi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let category of categories" class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <td class="py-3 px-4 font-medium">{{ category.name }}</td>
+              <td class="py-3 px-4 text-right text-blue-600 dark:text-blue-400">{{ formatCurrency(category.revenue) }}</td>
+              <td class="py-3 px-4 text-right text-orange-600 dark:text-orange-400">{{ formatCurrency(category.cost) }}</td>
+              <td class="py-3 px-4 text-right font-semibold" [ngClass]="category.profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                {{ formatCurrency(category.profit) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </mat-card-content>
   </mat-card>
 </div>
