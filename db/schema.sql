@@ -231,74 +231,107 @@ INSERT INTO exchange_rate (from_currency, to_currency, rate) VALUES
 ('LEK', 'LEK', 1.000000);
 
 -- Insert Transactions (both PURCHASE from suppliers and SALE to clients)
+-- Note: Restock prices are TOTAL COST, not per-kg. E.g., 50 Salmon at 450 EUR total = 9 EUR/kg purchase price
 INSERT INTO Transaction (transaction_type, supplier_id, client_id, total_amount, currency, status, invoice_number, notes, completed_date) VALUES 
-('PURCHASE', 1, NULL, 1500.00, 'EUR', 'COMPLETED', 'PUR-2025-001', 'Purchase of fresh salmon and koce', '2025-11-20 10:30:00'),
-('PURCHASE', 2, NULL, 800.00, 'EUR', 'PARTIAL', 'PUR-2025-002', 'Purchase of seafood assortment', NULL),
-('PURCHASE', 3, NULL, 2000.00, 'LEK', 'COMPLETED', 'PUR-2025-003', 'Bulk purchase wild fish', '2025-11-22 14:15:00'),
-('SALE', NULL, 1, 500.00, 'EUR', 'COMPLETED', 'SAL-2025-001', 'Sale to Ledjo Lleshaj', '2025-11-23 09:00:00'),
-('SALE', NULL, 2, 750.00, 'EUR', 'PARTIAL', 'SAL-2025-002', 'Sale to Kristjan Gjinaj', NULL),
-('SALE', NULL, 1, 300.00, 'USD', 'COMPLETED', 'SAL-2025-003', 'Additional sale to Ledjo', '2025-11-25 11:30:00');
+-- PURCHASES (restocks from suppliers) - restock_price is the TOTAL cost for that restock line
+('PURCHASE', 1, NULL, 1480.00, 'EUR', 'COMPLETED', 'PUR-2025-001', 'Purchase of fresh salmon, koce, gafforre, peshkaqen', '2025-11-20 10:30:00'),
+('PURCHASE', 2, NULL, 990.00, 'EUR', 'PARTIAL', 'PUR-2025-002', 'Purchase of seafood assortment', NULL),
+('PURCHASE', 3, NULL, 1660.00, 'EUR', 'COMPLETED', 'PUR-2025-003', 'Bulk purchase wild fish and seafood', '2025-11-22 14:15:00'),
+-- SALES to clients - more realistic amounts to generate positive profit
+('SALE', NULL, 1, 1250.00, 'EUR', 'COMPLETED', 'SAL-2025-001', 'Sale to Ledjo Lleshaj - large order', '2025-11-23 09:00:00'),
+('SALE', NULL, 2, 980.00, 'EUR', 'COMPLETED', 'SAL-2025-002', 'Sale to Kristjan Gjinaj', '2025-11-24 10:00:00'),
+('SALE', NULL, 1, 650.00, 'EUR', 'COMPLETED', 'SAL-2025-003', 'Additional sale to Ledjo', '2025-11-25 11:30:00'),
+('SALE', NULL, 2, 420.00, 'EUR', 'PARTIAL', 'SAL-2025-004', 'Small order Kristjan - partial payment', NULL),
+('SALE', NULL, 1, 890.00, 'EUR', 'COMPLETED', 'SAL-2025-005', 'Weekend order for Ledjo', '2025-11-26 09:00:00'),
+('SALE', NULL, 2, 560.00, 'EUR', 'COMPLETED', 'SAL-2025-006', 'Weekly order Kristjan', '2025-11-27 14:00:00');
 
 -- Insert Payments (linked to transactions)
 INSERT INTO Payment (transaction_id, account_id, amount, currency, payment_method, notes) VALUES 
 -- Payments for transaction 1 (PURCHASE, completed)
-(1, 4, 1500.00, 'EUR', 'CARD', 'Full payment for PUR-2025-001'),
--- Payments for transaction 2 (PURCHASE, partial)
-(2, 1, 400.00, 'EUR', 'CASH', 'Partial payment for PUR-2025-002'),
+(1, 4, 1480.00, 'EUR', 'CARD', 'Full payment for PUR-2025-001'),
+-- Payments for transaction 2 (PURCHASE, partial - 500 of 990 paid)
+(2, 1, 500.00, 'EUR', 'CASH', 'Partial payment for PUR-2025-002'),
 -- Payments for transaction 3 (PURCHASE, completed)
-(3, 6, 2000.00, 'LEK', 'CARD', 'Full payment for PUR-2025-003'),
+(3, 4, 1660.00, 'EUR', 'CARD', 'Full payment for PUR-2025-003'),
 -- Payments for transaction 4 (SALE, completed)
-(4, 1, 500.00, 'EUR', 'CASH', 'Full payment from client Ledjo'),
--- Payments for transaction 5 (SALE, partial)
-(5, 4, 400.00, 'EUR', 'CARD', 'Partial payment from client Kristjan'),
+(4, 1, 1250.00, 'EUR', 'CASH', 'Full payment from client Ledjo'),
+-- Payments for transaction 5 (SALE, completed)
+(5, 4, 980.00, 'EUR', 'CARD', 'Full payment from client Kristjan'),
 -- Payments for transaction 6 (SALE, completed)
-(6, 2, 300.00, 'USD', 'CASH', 'Payment from Ledjo in USD');
+(6, 1, 650.00, 'EUR', 'CASH', 'Full payment from Ledjo'),
+-- Payments for transaction 7 (SALE, partial - 200 of 420 paid)
+(7, 1, 200.00, 'EUR', 'CASH', 'Partial payment from Kristjan'),
+-- Payments for transaction 8 (SALE, completed)
+(8, 4, 890.00, 'EUR', 'CARD', 'Full payment from Ledjo'),
+-- Payments for transaction 9 (SALE, completed)
+(9, 1, 560.00, 'EUR', 'CASH', 'Full payment from Kristjan');
 
 -- Insert Account Transactions (track all money movements)
 INSERT INTO AccountTransaction (account_id, payment_id, transaction_type, amount, balance_after, notes) VALUES 
--- Cash EUR account movements
-(1, 4, 'DEPOSIT', 500.00, 5500.00, 'Received payment from sale SAL-2025-001'),
-(1, 2, 'WITHDRAWAL', 400.00, 5100.00, 'Payment to supplier for PUR-2025-002'),
--- Cash USD account movements
-(2, 6, 'DEPOSIT', 300.00, 3300.00, 'Received payment from sale SAL-2025-003'),
--- Bank EUR account movements
-(4, 5, 'DEPOSIT', 400.00, 25400.00, 'Received partial payment from client'),
-(4, 1, 'WITHDRAWAL', 1500.00, 23900.00, 'Payment to supplier for PUR-2025-001'),
--- Bank ALL account movements
-(6, 3, 'WITHDRAWAL', 2000.00, 498000.00, 'Payment to supplier for PUR-2025-003'),
--- Additional deposits (initial capital)
+-- Initial deposits (capital)
 (1, NULL, 'DEPOSIT', 5000.00, 5000.00, 'Initial cash deposit EUR'),
 (2, NULL, 'DEPOSIT', 3000.00, 3000.00, 'Initial cash deposit USD'),
 (3, NULL, 'DEPOSIT', 150000.00, 150000.00, 'Initial cash deposit LEK'),
 (4, NULL, 'DEPOSIT', 25000.00, 25000.00, 'Initial bank deposit EUR'),
 (5, NULL, 'DEPOSIT', 15000.00, 15000.00, 'Initial bank deposit USD'),
-(6, NULL, 'DEPOSIT', 500000.00, 500000.00, 'Initial bank deposit LEK');
+(6, NULL, 'DEPOSIT', 500000.00, 500000.00, 'Initial bank deposit LEK'),
+-- Cash EUR movements
+(1, 4, 'DEPOSIT', 1250.00, 6250.00, 'Received payment from sale SAL-2025-001'),
+(1, 2, 'WITHDRAWAL', 500.00, 5750.00, 'Payment to supplier for PUR-2025-002'),
+(1, 6, 'DEPOSIT', 650.00, 6400.00, 'Received payment from sale SAL-2025-003'),
+(1, 7, 'DEPOSIT', 200.00, 6600.00, 'Partial payment from sale SAL-2025-004'),
+(1, 9, 'DEPOSIT', 560.00, 7160.00, 'Payment from sale SAL-2025-006'),
+-- Bank EUR movements
+(4, 1, 'WITHDRAWAL', 1480.00, 23520.00, 'Payment to supplier for PUR-2025-001'),
+(4, 3, 'WITHDRAWAL', 1660.00, 21860.00, 'Payment to supplier for PUR-2025-003'),
+(4, 5, 'DEPOSIT', 980.00, 22840.00, 'Received payment from client Kristjan'),
+(4, 8, 'DEPOSIT', 890.00, 23730.00, 'Received payment from Ledjo');
 
 -- Sales data linked to transactions
+-- Prices are per-kg selling prices (higher than purchase per-kg price for profit)
 INSERT INTO Sales (transaction_id, prod_id, prod_price, user_id, quantity) VALUES 
--- Sales for transaction 4 (SAL-2025-001, completed)
-(4, 1, 10.00, 1, 20),
-(4, 3, 20.00, 1, 15),
--- Sales for transaction 5 (SAL-2025-002, partial payment)
-(5, 2, 15.00, 1, 30),
-(5, 7, 8.00, 1, 40),
--- Sales for transaction 6 (SAL-2025-003, completed)
-(6, 5, 30.00, 1, 10);
+-- Sales for transaction 4 (SAL-2025-001: 1250 EUR) - Salmon (50kg@12) + Koce (30kg@22) + Gafforre (5kg@28)
+(4, 1, 12.00, 1, 50),   -- Salmon: 50kg × 12 EUR = 600 EUR
+(4, 3, 22.00, 1, 25),   -- Koce: 25kg × 22 EUR = 550 EUR
+(4, 8, 20.00, 1, 5),    -- Gafforre: 5kg × 20 EUR = 100 EUR (total: 1250 EUR)
+-- Sales for transaction 5 (SAL-2025-002: 980 EUR)
+(5, 2, 17.00, 1, 20),   -- Karkaleca: 20kg × 17 EUR = 340 EUR
+(5, 7, 10.00, 1, 40),   -- Fruta Deti: 40kg × 10 EUR = 400 EUR
+(5, 9, 20.00, 1, 12),   -- Kallamar: 12kg × 20 EUR = 240 EUR (total: 980 EUR)
+-- Sales for transaction 6 (SAL-2025-003: 650 EUR)
+(6, 5, 35.00, 1, 10),   -- Peshk i eger: 10kg × 35 EUR = 350 EUR
+(6, 6, 15.00, 1, 20),   -- Peshk: 20kg × 15 EUR = 300 EUR (total: 650 EUR)
+-- Sales for transaction 7 (SAL-2025-004: 420 EUR, partial payment)
+(7, 4, 7.00, 1, 30),    -- Midhje: 30kg × 7 EUR = 210 EUR
+(7, 10, 26.00, 1, 8),   -- Sepie: 8kg × 26 EUR = 208 EUR (total: 418 EUR ≈ 420)
+-- Sales for transaction 8 (SAL-2025-005: 890 EUR)
+(8, 1, 12.00, 1, 30),   -- Salmon: 30kg × 12 EUR = 360 EUR
+(8, 11, 38.00, 1, 8),   -- Peshkaqen: 8kg × 38 EUR = 304 EUR
+(8, 8, 28.00, 1, 8),    -- Gafforre: 8kg × 28 EUR = 224 EUR (total: 888 EUR ≈ 890)
+-- Sales for transaction 9 (SAL-2025-006: 560 EUR)
+(9, 6, 15.00, 1, 25),   -- Peshk: 25kg × 15 EUR = 375 EUR
+(9, 4, 7.00, 1, 15),    -- Midhje: 15kg × 7 EUR = 105 EUR
+(9, 7, 10.00, 1, 8);    -- Fruta Deti: 8kg × 10 EUR = 80 EUR (total: 560 EUR)
 
 -- Insert Restock data (linked to Transaction records)
+-- restock_price is TOTAL COST for that quantity (not per-kg)
+-- Calculate per-kg cost: restock_price / quantity should be LESS than sale price per-kg for profit
 INSERT INTO Restock (transaction_id, prod_id, quantity, restock_price) VALUES 
--- Restocks for transaction 1 (PUR-2025-001)
-(1, 1, 50, 450.00),  -- Salmon restock
-(1, 3, 30, 550.00),  -- Koce restock
-(1, 8, 10, 240.00),  -- Gafforre restock
-(1, 11, 8, 240.00),  -- Peshkaqen restock
--- Restocks for transaction 2 (PUR-2025-002, partial payment)
-(2, 2, 20, 280.00),  -- Karkaleca restock
-(2, 4, 40, 120.00),  -- Midhje restock
-(2, 9, 35, 590.00),  -- Kallamar restock
--- Restocks for transaction 3 (PUR-2025-003)
-(3, 5, 15, 420.00),  -- Peshk i eger restock
-(3, 6, 60, 660.00),  -- Peshk restock
-(3, 7, 25, 180.00),  -- Fruta Deti restock
-(3, 10, 20, 400.00); -- Sepie restock
+-- Restocks for transaction 1 (PUR-2025-001: 1480 EUR total)
+(1, 1, 50, 450.00),    -- Salmon: 50kg total cost 450 EUR = 9 EUR/kg (sells at 10-12 EUR/kg)
+(1, 3, 30, 540.00),    -- Koce: 30kg total cost 540 EUR = 18 EUR/kg (sells at 20-22 EUR/kg)
+(1, 8, 20, 400.00),    -- Gafforre: 20kg total cost 400 EUR = 20 EUR/kg (sells at 25-28 EUR/kg)
+(1, 11, 10, 90.00),    -- Peshkaqen: 10kg total cost 90 EUR = 9 EUR/kg (sells at 35-38 EUR/kg)
+-- Total: 450+540+400+90 = 1480 EUR ✓
+-- Restocks for transaction 2 (PUR-2025-002: 990 EUR total, partial payment)
+(2, 2, 30, 360.00),    -- Karkaleca: 30kg total cost 360 EUR = 12 EUR/kg (sells at 15-17 EUR/kg)
+(2, 4, 50, 150.00),    -- Midhje: 50kg total cost 150 EUR = 3 EUR/kg (sells at 5-7 EUR/kg)
+(2, 9, 40, 480.00),    -- Kallamar: 40kg total cost 480 EUR = 12 EUR/kg (sells at 18-20 EUR/kg)
+-- Total: 360+150+480 = 990 EUR ✓
+-- Restocks for transaction 3 (PUR-2025-003: 1660 EUR total)
+(3, 5, 20, 400.00),    -- Peshk i eger: 20kg total cost 400 EUR = 20 EUR/kg (sells at 30-35 EUR/kg)
+(3, 6, 80, 640.00),    -- Peshk: 80kg total cost 640 EUR = 8 EUR/kg (sells at 12-15 EUR/kg)
+(3, 7, 60, 360.00),    -- Fruta Deti: 60kg total cost 360 EUR = 6 EUR/kg (sells at 8-10 EUR/kg)
+(3, 10, 20, 260.00);   -- Sepie: 20kg total cost 260 EUR = 13 EUR/kg (sells at 22-26 EUR/kg)
+-- Total: 400+640+360+260 = 1660 EUR ✓
 
