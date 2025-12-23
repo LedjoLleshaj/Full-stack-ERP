@@ -5,6 +5,8 @@ import { Router } from "@angular/router";
 import { ProductCategory } from "../../models/product-category.model";
 import { ProductName } from "../../models/product-name.model";
 import { InventoryService } from "src/app/shared/services/inventory-api/inventory.service";
+import { SupplierService } from "src/app/shared/services/suppliers-api/supplier.service";
+import { Supplier } from "src/app/models/supplier.model";
 
 @Component({
   selector: "app-add-product-view",
@@ -15,11 +17,13 @@ export class AddProductViewComponent implements OnInit {
   productForm: FormGroup;
   categories: ProductCategory[] = [];
   names: ProductName[] = [];
+  suppliers: Supplier[] = [];
 
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
     private inventoryService: InventoryService,
+    private supplierService: SupplierService,
     private router: Router
   ) {
     this.productForm = this.fb.group({
@@ -27,12 +31,14 @@ export class AddProductViewComponent implements OnInit {
       //category: ["", Validators.required],
       price: [0, [Validators.min(0)]],
       quantity: [0, [Validators.required, Validators.min(1)]],
+      supplier_id: [null, Validators.required],
     });
   }
 
   ngOnInit(): void {
     this.fetchCategories();
     this.fetchProductNames();
+    this.fetchSuppliers();
   }
 
   fetchCategories() {
@@ -53,6 +59,17 @@ export class AddProductViewComponent implements OnInit {
       },
       error: (error) => {
         console.error("Error fetching product names:", error);
+      },
+    });
+  }
+
+  fetchSuppliers() {
+    this.supplierService.getSuppliers().subscribe({
+      next: (data: Supplier[]) => {
+        this.suppliers = data;
+      },
+      error: (error) => {
+        console.error("Error fetching suppliers:", error);
       },
     });
   }
