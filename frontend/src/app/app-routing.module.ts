@@ -19,6 +19,7 @@ import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
 import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
 import { SupplierViewComponent } from "./views/suppliers-view/supplier-view.component";
 import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier-view.component";
+import { TopClientsViewComponent } from "./views/top-clients-view/top-clients-view.component";
 
 const routes: Routes = [
   {
@@ -81,6 +82,11 @@ const routes: Routes = [
         path: "reports/profit-by-category",
         component: ProfitByCategoryViewComponent,
         title: "Profit By Category - Selita",
+      },
+      {
+        path: "reports/top-clients",
+        component: TopClientsViewComponent,
+        title: "Top Clients - Selita",
       },
       {
         path: "alerts",

@@ -44,6 +44,19 @@ export interface TopProduct {
   quantity: number;
 }
 
+export interface ProfitByCategory {
+  name: string;
+  profit: number;
+  revenue: number;
+  cost: number;
+}
+
+export interface TopClient {
+  name: string;
+  total_amount: number;
+  transaction_count: number;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -65,5 +78,12 @@ export class ReportsApiService {
   getTopProducts(): Observable<TopProduct[]> {
     return this.http.get<TopProduct[]>(`${environment.apiUrl}/top-products`);
   }
-}
 
+  getProfitByCategory(): Observable<ProfitByCategory[]> {
+    return this.http.get<ProfitByCategory[]>(`${environment.apiUrl}/profit-by-category`);
+  }
+
+  getTopClients(): Observable<TopClient[]> {
+    return this.http.get<TopClient[]>(`${environment.apiUrl}/top-clients`);
+  }
+}
