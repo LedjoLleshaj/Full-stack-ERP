@@ -46,7 +46,7 @@
         Cmimi
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
-        {{ sale.prod_price + " €" }}
+        {{ sale.prod_price }} {{ sale.currency === 'EUR' ? '€' : (sale.currency === 'USD' ? '$' : 'Lek') }}
       </td>
     </ng-container>
 
@@ -89,7 +89,7 @@
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         <!-- {{ sale.payment ? sale.payment.amount + " €" : "In progress" }} -->
-        {{ sale.quantity * sale.prod_price + " €" }}
+        {{ sale.quantity * sale.prod_price }} {{ sale.currency === 'EUR' ? '€' : (sale.currency === 'USD' ? '$' : 'Lek') }}
       </td>
     </ng-container>
 

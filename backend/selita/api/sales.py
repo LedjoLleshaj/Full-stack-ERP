@@ -118,8 +118,9 @@ def getProductsFromSales(request):
                         "phone": client_serializer.data["phone"],
                         "address": client_serializer.data["address"],
                     }
-                    # Add payment status
+                    # Add payment status and currency
                     sale_data["payment_status"] = transaction.status
+                    sale_data["currency"] = transaction.currency
                 else:
                     sale_data["client"] = {
                         "error": "No client associated with transaction"
