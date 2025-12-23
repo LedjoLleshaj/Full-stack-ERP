@@ -52,6 +52,9 @@ import { TopProductsViewComponent } from "./views/top-products-view/top-products
 import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
 import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
 import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
+import { SupplierViewComponent } from "./views/suppliers-view/supplier-view.component";
+import { SupplierTableComponent } from "./shared/components/supplier-table/supplier-table.component";
+import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier-view.component";
 import { NgxEchartsModule } from "ngx-echarts";
 
 @NgModule({
@@ -79,6 +82,9 @@ import { NgxEchartsModule } from "ngx-echarts";
     ConfirmDialogComponent,
     EditPriceDialogComponent,
     SaleDetailsViewComponent,
+    SupplierViewComponent,
+    SupplierTableComponent,
+    AddSupplierViewComponent,
   ],
   imports: [
     BrowserModule,
