@@ -1,10 +1,11 @@
 from rest_framework.response import Response
-from ..models import Inventory, Product, Product_Names
+from ..models import Inventory, Product, Product_Names, Transaction, Restock, Supplier
 from rest_framework.decorators import api_view, permission_classes
-from ..serializers import InventorySerializer, ProductSerializer
+from ..serializers import InventorySerializer, ProductSerializer, RestockSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from decimal import Decimal
 
 
 # ======== USERS ========
@@ -79,6 +80,7 @@ def addProductToInventory(request):
         quantity = request.data.get("quantity")
         price = request.data.get("price")
         print("addProductToInventory", name, quantity, price)
+        
         if quantity <= 0:
             return Response(
                 {"error": "Quantity must be greater than zero"},
@@ -86,34 +88,83 @@ def addProductToInventory(request):
             )
         if price < 0:
             return Response(
-                {"error": "Price must be greater than zero"},
+                {"error": "Price must be greater than or equal to zero"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+        # Convert price to Decimal for accurate calculations
+        price = Decimal(str(price))
+        
         # Check if the product already exists
         try:
             product = Product.objects.get(name=name)
             print("Product already exists", product)
         except ObjectDoesNotExist:
             # Create a new product if it doesn't exist
-            product = Product.objects.create(name=name, price=price)
-        # Check if the inventory item already exists
+            # Get category from Product_Names table
+            try:
+                product_name_obj = Product_Names.objects.get(product_name=name)
+                category = product_name_obj.category.category_name
+            except ObjectDoesNotExist:
+                category = "Uncategorized"
+            
+            # Note: For new products, we use the purchase price as initial selling price
+            product = Product.objects.create(
+                name=name, 
+                price=price, 
+                category=category,
+                description=""
+            )
+        
+        # Create purchase transaction to track the expense
+        # Get or create an internal supplier for stock purchases
+        internal_supplier, _ = Supplier.objects.get_or_create(
+            firstname="Internal",
+            lastname="Purchase",
+            defaults={
+                "address": "Internal",
+                "phone": None,
+                "email": None
+            }
+        )
+        
+        total_amount = price * quantity
+        transaction = Transaction.objects.create(
+            transaction_type="PURCHASE",
+            supplier=internal_supplier,
+            total_amount=total_amount,
+            currency="EUR",
+            status="COMPLETED",
+            notes=f"Restock: {quantity} x {product.name} @ {price}/unit"
+        )
+        
+        # Create restock record to track purchase cost per unit
+        restock = Restock.objects.create(
+            transaction=transaction,
+            prod=product,
+            quantity=quantity,
+            restock_price=price
+        )
+        
+        # Update inventory quantity
         try:
             inventory = Inventory.objects.get(prod=product)
-            # Update the existing inventory item's quantity
             inventory.quantity += quantity
-            # update price if it is different
-            if inventory.prod.price != price:
-                inventory.prod.price = price
-                inventory.prod.save()
-            # Save the updated inventory item
-
             inventory.save()
         except ObjectDoesNotExist:
             # Create a new inventory item if it doesn't exist
             inventory = Inventory.objects.create(prod=product, quantity=quantity)
-        # Serialize the updated inventory item
-        serializer = InventorySerializer(inventory)
-        return Response(serializer.data)
+        
+        # Serialize the response
+        inventory_serializer = InventorySerializer(inventory)
+        restock_serializer = RestockSerializer(restock)
+        
+        return Response({
+            "inventory": inventory_serializer.data,
+            "restock": restock_serializer.data,
+            "transaction_id": transaction.id,
+            "message": f"Added {quantity} units of {product.name} to inventory. Purchase cost recorded: {total_amount} EUR"
+        })
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
