@@ -391,9 +391,11 @@ def profit_by_category(request):
         
         purchase_cost = Decimal("0")
         for restock in category_restocks:
-            # restock_price is always stored in EUR, no conversion needed
-            amount = restock.quantity * restock.restock_price
-            purchase_cost += amount
+            # restock_price is the per-unit purchase price
+            # Get currency from transaction and convert to EUR
+            currency = restock.transaction.currency if restock.transaction else "EUR"
+            total_cost = restock.restock_price * restock.quantity
+            purchase_cost += convert_to_eur(total_cost, currency)
         
         profit = sales_revenue - purchase_cost
         

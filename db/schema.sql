@@ -314,24 +314,24 @@ INSERT INTO Sales (transaction_id, prod_id, prod_price, user_id, quantity) VALUE
 (9, 7, 10.00, 1, 8);    -- Fruta Deti: 8kg × 10 EUR = 80 EUR (total: 560 EUR)
 
 -- Insert Restock data (linked to Transaction records)
--- restock_price is TOTAL COST for that quantity (not per-kg)
--- Calculate per-kg cost: restock_price / quantity should be LESS than sale price per-kg for profit
+-- restock_price is the PER-UNIT purchase price (per kg)
+-- Total cost = restock_price × quantity
 INSERT INTO Restock (transaction_id, prod_id, quantity, restock_price) VALUES 
 -- Restocks for transaction 1 (PUR-2025-001: 1480 EUR total)
-(1, 1, 50, 450.00),    -- Salmon: 50kg total cost 450 EUR = 9 EUR/kg (sells at 10-12 EUR/kg)
-(1, 3, 30, 540.00),    -- Koce: 30kg total cost 540 EUR = 18 EUR/kg (sells at 20-22 EUR/kg)
-(1, 8, 20, 400.00),    -- Gafforre: 20kg total cost 400 EUR = 20 EUR/kg (sells at 25-28 EUR/kg)
-(1, 11, 10, 90.00),    -- Peshkaqen: 10kg total cost 90 EUR = 9 EUR/kg (sells at 35-38 EUR/kg)
+(1, 1, 50, 9.00),     -- Salmon: 50kg × 9 EUR/kg = 450 EUR (sells at 10-12 EUR/kg)
+(1, 3, 30, 18.00),    -- Koce: 30kg × 18 EUR/kg = 540 EUR (sells at 20-22 EUR/kg)
+(1, 8, 20, 20.00),    -- Gafforre: 20kg × 20 EUR/kg = 400 EUR (sells at 25-28 EUR/kg)
+(1, 11, 10, 9.00),    -- Peshkaqen: 10kg × 9 EUR/kg = 90 EUR (sells at 35-38 EUR/kg)
 -- Total: 450+540+400+90 = 1480 EUR ✓
 -- Restocks for transaction 2 (PUR-2025-002: 990 EUR total, partial payment)
-(2, 2, 30, 360.00),    -- Karkaleca: 30kg total cost 360 EUR = 12 EUR/kg (sells at 15-17 EUR/kg)
-(2, 4, 50, 150.00),    -- Midhje: 50kg total cost 150 EUR = 3 EUR/kg (sells at 5-7 EUR/kg)
-(2, 9, 40, 480.00),    -- Kallamar: 40kg total cost 480 EUR = 12 EUR/kg (sells at 18-20 EUR/kg)
+(2, 2, 30, 12.00),    -- Karkaleca: 30kg × 12 EUR/kg = 360 EUR (sells at 15-17 EUR/kg)
+(2, 4, 50, 3.00),     -- Midhje: 50kg × 3 EUR/kg = 150 EUR (sells at 5-7 EUR/kg)
+(2, 9, 40, 12.00),    -- Kallamar: 40kg × 12 EUR/kg = 480 EUR (sells at 18-20 EUR/kg)
 -- Total: 360+150+480 = 990 EUR ✓
 -- Restocks for transaction 3 (PUR-2025-003: 1660 EUR total)
-(3, 5, 20, 400.00),    -- Peshk i eger: 20kg total cost 400 EUR = 20 EUR/kg (sells at 30-35 EUR/kg)
-(3, 6, 80, 640.00),    -- Peshk: 80kg total cost 640 EUR = 8 EUR/kg (sells at 12-15 EUR/kg)
-(3, 7, 60, 360.00),    -- Fruta Deti: 60kg total cost 360 EUR = 6 EUR/kg (sells at 8-10 EUR/kg)
-(3, 10, 20, 260.00);   -- Sepie: 20kg total cost 260 EUR = 13 EUR/kg (sells at 22-26 EUR/kg)
+(3, 5, 20, 20.00),    -- Peshk i eger: 20kg × 20 EUR/kg = 400 EUR (sells at 30-35 EUR/kg)
+(3, 6, 80, 8.00),     -- Peshk: 80kg × 8 EUR/kg = 640 EUR (sells at 12-15 EUR/kg)
+(3, 7, 60, 6.00),     -- Fruta Deti: 60kg × 6 EUR/kg = 360 EUR (sells at 8-10 EUR/kg)
+(3, 10, 20, 13.00);   -- Sepie: 20kg × 13 EUR/kg = 260 EUR (sells at 22-26 EUR/kg)
 -- Total: 400+640+360+260 = 1660 EUR ✓
 
