@@ -19,6 +19,7 @@ export class LayoutComponent {
   isProductMenuOpen: boolean = false; // Track product menu state
   isRightNavOpen: boolean = false; // Track right nav state
   isClientMenuOpen: boolean = false; // Track client menu state
+  isSupplierMenuOpen: boolean = false; // Track supplier menu state
   cartItems: any[] = []; // Store unique cart items with their counts
 
   constructor(
@@ -56,6 +57,10 @@ export class LayoutComponent {
   navigateToClients() {
     this.isClientMenuOpen = !this.isClientMenuOpen;
     this.router.navigate(["/clients"]);
+  }
+  navigateToSuppliers() {
+    this.isSupplierMenuOpen = !this.isSupplierMenuOpen;
+    this.router.navigate(["/suppliers"]);
   }
 
   // Shopping cart menu open-close function

@@ -17,6 +17,8 @@ import { TopProductsViewComponent } from "./views/top-products-view/top-products
 import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
 import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
 import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
+import { SupplierViewComponent } from "./views/suppliers-view/supplier-view.component";
+import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier-view.component";
 
 const routes: Routes = [
   {
@@ -44,6 +46,11 @@ const routes: Routes = [
         path: "clients",
         component: ClientViewComponent,
         title: "Client List - Selita",
+      },
+      {
+        path: "suppliers",
+        component: SupplierViewComponent,
+        title: "Supplier List - Selita",
       },
       {
         path: "products",
@@ -87,6 +94,7 @@ const routes: Routes = [
       },
       { path: "add-product", component: AddProductViewComponent },
       { path: "add-client", component: AddClientViewComponent },
+      { path: "add-supplier", component: AddSupplierViewComponent },
       {
         path: "sale/:id",
         component: SaleDetailsViewComponent,
