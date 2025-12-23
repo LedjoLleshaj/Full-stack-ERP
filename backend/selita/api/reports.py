@@ -343,3 +343,120 @@ def top_products(request):
     
     return Response(result)
 
+
+@api_view(["GET"])
+def profit_by_category(request):
+    """
+    Get profit by product category.
+    Returns category names and their total profit (sales revenue - purchase cost).
+    """
+    from ..models import Product, ExchangeRate, Restock
+    from decimal import Decimal
+    
+    def convert_to_eur(amount, currency):
+        """Convert amount from any currency to EUR"""
+        if currency == "EUR":
+            return amount
+        try:
+            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
+            return amount * rate.rate
+        except ExchangeRate.DoesNotExist:
+            return amount
+    
+    # Get all unique categories from products (use set to ensure uniqueness)
+    categories = set(Product.objects.values_list('category', flat=True))
+    
+    result = []
+    for category_name in categories:
+        # Get sales revenue for this category
+        category_sales = (
+            Sales.objects
+            .filter(prod__category=category_name)
+            .exclude(transaction__status="CANCELLED")
+        )
+        
+        sales_revenue = Decimal("0")
+        for sale in category_sales:
+            # Get currency from transaction and convert to EUR
+            currency = sale.transaction.currency if sale.transaction else "EUR"
+            amount = sale.quantity * sale.prod_price
+            sales_revenue += convert_to_eur(amount, currency)
+        
+        # Get purchase cost for this category (from restocks)
+        category_restocks = (
+            Restock.objects
+            .filter(prod__category=category_name)
+            .exclude(transaction__status="CANCELLED")
+        )
+        
+        purchase_cost = Decimal("0")
+        for restock in category_restocks:
+            # restock_price is always stored in EUR, no conversion needed
+            amount = restock.quantity * restock.restock_price
+            purchase_cost += amount
+        
+        profit = sales_revenue - purchase_cost
+        
+        if sales_revenue > 0 or purchase_cost > 0:  # Only include categories with data
+            result.append({
+                "name": category_name,
+                "profit": float(profit),
+                "revenue": float(sales_revenue),
+                "cost": float(purchase_cost)
+            })
+    
+    # Sort by profit descending
+    result.sort(key=lambda x: x['profit'], reverse=True)
+    
+    return Response(result)
+
+
+@api_view(["GET"])
+def top_clients(request):
+    """
+    Get the top 5 clients by total purchase amount.
+    Returns client names and their total purchase amounts.
+    """
+    from ..models import Client, ExchangeRate
+    from decimal import Decimal
+    
+    def convert_to_eur(amount, currency):
+        """Convert amount from any currency to EUR"""
+        if currency == "EUR":
+            return amount
+        try:
+            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
+            return amount * rate.rate
+        except ExchangeRate.DoesNotExist:
+            return amount
+    
+    # Get all clients with their transactions
+    clients = Client.objects.all()
+    
+    client_totals = []
+    for client in clients:
+        # Get all completed/partial sales transactions for this client
+        client_transactions = Transaction.objects.filter(
+            client=client,
+            transaction_type="SALE"
+        ).exclude(status="CANCELLED")
+        
+        total_amount = Decimal("0")
+        transaction_count = 0
+        for transaction in client_transactions:
+            total_amount += convert_to_eur(transaction.total_amount, transaction.currency)
+            transaction_count += 1
+        
+        if total_amount > 0:
+            client_totals.append({
+                "name": f"{client.firstname} {client.lastname}",
+                "total_amount": float(total_amount),
+                "transaction_count": transaction_count
+            })
+    
+    # Sort by total amount descending and take top 5
+    client_totals.sort(key=lambda x: x['total_amount'], reverse=True)
+    top_5 = client_totals[:5]
+    
+    return Response(top_5)
+
