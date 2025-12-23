@@ -79,7 +79,8 @@ def addProductToInventory(request):
         # category = request.data.get("category")
         quantity = request.data.get("quantity")
         price = request.data.get("price")
-        print("addProductToInventory", name, quantity, price)
+        supplier_id = request.data.get("supplier_id")
+        print("addProductToInventory", name, quantity, price, "supplier_id:", supplier_id)
         
         if quantity <= 0:
             return Response(
@@ -90,6 +91,20 @@ def addProductToInventory(request):
             return Response(
                 {"error": "Price must be greater than or equal to zero"},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not supplier_id:
+            return Response(
+                {"error": "Supplier is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Get the supplier
+        try:
+            supplier = Supplier.objects.get(id=supplier_id)
+        except ObjectDoesNotExist:
+            return Response(
+                {"error": "Supplier not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
         
         # Convert price to Decimal for accurate calculations
@@ -117,21 +132,10 @@ def addProductToInventory(request):
             )
         
         # Create purchase transaction to track the expense
-        # Get or create an internal supplier for stock purchases
-        internal_supplier, _ = Supplier.objects.get_or_create(
-            firstname="Internal",
-            lastname="Purchase",
-            defaults={
-                "address": "Internal",
-                "phone": None,
-                "email": None
-            }
-        )
-        
         total_amount = price * quantity
         transaction = Transaction.objects.create(
             transaction_type="PURCHASE",
-            supplier=internal_supplier,
+            supplier=supplier,
             total_amount=total_amount,
             currency="EUR",
             status="COMPLETED",

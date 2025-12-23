@@ -24,6 +24,17 @@
         <mat-error *ngIf="productForm.controls['category'].hasError('required')"> Category is required </mat-error>
       </mat-form-field> -->
 
+      <!-- Supplier Selection -->
+      <mat-form-field class="full-width">
+        <mat-label>Furnitori</mat-label>
+        <mat-select formControlName="supplier_id" required>
+          <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+            {{ supplier.firstname }} {{ supplier.lastname }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="productForm.controls['supplier_id'].hasError('required')"> Furnitori eshte i detyrueshem </mat-error>
+      </mat-form-field>
+
       <!-- Product Price (per unit) -->
       <mat-form-field class="full-width">
         <mat-label>Cmimi blerje për njësi (€/kg)</mat-label>
