@@ -1,0 +1,70 @@
+<div class="flex flex-col items-stretch justify-start gap-6">
+  <!-- Page Header -->
+  <div class="py-2">
+    <h1 class="text-3xl font-bold">Top Klientët</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-1">Klientët me blerjet më të mëdha</p>
+  </div>
+
+  <!-- Stats Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4" *ngIf="clients.length > 0 && !isLoading">
+    <mat-card *ngFor="let client of clients; let i = index" class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1">
+          <mat-icon class="text-amber-500" style="font-size: 18px; width: 18px; height: 18px;">
+            {{ i === 0 ? 'emoji_events' : (i === 1 ? 'military_tech' : 'star') }}
+          </mat-icon>
+          #{{ i + 1 }}
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="text-sm font-semibold truncate" [title]="client.name">{{ client.name }}</p>
+        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+          {{ formatCurrency(client.total_amount) }}
+        </p>
+        <p class="text-xs text-gray-500">{{ client.transaction_count }} transaksione</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Chart Card -->
+  <mat-card class="chart-card" [ngClass]="{'dark-card': isDarkMode}">
+    <mat-card-content>
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p class="text-gray-500 mt-4">Duke ngarkuar të dhënat...</p>
+      </div>
+
+      <!-- No Data Message -->
+      <div *ngIf="!isLoading && clients.length === 0" class="loading-container">
+        <mat-icon class="text-gray-400" style="font-size: 64px; width: 64px; height: 64px;">people</mat-icon>
+        <p class="text-gray-500 mt-4">Nuk ka të dhëna për klientët</p>
+      </div>
+
+      <!-- Chart -->
+      <div
+        *ngIf="!isLoading && clients.length > 0"
+        echarts
+        [options]="chartOptions"
+        class="chart-container"
+      ></div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Summary Footer -->
+  <div *ngIf="clients.length > 0 && !isLoading" class="total-summary">
+    <div class="flex items-center justify-center gap-6 flex-wrap">
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-emerald-500">account_balance_wallet</mat-icon>
+        <span class="text-gray-600 dark:text-gray-400">Shuma totale (Top 5):</span>
+        <span class="text-xl font-bold">{{ formatCurrency(getTotalAmount()) }}</span>
+      </div>
+      <span class="text-gray-300 dark:text-gray-600">|</span>
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-blue-500">receipt_long</mat-icon>
+        <span class="text-gray-600 dark:text-gray-400">Transaksione gjithsej:</span>
+        <span class="text-xl font-bold">{{ getTotalTransactions() }}</span>
+      </div>
+    </div>
+  </div>
+</div>
