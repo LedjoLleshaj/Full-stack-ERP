@@ -11,3 +11,6 @@ venv/
 *.pyo
 *.pyd
 db/tempo.sql
+
+# macOS
+.DS_Store
