@@ -34,8 +34,8 @@ import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatDatepickerModule } from "@angular/material/datepicker";
 import { MatNativeDateModule } from "@angular/material/core";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { ProductDetailDialogComponent } from "./shared/components/dialogs/product-detail-dialog/product-detail-dialog.component";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
+import { ProductDetailsViewComponent } from "./views/product-details-view/product-details-view.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
 
 import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
@@ -66,8 +66,8 @@ import { NgxEchartsModule } from "ngx-echarts";
     ProductsViewComponent,
     ClientViewComponent,
     AddProductViewComponent,
-    ProductDetailDialogComponent,
     ProductBuyDialogComponent,
+    ProductDetailsViewComponent,
     EditPriceDialogComponent,
     ProductTableComponent,
     ClientTableComponent,
