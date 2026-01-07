@@ -2,9 +2,9 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
+import { Router } from "@angular/router";
 import { ProductService } from "../../services/product-api/product.service";
 import { Product } from "src/app/models/product.model";
-import { ProductDetailDialogComponent } from "../dialogs/product-detail-dialog/product-detail-dialog.component";
 import { EditPriceDialogComponent } from "../../../dialogs/edit-price-dialog/edit-price-dialog.component";
 import { MatDialog } from "@angular/material/dialog";
 
@@ -21,7 +21,11 @@ export class ProductTableComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private productService: ProductService, private dialog: MatDialog) {}
+  constructor(
+    private productService: ProductService,
+    private dialog: MatDialog,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.fetchProducts();
@@ -36,10 +40,7 @@ export class ProductTableComponent implements OnInit {
   }
 
   openProductDetail(product: Product) {
-    const dialogRef = this.dialog.open(ProductDetailDialogComponent, { data: product });
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log("The dialog was closed", result);
-    });
+    this.router.navigate(['/product', product.id]);
   }
 
   openEditPriceDialog(product: Product) {
