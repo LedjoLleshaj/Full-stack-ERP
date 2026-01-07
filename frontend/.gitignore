@@ -64,3 +64,9 @@ baseline.json
 # Ignore AIO files, useful when changing branches 
 aio/node_modules
 aio/out-tsc
+
+# Lock files
+*-lock.json
+*.lock
+*.lockb
+pnpm-lock.yaml
