@@ -88,6 +88,7 @@ urlpatterns = [
     path("productbyname/<str:name>", products.getProductByName),
     path("filterbycategories", products.filterByCategories),
     path("checkdisponibility/<str:pk>", products.checkDisponibility),
+    path("product-history/<str:pk>", products.getProductHistory),
     
     # ======== INVENTORY ========
     path("inventory", inventory.getInventory),
