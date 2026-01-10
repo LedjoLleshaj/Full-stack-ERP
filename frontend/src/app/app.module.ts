@@ -34,6 +34,7 @@ import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatDatepickerModule } from "@angular/material/datepicker";
 import { MatNativeDateModule } from "@angular/material/core";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
+import { MatButtonToggleModule } from "@angular/material/button-toggle";
 import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
 import { ProductDetailsViewComponent } from "./views/product-details-view/product-details-view.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
@@ -118,6 +119,7 @@ import { NgxEchartsModule } from "ngx-echarts";
     MatNativeDateModule,
     SalesTableComponent,
     MatProgressBarModule,
+    MatButtonToggleModule,
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts')
     }),
