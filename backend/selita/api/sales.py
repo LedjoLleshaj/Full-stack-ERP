@@ -475,9 +475,12 @@ def getLastSoldPrice(request):
         )
 
         if last_sale:
-            return Response({"price": last_sale.prod_price})
+            return Response({
+                "price": last_sale.prod_price,
+                "currency": last_sale.transaction.currency
+            })
         else:
-            return Response({"price": None})  # No previous sale found
+            return Response({"price": None, "currency": None})  # No previous sale found
 
     except Exception as e:
         return Response(

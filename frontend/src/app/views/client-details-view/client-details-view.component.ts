@@ -26,7 +26,7 @@ export class ClientDetailsViewComponent implements OnInit {
   isPaid: boolean = true;
   currentUserId: number = 1; // ⚡ TODO: Get from auth service
   lastSoldPrice: number | null = null;
-  baseLastSoldPriceEUR: number | null = null; // Base last sold price in EUR for conversion
+  lastSoldCurrency: string | null = null; // Currency of the last sale
 
   // Payment method and currency options
   paymentMethod: string = "CASH";
@@ -112,12 +112,12 @@ export class ClientDetailsViewComponent implements OnInit {
         this.saleService.getLastSoldPrice(this.clientId, this.selectedProduct.id).subscribe({
           next: (response) => {
             this.lastSoldPrice = response.price;
-            this.baseLastSoldPriceEUR = response.price; // Store base price for currency conversion
+            this.lastSoldCurrency = response.currency;
           },
           error: (err) => {
             console.error("Failed to fetch last sold price:", err);
             this.lastSoldPrice = null;
-            this.baseLastSoldPriceEUR = null;
+            this.lastSoldCurrency = null;
           },
         });
       }
@@ -131,19 +131,13 @@ export class ClientDetailsViewComponent implements OnInit {
     if (!this.selectedProduct || this.basePriceEUR === 0) return;
 
     if (this.currency === "EUR") {
-      // Reset to base EUR prices
+      // Reset to base EUR price
       this.salePrice = this.basePriceEUR;
-      if (this.baseLastSoldPriceEUR !== null) {
-        this.lastSoldPrice = this.baseLastSoldPriceEUR;
-      }
     } else {
       // Convert EUR to selected currency
       this.currencyExchange.getExchangeRate("EUR", this.currency).subscribe({
         next: (rate) => {
           this.salePrice = Math.round(this.basePriceEUR * rate * 100) / 100;
-          if (this.baseLastSoldPriceEUR !== null) {
-            this.lastSoldPrice = Math.round(this.baseLastSoldPriceEUR * rate * 100) / 100;
-          }
         },
         error: () => {
           this.snackBar.open("Gabim në marrjen e kursit të këmbimit", "Mbyll", { duration: 3000 });
@@ -220,7 +214,7 @@ export class ClientDetailsViewComponent implements OnInit {
     this.isPaid = true;
     this.searchText = "";
     this.lastSoldPrice = null;
-    this.baseLastSoldPriceEUR = null;
+    this.lastSoldCurrency = null;
     this.paymentMethod = "CASH";
     this.currency = "EUR"; // Reset to EUR (matches product prices)
   }
