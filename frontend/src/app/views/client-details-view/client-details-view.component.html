@@ -79,7 +79,7 @@
         <h3>{{ selectedProduct.name }}</h3>
         <p class="stock-info">Sasia ne Inventar: {{ selectedProduct.disponibility }}</p>
         <p class="price-info">Çmimi aktual: {{ salePrice | currency:currency }}</p>
-        <p class="price-info" *ngIf="lastSoldPrice !== null">Cmimi i fundit: {{ lastSoldPrice | currency:currency }}</p>
+        <p class="price-info" *ngIf="lastSoldPrice !== null && lastSoldCurrency !== null">Cmimi i fundit: {{ lastSoldPrice | currency:lastSoldCurrency! }}</p>
       </div>
 
       <mat-divider></mat-divider>
