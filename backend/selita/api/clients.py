@@ -17,6 +17,22 @@ def getClients(request):
         clients = Client.objects.all()
         # for each client get the balance by summing the amount they have to pay in unpaid sales
         serializer = ClientSerializer(clients, many=True)
+        
+        from ..models import Payment, ExchangeRate
+        from django.db.models import Sum
+        from decimal import Decimal
+        
+        def convert_to_eur(amount, currency):
+            """Convert amount from any currency to EUR"""
+            if currency == "EUR":
+                return Decimal(str(amount))
+            try:
+                rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
+                return Decimal(str(amount)) * rate.rate
+            except ExchangeRate.DoesNotExist:
+                # Fallback: return as-is if no rate found
+                return Decimal(str(amount))
+        
         for client in serializer.data:
             # Get sales through transaction relationship
             sales = Sales.objects.filter(
@@ -24,19 +40,19 @@ def getClients(request):
                 transaction__status__in=["PENDING", "PARTIAL"]  # Not fully paid
             ).select_related('transaction')
             
-            total_amount = 0
+            total_amount = Decimal("0")
             for sale in sales:
                 # Calculate remaining balance for this sale's transaction
-                from ..models import Payment
-                from django.db.models import Sum
                 total_paid = Payment.objects.filter(
                     transaction=sale.transaction
                 ).aggregate(total=Sum('amount'))['total'] or 0
                 
-                remaining = sale.transaction.total_amount - total_paid
-                total_amount += remaining
+                remaining = Decimal(str(sale.transaction.total_amount)) - Decimal(str(total_paid))
+                # Convert remaining balance to EUR using the transaction's currency
+                currency = sale.transaction.currency if sale.transaction else "EUR"
+                total_amount += convert_to_eur(remaining, currency)
                 
-            client["unpaidBalance"] = float(total_amount)
+            client["unpaidBalance"] = round(float(total_amount), 2)
         return Response(serializer.data)
     except Exception as e:
         return Response(
@@ -92,8 +108,8 @@ def getClient(request, pk):
                 # Convert remaining balance to EUR
                 unpaidBalance += convert_to_eur(remaining, currency)
         
-        client_data["unpaidBalance"] = float(unpaidBalance)
-        client_data["totalBought"] = float(totalBought)
+        client_data["unpaidBalance"] = round(float(unpaidBalance), 2)
+        client_data["totalBought"] = round(float(totalBought), 2)
         return Response(client_data)
     except ObjectDoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
