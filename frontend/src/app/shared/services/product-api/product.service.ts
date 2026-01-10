@@ -42,4 +42,45 @@ export class ProductService {
   getProductById(productId: number): Observable<Product> {
     return this.http.get<Product>(`${this.apiUrl}${environment.productbyid}${productId}`);
   }
+
+  getProductHistory(productId: number, months: number = 3): Observable<ProductHistory> {
+    return this.http.get<ProductHistory>(`${this.apiUrl}/product-history/${productId}?months=${months}`);
+  }
+}
+
+// Product history response types
+export interface ProductHistory {
+  product: Product & { disponibility: number };
+  recent_sales: RecentSale[];
+  recent_restocks: RecentRestock[];
+  price_history: {
+    sale_prices: PricePoint[];
+    restock_prices: PricePoint[];
+  };
+}
+
+export interface RecentSale {
+  id: number;
+  date: string;
+  price: number;
+  quantity: number;
+  currency: string;
+  client_name: string;
+  transaction_id: number | null;
+  status: string;
+}
+
+export interface RecentRestock {
+  id: number;
+  date: string;
+  price: number;
+  quantity: number;
+  currency: string;
+  supplier_name: string;
+}
+
+export interface PricePoint {
+  date: string;
+  price: number;
+  currency: string;
 }
