@@ -201,3 +201,120 @@ def checkDisponibility(request, pk):
             {"error": "An unexpected error occurred", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def getProductHistory(request, pk):
+    """
+    Get product history including:
+    - Last 10 sales
+    - Last 10 restocks
+    - Price history for chart (adjustable time range: 1-12 months)
+    """
+    from ..models import Sales, Restock
+    from datetime import date, timedelta
+    
+    try:
+        product = Product.objects.get(id=pk)
+        serializer = ProductSerializer(product, many=False)
+        product_data = serializer.data
+        
+        # Get disponibility
+        try:
+            inventory = Inventory.objects.get(prod=product)
+            product_data["disponibility"] = inventory.quantity
+        except ObjectDoesNotExist:
+            product_data["disponibility"] = 0
+        
+        # Get time range from query params (default 3 months)
+        months = int(request.query_params.get("months", 3))
+        months = min(max(months, 1), 12)  # Clamp between 1 and 12
+        start_date = date.today() - timedelta(days=months * 30)
+        
+        # Get last 10 sales for this product
+        recent_sales = Sales.objects.filter(
+            prod=product
+        ).select_related('transaction', 'transaction__client').order_by('-sale_date')[:10]
+        
+        sales_list = []
+        for sale in recent_sales:
+            client = sale.transaction.client if sale.transaction else None
+            client_name = f"{client.firstname} {client.lastname}" if client else "N/A"
+            sales_list.append({
+                "id": sale.id,
+                "date": sale.sale_date.date().isoformat(),
+                "price": float(sale.prod_price),
+                "quantity": sale.quantity,
+                "currency": sale.transaction.currency if sale.transaction else "EUR",
+                "client_name": client_name,
+                "transaction_id": sale.transaction.id if sale.transaction else None,
+                "status": sale.transaction.status if sale.transaction else "PENDING"
+            })
+        
+        # Get last 10 restocks for this product
+        recent_restocks = Restock.objects.filter(
+            prod=product
+        ).select_related('transaction', 'transaction__supplier').order_by('-restock_date')[:10]
+        
+        restocks_list = []
+        for restock in recent_restocks:
+            supplier = restock.transaction.supplier if restock.transaction else None
+            supplier_name = f"{supplier.firstname} {supplier.lastname}" if supplier else "N/A"
+            restocks_list.append({
+                "id": restock.id,
+                "date": restock.restock_date.date().isoformat(),
+                "price": float(restock.restock_price),
+                "quantity": restock.quantity,
+                "currency": restock.transaction.currency if restock.transaction else "EUR",
+                "supplier_name": supplier_name
+            })
+        
+        # Get price history for chart (within time range)
+        # Sales prices
+        sales_in_range = Sales.objects.filter(
+            prod=product,
+            sale_date__date__gte=start_date
+        ).select_related('transaction').order_by('sale_date')
+        
+        sale_prices = []
+        for sale in sales_in_range:
+            sale_prices.append({
+                "date": sale.sale_date.date().isoformat(),
+                "price": float(sale.prod_price),
+                "currency": sale.transaction.currency if sale.transaction else "EUR"
+            })
+        
+        # Restock prices
+        restocks_in_range = Restock.objects.filter(
+            prod=product,
+            restock_date__date__gte=start_date
+        ).select_related('transaction').order_by('restock_date')
+        
+        restock_prices = []
+        for restock in restocks_in_range:
+            restock_prices.append({
+                "date": restock.restock_date.date().isoformat(),
+                "price": float(restock.restock_price),
+                "currency": restock.transaction.currency if restock.transaction else "EUR"
+            })
+        
+        return Response({
+            "product": product_data,
+            "recent_sales": sales_list,
+            "recent_restocks": restocks_list,
+            "price_history": {
+                "sale_prices": sale_prices,
+                "restock_prices": restock_prices
+            }
+        })
+        
+    except ObjectDoesNotExist:
+        return Response(
+            {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
