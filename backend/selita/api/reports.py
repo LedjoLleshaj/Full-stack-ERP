@@ -135,20 +135,24 @@ def dashboard_stats(request):
         })
 
     # 5. Debt (Total pending/partial sales amount - Total paid for those sales)
+    # Convert all amounts to EUR before summing
     pending_sales = Transaction.objects.filter(
         transaction_type="SALE",
         status__in=["PENDING", "PARTIAL"]
     )
     
-    # Calculate total expected from pending sales
-    total_pending_amount = pending_sales.aggregate(sum_val=Sum("total_amount"))["sum_val"] or 0
-    
-    # Calculate what has been paid so far for these specific transactions
-    paid_towards_pending = Payment.objects.filter(
-        transaction__in=pending_sales
-    ).aggregate(sum_val=Sum("amount"))["sum_val"] or 0
-    
-    debt = total_pending_amount - paid_towards_pending
+    debt = Decimal("0")
+    for sale in pending_sales:
+        # Get total payments made for this transaction
+        payments_made = Payment.objects.filter(
+            transaction=sale
+        ).aggregate(sum_val=Sum("amount"))["sum_val"] or Decimal("0")
+        
+        # Calculate remaining for this transaction
+        remaining = sale.total_amount - payments_made
+        if remaining > 0:
+            # Convert to EUR
+            debt += convert_to_eur(remaining, sale.currency)
 
     data = {
         "revenue_today": revenue_today,
