@@ -109,7 +109,9 @@
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="restockColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: restockColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: restockColumns" 
+              (click)="goToRestock(row.id)" 
+              class="clickable-row"></tr>
         </table>
       </mat-card-content>
     </mat-card>
