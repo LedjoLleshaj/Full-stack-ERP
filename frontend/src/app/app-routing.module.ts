@@ -21,6 +21,7 @@ import { SupplierViewComponent } from "./views/suppliers-view/supplier-view.comp
 import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier-view.component";
 import { TopClientsViewComponent } from "./views/top-clients-view/top-clients-view.component";
 import { ProductDetailsViewComponent } from "./views/product-details-view/product-details-view.component";
+import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supplier-details-view.component";
 
 const routes: Routes = [
   {
@@ -111,6 +112,11 @@ const routes: Routes = [
         path: "product/:id",
         component: ProductDetailsViewComponent,
         title: "Product Details - Selita",
+      },
+      {
+        path: "supplier/:id",
+        component: SupplierDetailsViewComponent,
+        title: "Supplier Details - Selita",
       },
     ],
   },

@@ -20,6 +20,10 @@ export class SupplierService {
     return this.http.get<Supplier>(`${this.apiUrl}/supplier/${id}`);
   }
 
+  getSupplierById(id: number): Observable<Supplier> {
+    return this.getSupplier(id);
+  }
+
   addSupplier(supplier: Supplier): Observable<Supplier> {
     return this.http.post<Supplier>(`${this.apiUrl}/add-supplier`, supplier);
   }
