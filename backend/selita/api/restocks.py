@@ -289,3 +289,124 @@ def getRestocksBySupplier(request, supplier_id):
             {"error": "An unexpected error occurred", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def payRestock(request, pk):
+    """Add a payment to a restock's transaction"""
+    from ..models import Account, ExchangeRate
+    
+    try:
+        restock = Restock.objects.select_related('transaction').get(id=pk)
+        transaction = restock.transaction
+        
+        if not transaction:
+            return Response(
+                {"error": "No transaction found for this restock"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Extract payment data
+        amount = Decimal(str(request.data.get('amount', 0)))
+        payment_currency = request.data.get('currency', transaction.currency)
+        payment_method = request.data.get('payment_method', 'CASH')
+        notes = request.data.get('notes', f'Payment for restock #{pk}')
+        pay_remaining = request.data.get('pay_remaining', False)
+        transaction_currency = transaction.currency
+        
+        if amount <= 0:
+            return Response(
+                {"error": "Payment amount must be greater than 0"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Calculate total paid so far
+        existing_payments = Payment.objects.filter(transaction=transaction)
+        total_paid = sum(Decimal(str(p.amount)) for p in existing_payments)
+        remaining = transaction.total_amount - total_paid
+        
+        # Convert payment amount to transaction currency if different
+        amount_in_transaction_currency = amount
+        exchange_rate = Decimal("1.0")
+        
+        if payment_currency != transaction_currency:
+            try:
+                rate_obj = ExchangeRate.objects.get(
+                    from_currency=payment_currency,
+                    to_currency=transaction_currency
+                )
+                exchange_rate = rate_obj.rate
+                amount_in_transaction_currency = amount * exchange_rate
+            except ExchangeRate.DoesNotExist:
+                return Response(
+                    {"error": f"Exchange rate not found for {payment_currency} to {transaction_currency}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        
+        # If paying exact remaining, use remaining amount to avoid rounding issues
+        if pay_remaining:
+            tolerance = remaining * Decimal("0.05")
+            if abs(amount_in_transaction_currency - remaining) <= tolerance:
+                amount_in_transaction_currency = remaining
+        
+        if amount_in_transaction_currency > remaining + Decimal('0.01'):
+            return Response(
+                {"error": f"Payment amount ({amount_in_transaction_currency}) exceeds remaining balance ({remaining})"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Auto-select account based on payment method and currency
+        try:
+            account_type = "CASH" if payment_method == "CASH" else "BANK"
+            account = Account.objects.get(
+                account_type=account_type,
+                currency=payment_currency
+            )
+        except Account.DoesNotExist:
+            return Response(
+                {"error": f"No {account_type} account found for currency {payment_currency}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Create payment
+        payment = Payment.objects.create(
+            transaction=transaction,
+            account=account,
+            amount=amount_in_transaction_currency,
+            currency=transaction_currency,
+            original_amount=amount,
+            original_currency=payment_currency,
+            exchange_rate=exchange_rate if payment_currency != transaction_currency else None,
+            payment_method=payment_method,
+            notes=notes
+        )
+        
+        # Update transaction status
+        new_total_paid = total_paid + amount_in_transaction_currency
+        if new_total_paid >= transaction.total_amount - Decimal('0.01'):
+            transaction.status = 'COMPLETED'
+            transaction.completed_date = timezone.now()
+        elif new_total_paid > 0:
+            transaction.status = 'PARTIAL'
+        transaction.save()
+        
+        return Response({
+            "message": "Payment recorded successfully",
+            "payment_id": payment.id,
+            "transaction_status": transaction.status,
+            "total_paid": float(new_total_paid),
+            "remaining": float(transaction.total_amount - new_total_paid)
+        }, status=status.HTTP_201_CREATED)
+        
+    except ObjectDoesNotExist:
+        return Response(
+            {"error": "Restock not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
