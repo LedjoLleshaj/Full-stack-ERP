@@ -39,6 +39,14 @@ export class SupplierService {
   getRestocksBySupplier(supplierId: number): Observable<SupplierRestock[]> {
     return this.http.get<SupplierRestock[]>(`${this.apiUrl}/restocks-by-supplier/${supplierId}`);
   }
+
+  getRestockDetails(restockId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/restock/${restockId}`);
+  }
+
+  payRestock(restockId: number, payment: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/pay-restock/${restockId}`, payment);
+  }
 }
 
 export interface SupplierRestock {
@@ -52,3 +60,4 @@ export interface SupplierRestock {
   status: string;
   transaction_id: number | null;
 }
+
