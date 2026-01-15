@@ -80,7 +80,8 @@ def addProductToInventory(request):
         quantity = request.data.get("quantity")
         price = request.data.get("price")
         supplier_id = request.data.get("supplier_id")
-        print("addProductToInventory", name, quantity, price, "supplier_id:", supplier_id)
+        is_paid = request.data.get("is_paid", True)  # Default to True (paid)
+        print("addProductToInventory", name, quantity, price, "supplier_id:", supplier_id, "is_paid:", is_paid)
         
         if quantity <= 0:
             return Response(
@@ -131,6 +132,9 @@ def addProductToInventory(request):
                 description=""
             )
         
+        # Determine transaction status based on is_paid
+        transaction_status = "COMPLETED" if is_paid else "PENDING"
+        
         # Create purchase transaction to track the expense
         total_amount = price * quantity
         transaction = Transaction.objects.create(
@@ -138,7 +142,7 @@ def addProductToInventory(request):
             supplier=supplier,
             total_amount=total_amount,
             currency="EUR",
-            status="COMPLETED",
+            status=transaction_status,
             notes=f"Restock: {quantity} x {product.name} @ {price}/unit"
         )
         

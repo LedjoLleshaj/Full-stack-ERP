@@ -55,6 +55,13 @@
         </mat-error>
       </mat-form-field>
 
+      <!-- Payment Status Checkbox -->
+      <div class="checkbox-container">
+        <mat-checkbox formControlName="is_paid" color="primary">
+          Furnizimi është paguar
+        </mat-checkbox>
+      </div>
+
       <!-- Submit Button -->
       <div class="button-container">
         <button mat-raised-button color="primary" type="submit" [disabled]="!productForm.valid">Shto produktin</button>
