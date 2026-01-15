@@ -112,6 +112,7 @@ urlpatterns = [
     path("update-restock/<str:pk>", restocks.updateRestock),
     path("delete-restock/<str:pk>", restocks.deleteRestock),
     path("restocks-by-supplier/<str:supplier_id>", restocks.getRestocksBySupplier),
+    path("pay-restock/<str:pk>", restocks.payRestock),
     
     # ======== REPORTS ========
     path("report/sales/", reports.sales_report),
