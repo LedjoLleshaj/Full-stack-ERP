@@ -8,6 +8,7 @@ import { ClientService } from "src/app/shared/services/clients-api/client.servic
 import { ProductService } from "src/app/shared/services/product-api/product.service";
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
 import { CurrencyExchangeService } from "src/app/shared/services/currency-exchange/currency-exchange.service";
+import { Router } from "@angular/router";
 
 @Component({
   selector: "app-client-details-view",
@@ -34,19 +35,26 @@ export class ClientDetailsViewComponent implements OnInit {
   currency: string = "EUR"; // Default to EUR since product prices are in EUR
   currencies: string[] = ["EUR", "USD", "LEK"];
 
+  // Recent sales
+  recentSales: any[] = [];
+  isLoadingSales = false;
+  salesColumns = ['date', 'product_name', 'quantity', 'price', 'status'];
+
   constructor(
     private route: ActivatedRoute,
     private clientService: ClientService,
     private productService: ProductService,
     private saleService: SalesApiService,
     private snackBar: MatSnackBar,
-    private currencyExchange: CurrencyExchangeService
+    private currencyExchange: CurrencyExchangeService,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.clientId = Number(this.route.snapshot.paramMap.get("id"));
     if (this.clientId) {
       this.loadClient(this.clientId);
+      this.loadClientSales(this.clientId);
     }
     this.fetchProducts();
   }
@@ -60,6 +68,23 @@ export class ClientDetailsViewComponent implements OnInit {
         console.error("Failed to load client:", err);
         this.snackBar.open("Gabim ne ngarkimin e klientit", "Mbyll", { duration: 3000 });
       },
+    });
+  }
+
+  private loadClientSales(clientId: number): void {
+    this.isLoadingSales = true;
+    this.clientService.getClientSales(clientId).subscribe({
+      next: (data: any[]) => {
+        // Filter to only unpaid sales (PENDING or PARTIAL), take last 10
+        this.recentSales = data
+          .filter(sale => sale.payment_status !== 'COMPLETED')
+          .slice(0, 10);
+        this.isLoadingSales = false;
+      },
+      error: (err) => {
+        console.error('Failed to load client sales:', err);
+        this.isLoadingSales = false;
+      }
     });
   }
 
@@ -198,6 +223,7 @@ export class ClientDetailsViewComponent implements OnInit {
         this.clearSelection();
         this.fetchProducts(); // Refresh product list
         this.loadClient(this.clientId); // Refresh client stats
+        this.loadClientSales(this.clientId); // Refresh recent sales
       },
       error: (error) => {
         console.error("Error creating sale:", error);
@@ -218,4 +244,38 @@ export class ClientDetailsViewComponent implements OnInit {
     this.paymentMethod = "CASH";
     this.currency = "EUR"; // Reset to EUR (matches product prices)
   }
+
+  // Helpers for recent sales table
+  formatSaleDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('sq-AL', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  formatSaleCurrency(amount: number, currency: string): string {
+    const symbols: { [key: string]: string } = { 'EUR': '€', 'USD': '$', 'LEK': 'Lek' };
+    return `${amount.toFixed(2)} ${symbols[currency] || currency}`;
+  }
+
+  getSaleStatusClass(status: string): string {
+    const classes: { [key: string]: string } = {
+      'COMPLETED': 'status-completed',
+      'PARTIAL': 'status-partial',
+      'PENDING': 'status-pending'
+    };
+    return classes[status] || 'status-pending';
+  }
+
+  getSaleStatusLabel(status: string): string {
+    const labels: { [key: string]: string } = {
+      'COMPLETED': 'Paguar',
+      'PARTIAL': 'Pjesërisht',
+      'PENDING': 'Pa Paguar'
+    };
+    return labels[status] || status;
+  }
+
+  goToSale(saleId: number): void {
+    this.router.navigate(['/sale', saleId]);
+  }
 }
+
