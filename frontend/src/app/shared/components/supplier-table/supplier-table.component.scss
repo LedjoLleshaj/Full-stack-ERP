@@ -32,3 +32,13 @@ table {
   .mat-paginator {
     margin-top: 16px;
   }
+
+.clickable-name {
+  cursor: pointer;
+  color: #3b82f6;
+  font-weight: 500;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
