@@ -318,7 +318,8 @@ export class RestockDetailsViewComponent implements OnInit {
 
   formatCurrency(amount: number | string, currency: string): string {
     const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-    return `${numAmount.toFixed(2)} ${currency}`;
+    const symbols: { [key: string]: string } = { 'EUR': '€', 'USD': '$', 'LEK': 'Lek' };
+    return `${numAmount.toFixed(2)} ${symbols[currency] || currency}`;
   }
 
   goBack(): void {
