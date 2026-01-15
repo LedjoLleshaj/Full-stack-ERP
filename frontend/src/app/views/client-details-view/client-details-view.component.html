@@ -1,9 +1,12 @@
 <div class="client-details-container">
-  <!-- Section 1: Client Info -->
-  <div class="client-info-section">
-    <div class="section-header">
-      <h2>Informacione mbi Klientin</h2>
-    </div>
+  <!-- Section 1: Client Information -->
+  <mat-card class="client-details-card client-info-section">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>person</mat-icon>
+      <mat-card-title>Informacione mbi Klientin</mat-card-title>
+    </mat-card-header>
+    <mat-divider></mat-divider>
+    <mat-card-content>
 
     <div class="info-grid">
       <div class="info-row">
@@ -46,10 +49,11 @@
         </div>
       </div>
     </div>
-  </div>
+  </mat-card-content>
+</mat-card>
 
   <!-- Section 2: Recent Sales -->
-  <mat-card class="recent-sales-section">
+  <mat-card class="client-details-card recent-sales-section">
     <mat-card-header>
       <mat-icon mat-card-avatar>shopping_cart</mat-icon>
       <mat-card-title>Shitjet e Papaguara ({{ recentSales.length }})</mat-card-title>
@@ -118,10 +122,13 @@
   </mat-card>
 
   <!-- Section 3: Create Sale -->
-  <div class="create-sale-section">
-    <div class="section-header">
-      <h2>Krijo Shitje te Re</h2>
-    </div>
+  <mat-card class="client-details-card create-sale-section">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>shopping_cart</mat-icon>
+      <mat-card-title>Krijo Shitje te Re</mat-card-title>
+    </mat-card-header>
+    <mat-divider></mat-divider>
+    <mat-card-content>
 
     <!-- Product Selection with Autocomplete -->
     <div class="form-row">
@@ -233,5 +240,6 @@
       <mat-icon>shopping_cart</mat-icon>
       <p>Zgjidh nje produkt per te filluar shitjen</p>
     </div>
-  </div>
+    </mat-card-content>
+  </mat-card>
 </div>

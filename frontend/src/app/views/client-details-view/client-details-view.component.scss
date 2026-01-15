@@ -7,26 +7,46 @@
   margin: 0 auto;
 }
 
-/* ========== Client Info Section ========== */
-.client-info-section {
-  background: var(--surface-bg);
-  border-radius: 12px;
-  padding: 28px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border-color);
-}
-
-.section-header {
+/* ========== Common Section Styling (mat-card) ========== */
+.client-details-card {
+  border-radius: 12px !important;
+  overflow: hidden;
   margin-bottom: 24px;
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+
+  mat-card-header {
+    padding: 16px 24px;
+    
+    mat-icon[mat-card-avatar] {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      border-radius: 8px;
+      padding: 8px;
+      margin-right: 12px;
+    }
+    
+    mat-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary-color) !important;
+      margin: 0;
+    }
+  }
+  
+  mat-card-content {
+    padding: 24px;
+  }
 }
 
-.section-header h2 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--primary-color);
-  border-bottom: 3px solid var(--primary-color);
-  padding-bottom: 12px;
+
+
+/* ========== Dark Mode Compatibility ========== */
+:host-context(.dark-mode) {
+  .sales-table {
+    background-color: #2a2a2a !important;
+  }
 }
 
 .info-grid {
@@ -54,7 +74,8 @@
 }
 
 mat-divider {
-  margin: 24px 0 !important;
+  margin: 2px 0 !important;
+  opacity: 0.5;
   border-top-color: var(--border-color) !important;
 }
 
@@ -94,33 +115,14 @@ mat-divider {
 
 /* ========== Recent Sales Section ========== */
 .recent-sales-section {
-  border-radius: 12px !important;
-  overflow: hidden;
-
-  mat-card-header {
-    padding: 16px 24px;
-    
-    mat-icon[mat-card-avatar] {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
-      border-radius: 8px;
-      padding: 8px;
-      margin-right: 12px;
-    }
-    
-    mat-card-title {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-  }
-  
   mat-card-content {
-    padding: 0;
+    padding: 0 !important;
   }
 }
 
 .sales-table {
   width: 100%;
+  background-color: transparent;
   
   th {
     font-weight: 600;
@@ -218,13 +220,7 @@ mat-divider {
 }
 
 /* ========== Create Sale Section ========== */
-.create-sale-section {
-  background: var(--surface-bg);
-  border-radius: 12px;
-  padding: 28px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border-color);
-}
+
 
 .form-row {
   display: flex;
