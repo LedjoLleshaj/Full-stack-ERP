@@ -16,6 +16,7 @@ export interface SaleResponse {
   };
   product: Product;
   payment_status: string; // PENDING, PARTIAL, COMPLETED
+  currency?: string;
 }
 
 export interface Sale {
