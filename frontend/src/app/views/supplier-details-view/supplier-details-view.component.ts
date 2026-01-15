@@ -76,9 +76,9 @@ export class SupplierDetailsViewComponent implements OnInit {
     const symbols: { [key: string]: string } = {
       'EUR': '€',
       'USD': '$',
-      'LEK': 'L'
+      'LEK': 'Lek'
     };
-    return `${symbols[currency] || currency} ${amount.toFixed(2)}`;
+    return `${amount.toFixed(2)} ${symbols[currency] || currency}`;
   }
 
   getStatusClass(status: string): string {
