@@ -38,31 +38,35 @@
 
 /* ========== Supplier Info Section ========== */
 .supplier-info-section {
-  background: var(--surface-bg);
-  border-radius: 12px;
-  padding: 28px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border-color);
-}
+  border-radius: 12px !important;
+  overflow: hidden;
 
-.section-header {
-  margin-bottom: 24px;
-}
+  mat-card-header {
+    padding: 16px 24px;
+    
+    mat-icon[mat-card-avatar] {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      border-radius: 8px;
+      padding: 8px;
+      margin-right: 12px;
+    }
+    
+    mat-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+  }
 
-.section-header h2 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--primary-color);
-  border-bottom: 3px solid var(--primary-color);
-  padding-bottom: 12px;
+  mat-card-content {
+    padding: 24px;
+  }
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
 }
 
 .info-row {

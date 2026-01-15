@@ -15,34 +15,37 @@
   <!-- Main Content -->
   <div *ngIf="!isLoading && supplier" class="main-content">
     <!-- Section 1: Supplier Info -->
-    <div class="supplier-info-section">
-      <div class="section-header">
-        <h2>Informacione mbi Furnitorin</h2>
-      </div>
-
-      <div class="info-grid">
-        <div class="info-row">
-          <span class="info-label">Emër:</span>
-          <span class="info-value">{{ supplier.firstname }}</span>
+    <mat-card class="supplier-info-section">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>person</mat-icon>
+        <mat-card-title>Informacione mbi Furnitorin</mat-card-title>
+      </mat-card-header>
+      <mat-divider></mat-divider>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-row">
+            <span class="info-label">Emër:</span>
+            <span class="info-value">{{ supplier.firstname }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Mbiemër:</span>
+            <span class="info-value">{{ supplier.lastname }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ supplier.email || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Nr. Cel:</span>
+            <span class="info-value">{{ supplier.phone || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Adresa:</span>
+            <span class="info-value">{{ supplier.address || '-' }}</span>
+          </div>
         </div>
-        <div class="info-row">
-          <span class="info-label">Mbiemër:</span>
-          <span class="info-value">{{ supplier.lastname }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Email:</span>
-          <span class="info-value">{{ supplier.email || '-' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Nr. Cel:</span>
-          <span class="info-value">{{ supplier.phone || '-' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Adresa:</span>
-          <span class="info-value">{{ supplier.address || '-' }}</span>
-        </div>
-      </div>
-    </div>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Section 2: Recent Restocks -->
     <mat-card class="table-card">

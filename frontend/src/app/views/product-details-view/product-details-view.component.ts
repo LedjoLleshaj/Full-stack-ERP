@@ -108,8 +108,21 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
 
     this.chartOptions = {
       backgroundColor: 'transparent',
+      axisPointer: {
+        link: [{ xAxisIndex: 'all' }],
+        triggerOn: 'mousemove|click'
+      },
       tooltip: {
         trigger: 'axis',
+        axisPointer: {
+          type: 'line',
+          snap: true,
+          lineStyle: {
+            color: this.isDarkMode ? '#6b7280' : '#9ca3af',
+            width: 1,
+            type: 'dashed'
+          }
+        },
         backgroundColor: this.isDarkMode ? '#1f2937' : '#fff',
         borderColor: this.isDarkMode ? '#374151' : '#e5e7eb',
         textStyle: {
@@ -118,7 +131,7 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
         formatter: (params: any) => {
           let result = params[0]?.name || '';
           params.forEach((p: any) => {
-            if (p.value !== null) {
+            if (p.value != null) {
               result += `<br/>${p.marker} ${p.seriesName}: <strong>€${p.value.toFixed(2)}</strong>`;
             }
           });
@@ -181,12 +194,12 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
           symbolSize: 8,
           lineStyle: {
             color: '#3b82f6',
-            width: 3
+            width: 1
           },
           itemStyle: {
             color: '#3b82f6'
           },
-          connectNulls: false
+          connectNulls: true
         },
         {
           name: 'Çmimi Blerjes',
@@ -197,12 +210,12 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
           symbolSize: 8,
           lineStyle: {
             color: '#f97316',
-            width: 3
+            width: 1
           },
           itemStyle: {
             color: '#f97316'
           },
-          connectNulls: false
+          connectNulls: true
         }
       ]
     };
