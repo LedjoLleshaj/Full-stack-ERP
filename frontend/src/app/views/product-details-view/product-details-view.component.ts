@@ -132,7 +132,7 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
           let result = params[0]?.name || '';
           params.forEach((p: any) => {
             if (p.value != null) {
-              result += `<br/>${p.marker} ${p.seriesName}: <strong>€${p.value.toFixed(2)}</strong>`;
+              result += `<br/>${p.marker} ${p.seriesName}: <strong>${p.value.toFixed(2)} €</strong>`;
             }
           });
           return result;
@@ -171,7 +171,7 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
         axisLabel: {
           fontSize: 12,
           color: axisLabelColor,
-          formatter: (value: number) => `€${value}`
+          formatter: (value: number) => `${value} €`
         },
         axisLine: {
           lineStyle: {
@@ -230,9 +230,9 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
     const symbols: { [key: string]: string } = {
       'EUR': '€',
       'USD': '$',
-      'LEK': 'L'
+      'LEK': 'Lek'
     };
-    return `${symbols[currency] || currency} ${amount.toFixed(2)}`;
+    return `${amount.toFixed(2)} ${symbols[currency] || currency}`;
   }
 
   getStatusClass(status: string): string {
