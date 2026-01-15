@@ -1,0 +1,59 @@
+<div class="supplier-details-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Duke ngarkuar të dhënat...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!isLoading && errorMessage" class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="goBack()">Kthehu te Furnitorët</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading && supplier" class="main-content">
+    <!-- Section 1: Supplier Info -->
+    <div class="supplier-info-section">
+      <div class="section-header">
+        <h2>Informacione mbi Furnitorin</h2>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">Emër:</span>
+          <span class="info-value">{{ supplier.firstname }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Mbiemër:</span>
+          <span class="info-value">{{ supplier.lastname }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email:</span>
+          <span class="info-value">{{ supplier.email || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Nr. Cel:</span>
+          <span class="info-value">{{ supplier.phone || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Adresa:</span>
+          <span class="info-value">{{ supplier.address || '-' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Recent Restocks (Placeholder) -->
+    <div class="restocks-section">
+      <div class="section-header">
+        <h2>Furnizimet e Fundit</h2>
+      </div>
+      
+      <div class="empty-state">
+        <mat-icon>local_shipping</mat-icon>
+        <p>Furnizimet e fundit do të shfaqen këtu</p>
+      </div>
+    </div>
+  </div>
+</div>
