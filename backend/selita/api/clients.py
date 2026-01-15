@@ -186,11 +186,11 @@ def getClientSales(request, pk):
         # Get sales through transaction relationship
         sales = Sales.objects.filter(
             transaction__client=client
-        ).select_related('transaction', 'prod')
+        ).select_related('transaction', 'prod').order_by('-sale_date')
         
         serializer = SalesSerializer(sales, many=True)
-        # For each sale, retrieve and add the product data
-        for sale_data in serializer.data:
+        # For each sale, retrieve and add the product data and payment status
+        for i, sale_data in enumerate(serializer.data):
             prod_id = sale_data["prod"]
 
             try:
@@ -199,6 +199,16 @@ def getClientSales(request, pk):
                 sale_data["product"] = product_serializer.data
             except Product.DoesNotExist:
                 sale_data["product"] = {"error": "Product not found"}
+            
+            # Add payment status and currency from transaction
+            sale = sales[i]
+            if sale.transaction:
+                sale_data["payment_status"] = sale.transaction.status
+                sale_data["currency"] = sale.transaction.currency
+            else:
+                sale_data["payment_status"] = "PENDING"
+                sale_data["currency"] = "EUR"  # Fallback
+                
         return Response(serializer.data)
     except ObjectDoesNotExist:
         return Response({"error": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
