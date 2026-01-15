@@ -254,3 +254,38 @@ def deleteRestock(request, pk):
             {"error": "An unexpected error occurred", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def getRestocksBySupplier(request, supplier_id):
+    """Get recent restocks for a specific supplier"""
+    try:
+        # Get restocks for this supplier through transaction
+        restocks = Restock.objects.filter(
+            transaction__supplier_id=supplier_id
+        ).select_related('transaction', 'prod').order_by('-restock_date')[:10]
+        
+        restocks_list = []
+        for restock in restocks:
+            product = restock.prod
+            transaction = restock.transaction
+            
+            restocks_list.append({
+                "id": restock.id,
+                "date": restock.restock_date.date().isoformat(),
+                "product_name": product.name if product else "N/A",
+                "product_category": product.category if product else "N/A",
+                "quantity": restock.quantity,
+                "price": float(restock.restock_price),
+                "currency": transaction.currency if transaction else "EUR",
+                "status": transaction.status if transaction else "PENDING",
+                "transaction_id": transaction.id if transaction else None
+            })
+        
+        return Response(restocks_list)
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

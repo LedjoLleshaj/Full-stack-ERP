@@ -35,4 +35,20 @@ export class SupplierService {
   deleteSupplier(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/delete-supplier/${id}`);
   }
+
+  getRestocksBySupplier(supplierId: number): Observable<SupplierRestock[]> {
+    return this.http.get<SupplierRestock[]>(`${this.apiUrl}/restocks-by-supplier/${supplierId}`);
+  }
+}
+
+export interface SupplierRestock {
+  id: number;
+  date: string;
+  product_name: string;
+  product_category: string;
+  quantity: number;
+  price: number;
+  currency: string;
+  status: string;
+  transaction_id: number | null;
 }
