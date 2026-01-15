@@ -127,6 +127,15 @@
   td {
     font-size: 0.875rem;
   }
+
+  .clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.08);
+    }
+  }
 }
 
 .product-cell {

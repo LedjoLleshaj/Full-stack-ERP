@@ -104,4 +104,8 @@ export class SupplierDetailsViewComponent implements OnInit {
   goBack(): void {
     this.router.navigate(['/suppliers']);
   }
+
+  goToRestock(restockId: number): void {
+    this.router.navigate(['/restock', restockId]);
+  }
 }
