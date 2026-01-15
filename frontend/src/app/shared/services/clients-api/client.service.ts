@@ -22,4 +22,8 @@ export class ClientService {
   addClient(client: Client): Observable<Client> {
     return this.http.post<Client>(`${this.apiUrl}${environment.addClient}`, client);
   }
+
+  getClientSales(clientId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/client-sales/${clientId}`);
+  }
 }
