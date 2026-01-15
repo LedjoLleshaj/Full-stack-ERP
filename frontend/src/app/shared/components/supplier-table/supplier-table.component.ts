@@ -31,4 +31,8 @@ export class SupplierTableComponent implements OnInit {
       this.dataSource.sort = this.sort;
     });
   }
+
+  goToSupplierDetails(supplierId: number): void {
+    this.router.navigate(['/supplier', supplierId]);
+  }
 }
