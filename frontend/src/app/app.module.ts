@@ -57,6 +57,7 @@ import { SupplierViewComponent } from "./views/suppliers-view/supplier-view.comp
 import { SupplierTableComponent } from "./shared/components/supplier-table/supplier-table.component";
 import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier-view.component";
 import { TopClientsViewComponent } from "./views/top-clients-view/top-clients-view.component";
+import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supplier-details-view.component";
 import { NgxEchartsModule } from "ngx-echarts";
 
 @NgModule({
@@ -88,6 +89,7 @@ import { NgxEchartsModule } from "ngx-echarts";
     SupplierTableComponent,
     AddSupplierViewComponent,
     TopClientsViewComponent,
+    SupplierDetailsViewComponent,
   ],
   imports: [
     BrowserModule,
