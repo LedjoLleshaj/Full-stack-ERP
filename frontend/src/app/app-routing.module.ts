@@ -23,6 +23,7 @@ import { TopClientsViewComponent } from "./views/top-clients-view/top-clients-vi
 import { ProductDetailsViewComponent } from "./views/product-details-view/product-details-view.component";
 import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supplier-details-view.component";
 import { RestockDetailsViewComponent } from "./views/restock-details-view/restock-details-view.component";
+import { RestocksViewComponent } from "./views/restocks-view/restocks-view.component";
 
 const routes: Routes = [
   {
@@ -45,6 +46,11 @@ const routes: Routes = [
         path: "sales",
         component: SalesViewComponent,
         title: "Sale History - Selita",
+      },
+      {
+        path: "restocks",
+        component: RestocksViewComponent,
+        title: "Restock History - Selita",
       },
       {
         path: "clients",
