@@ -382,6 +382,10 @@ def payRestock(request, pk):
             notes=notes
         )
         
+        # Decrease account balance (PURCHASE = money going out)
+        account.current_balance -= amount
+        account.save()
+        
         # Update transaction status
         new_total_paid = total_paid + amount_in_transaction_currency
         if new_total_paid >= transaction.total_amount - Decimal('0.01'):
