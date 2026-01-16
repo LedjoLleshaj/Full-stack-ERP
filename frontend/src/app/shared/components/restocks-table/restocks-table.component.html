@@ -1,0 +1,87 @@
+<div class="se-table-responsive">
+  <table
+    mat-table
+    matSort
+    [dataSource]="dataSource"
+    [matSortActive]="'restock_date'"
+    matSortDirection="desc"
+    class="mat-elevation-z1 table"
+  >
+    <caption>
+      Historiku i furnizimeve
+    </caption>
+
+    <!-- product -->
+    <ng-container matColumnDef="product">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by product">
+        Produkti
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let restock">
+        {{ restock.product_info?.name || 'N/A' }}
+      </td>
+    </ng-container>
+
+    <!-- quantity -->
+    <ng-container matColumnDef="quantity">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by quantity">
+        Sasia
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let restock">
+        {{ restock.quantity }}
+      </td>
+    </ng-container>
+
+    <!-- restock_price -->
+    <ng-container matColumnDef="restock_price">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by price">
+        Cmimi
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let restock">
+        {{ restock.restock_price }} {{ getCurrency(restock) }}
+      </td>
+    </ng-container>
+
+    <!-- restock_date -->
+    <ng-container matColumnDef="restock_date">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by date">
+        Data e furnizimit
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let restock">
+        {{ restock.restock_date | date : "dd/MM/yyyy" }}
+      </td>
+    </ng-container>
+
+    <!-- total -->
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef scope="col" mat-sort-header sortActionDescription="Sort by total">
+        Totali
+      </th>
+      <td class="se-table-row" mat-cell *matCellDef="let restock">
+        {{ getTotal(restock) }} {{ getCurrency(restock) }}
+      </td>
+    </ng-container>
+
+    <!-- Payment Status -->
+    <ng-container matColumnDef="payment_status">
+      <th mat-header-cell *matHeaderCellDef scope="col">Statusi i Pageses</th>
+      <td class="se-table-row" mat-cell *matCellDef="let restock">
+        <span *ngIf="restock.transaction_info?.status === 'COMPLETED'" class="text-green-600">✓ E paguar</span>
+        <span *ngIf="restock.transaction_info?.status === 'PARTIAL'" class="text-yellow-600">⊙ Pjeserisht e paguar</span>
+        <span *ngIf="restock.transaction_info?.status === 'PENDING'" class="text-red-600">✗ Nuk eshte paguar</span>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns" 
+        class="clickable-row" 
+        (click)="goToRestockDetails(row)"></tr>
+  </table>
+</div>
+<mat-paginator
+  class="mat-elevation-z1"
+  [length]="this.total"
+  [pageSize]="10"
+  [pageSizeOptions]="[5, 10, 25, 50]"
+  showFirstLastButtons
+  aria-label="Pagination Navigation"
+></mat-paginator>

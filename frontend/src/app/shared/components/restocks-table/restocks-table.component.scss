@@ -1,0 +1,15 @@
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(102, 126, 234, 0.1);
+  }
+}
+
+// Dark mode hover effect
+:host-context(.dark-mode) {
+  .clickable-row:hover {
+    background-color: rgba(102, 126, 234, 0.15);
+  }
+}
