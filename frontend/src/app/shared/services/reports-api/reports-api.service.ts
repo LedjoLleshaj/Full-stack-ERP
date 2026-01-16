@@ -20,6 +20,8 @@ export interface DashboardStats {
 
 export interface DailyProfit {
   date: string;
+  sales: number;
+  purchases: number;
   profit: number;
 }
 
@@ -67,8 +69,9 @@ export class ReportsApiService {
     return this.http.get<DashboardStats>(`${environment.apiUrl}${environment.dashboardStats}`);
   }
 
-  getDailyProfit(): Observable<DailyProfit[]> {
-    return this.http.get<DailyProfit[]>(`${environment.apiUrl}${environment.dailyProfit}`);
+  getDailyProfit(days: number = 30): Observable<DailyProfit[]> {
+    const params = days === 0 ? '?days=0' : `?days=${days}`;
+    return this.http.get<DailyProfit[]>(`${environment.apiUrl}${environment.dailyProfit}${params}`);
   }
 
   getPaidVsUnpaid(): Observable<PaidVsUnpaidStats> {

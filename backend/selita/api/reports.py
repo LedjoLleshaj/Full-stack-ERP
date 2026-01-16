@@ -168,15 +168,34 @@ def dashboard_stats(request):
 @api_view(["GET"])
 def daily_profit(request):
     """
-    Get daily profit data for the past 30 days.
-    Returns an array of {date, profit} objects for chart visualization.
+    Get daily profit data for a specified time period.
+    Query params:
+    - days: Number of days to look back (default: 30, max: 365, use 0 for all time)
+    Returns an array of {date, sales, purchases, profit} objects for chart visualization.
     """
     from ..models import ExchangeRate
     from decimal import Decimal
     from datetime import timedelta
     
     today = date.today()
-    start_date = today - timedelta(days=30)
+    
+    # Get days parameter (default 30, max 365, 0 = all time)
+    days_param = request.GET.get('days', '30')
+    try:
+        days = int(days_param)
+    except ValueError:
+        days = 30
+    
+    if days == 0:
+        # All time - get earliest transaction date
+        earliest = Transaction.objects.order_by('created_date').first()
+        if earliest:
+            start_date = earliest.created_date.date()
+        else:
+            start_date = today - timedelta(days=30)
+    else:
+        days = min(max(days, 1), 365)  # Clamp between 1 and 365
+        start_date = today - timedelta(days=days)
     
     def convert_to_eur(amount, currency):
         """Convert amount from any currency to EUR"""
@@ -225,6 +244,8 @@ def daily_profit(request):
         
         result.append({
             "date": current_date.isoformat(),
+            "sales": float(sales_amount),
+            "purchases": float(purchases_amount),
             "profit": float(profit)
         })
         current_date += timedelta(days=1)
