@@ -116,9 +116,12 @@ def addProductToInventory(request):
         try:
             product = Product.objects.get(name=name)
             print("Product already exists", product)
-            # Update description if a new one is provided
+            # Update description if a new one is provided, or if current is empty, use name
             if description:
                 product.description = description
+                product.save()
+            elif not product.description:
+                product.description = name
                 product.save()
         except ObjectDoesNotExist:
             # Create a new product if it doesn't exist
@@ -130,11 +133,12 @@ def addProductToInventory(request):
                 category = "Uncategorized"
             
             # Note: For new products, we use the purchase price as initial selling price
+            # If no description provided, use the product name as default
             product = Product.objects.create(
                 name=name, 
                 price=price, 
                 category=category,
-                description=description
+                description=description if description else name
             )
         
         # Determine transaction status based on is_paid
