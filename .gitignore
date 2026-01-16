@@ -14,3 +14,4 @@ db/tempo.sql
 
 # macOS
 .DS_Store
+backend/Auth.md
