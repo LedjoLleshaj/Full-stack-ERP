@@ -80,8 +80,9 @@ def addProductToInventory(request):
         quantity = request.data.get("quantity")
         price = request.data.get("price")
         supplier_id = request.data.get("supplier_id")
+        description = request.data.get("description", "")  # Default to empty string
         is_paid = request.data.get("is_paid", True)  # Default to True (paid)
-        print("addProductToInventory", name, quantity, price, "supplier_id:", supplier_id, "is_paid:", is_paid)
+        print("addProductToInventory", name, quantity, price, "supplier_id:", supplier_id, "description:", description, "is_paid:", is_paid)
         
         if quantity <= 0:
             return Response(
@@ -115,6 +116,10 @@ def addProductToInventory(request):
         try:
             product = Product.objects.get(name=name)
             print("Product already exists", product)
+            # Update description if a new one is provided
+            if description:
+                product.description = description
+                product.save()
         except ObjectDoesNotExist:
             # Create a new product if it doesn't exist
             # Get category from Product_Names table
@@ -129,7 +134,7 @@ def addProductToInventory(request):
                 name=name, 
                 price=price, 
                 category=category,
-                description=""
+                description=description
             )
         
         # Determine transaction status based on is_paid
