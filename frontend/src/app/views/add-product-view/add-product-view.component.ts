@@ -32,6 +32,7 @@ export class AddProductViewComponent implements OnInit {
       price: [0, [Validators.min(0)]],
       quantity: [0, [Validators.required, Validators.min(1)]],
       supplier_id: [null, Validators.required],
+      description: [""],
       is_paid: [true],
     });
   }
