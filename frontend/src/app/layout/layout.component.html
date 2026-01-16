@@ -66,6 +66,17 @@
       <mat-divider></mat-divider>
       <button
         mat-list-item
+        aria-label="Hap historikun e furnizimeve"
+        title="Hap historikun e furnizimeve"
+        [activated]="this.router.url === '/restocks'"
+        (click)="this.router.navigate(['/restocks'])"
+      >
+        <mat-icon matListItemIcon>inventory_2</mat-icon>
+        <div matListItemTitle>Furnizimet</div>
+      </button>
+      <mat-divider></mat-divider>
+      <button
+        mat-list-item
         aria-label="Hap raportet"
         title="Hap raportet"
         [activated]="this.router.url === '/reports'"
