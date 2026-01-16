@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from ..models import Inventory, Product, Product_Names, Transaction, Restock, Supplier
+from ..models import Inventory, Product, Product_Names, Transaction, Restock, Supplier, Payment, Account
 from rest_framework.decorators import api_view, permission_classes
 from ..serializers import InventorySerializer, ProductSerializer, RestockSerializer
 from django.core.exceptions import ObjectDoesNotExist
@@ -162,6 +162,30 @@ def addProductToInventory(request):
             quantity=quantity,
             restock_price=price
         )
+        
+        # If marked as paid, create a payment record and update account balance
+        if is_paid:
+            try:
+                # Auto-select CASH account in EUR (default)
+                account = Account.objects.get(
+                    account_type="CASH",
+                    currency="EUR"
+                )
+                Payment.objects.create(
+                    transaction=transaction,
+                    account=account,
+                    amount=total_amount,
+                    currency="EUR",
+                    payment_method="CASH",
+                    notes=f"Initial payment for restock #{restock.id}"
+                )
+                # Decrease account balance (PURCHASE = money going out)
+                account.current_balance -= total_amount
+                account.save()
+            except Account.DoesNotExist:
+                # If no CASH EUR account exists, skip payment creation
+                # Transaction status is already set to COMPLETED
+                print("Warning: No CASH EUR account found, payment record not created")
         
         # Update inventory quantity
         try:
