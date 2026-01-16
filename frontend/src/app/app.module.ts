@@ -60,6 +60,8 @@ import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier
 import { TopClientsViewComponent } from "./views/top-clients-view/top-clients-view.component";
 import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supplier-details-view.component";
 import { RestockDetailsViewComponent } from "./views/restock-details-view/restock-details-view.component";
+import { RestocksViewComponent } from "./views/restocks-view/restocks-view.component";
+import { RestocksTableComponent } from "./shared/components/restocks-table/restocks-table.component";
 import { NgxEchartsModule } from "ngx-echarts";
 
 @NgModule({
@@ -93,6 +95,7 @@ import { NgxEchartsModule } from "ngx-echarts";
     TopClientsViewComponent,
     SupplierDetailsViewComponent,
     RestockDetailsViewComponent,
+    RestocksViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -123,6 +126,7 @@ import { NgxEchartsModule } from "ngx-echarts";
     MatDatepickerModule,
     MatNativeDateModule,
     SalesTableComponent,
+    RestocksTableComponent,
     MatProgressBarModule,
     MatButtonToggleModule,
     MatCheckboxModule,
