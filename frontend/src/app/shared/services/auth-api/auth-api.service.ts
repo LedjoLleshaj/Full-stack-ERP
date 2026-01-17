@@ -8,6 +8,7 @@ import { LOCAL_STORAGE_KEYS } from "../../constants";
 import { Router } from "@angular/router";
 
 export interface User {
+  id: number;
   username: string;
   firstName: string;
   lastName: string;
@@ -33,12 +34,18 @@ export class AuthApiService {
   private loadUserFromStorage(): void {
     // We can no longer check for tokens, so we rely on the user info in localStorage
     // or try to refresh the token to see if we are still logged in.
+    const userIdStr = localStorage.getItem(LOCAL_STORAGE_KEYS.USER_ID);
     const username = localStorage.getItem(LOCAL_STORAGE_KEYS.USERNAME);
     const firstName = localStorage.getItem(LOCAL_STORAGE_KEYS.FIRST_NAME);
     const lastName = localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_NAME);
 
-    if (username && firstName && lastName) {
-      this.currentUserSubject.next({ username, firstName, lastName });
+    if (userIdStr && username && firstName && lastName) {
+      this.currentUserSubject.next({
+        id: parseInt(userIdStr, 10),
+        username,
+        firstName,
+        lastName
+      });
     }
   }
 
@@ -94,12 +101,19 @@ export class AuthApiService {
     return this.currentUserSubject.value;
   }
 
+  // Get the current user's ID for API requests
+  getUserId(): number | null {
+    return this.currentUserSubject.value?.id ?? null;
+  }
+
   private setUserInfo(response: LoginResponse): void {
+    localStorage.setItem(LOCAL_STORAGE_KEYS.USER_ID, response.user_id.toString());
     localStorage.setItem(LOCAL_STORAGE_KEYS.USERNAME, response.username);
     localStorage.setItem(LOCAL_STORAGE_KEYS.FIRST_NAME, response.first_name);
     localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_NAME, response.last_name);
 
     this.currentUserSubject.next({
+      id: response.user_id,
       username: response.username,
       firstName: response.first_name,
       lastName: response.last_name,
