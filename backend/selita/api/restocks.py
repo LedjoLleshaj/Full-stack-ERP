@@ -259,12 +259,19 @@ def deleteRestock(request, pk):
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def getRestocksBySupplier(request, supplier_id):
-    """Get recent restocks for a specific supplier"""
+    """Get restocks for a specific supplier. Add ?all=true to get all restocks."""
     try:
+        # Check if we should return all restocks
+        fetch_all = request.query_params.get('all', 'false').lower() == 'true'
+        
         # Get restocks for this supplier through transaction
         restocks = Restock.objects.filter(
             transaction__supplier_id=supplier_id
-        ).select_related('transaction', 'prod').order_by('-restock_date')[:10]
+        ).select_related('transaction', 'prod').order_by('-restock_date')
+        
+        # Limit to 10 unless 'all' parameter is provided
+        if not fetch_all:
+            restocks = restocks[:10]
         
         restocks_list = []
         for restock in restocks:
