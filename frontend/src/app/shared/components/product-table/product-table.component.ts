@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
+import { Component, Input, OnInit, ViewChild } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
@@ -14,7 +14,6 @@ import { MatDialog } from "@angular/material/dialog";
   styleUrls: ["./product-table.component.scss"],
 })
 export class ProductTableComponent implements OnInit {
-  @Output() buyProduct = new EventEmitter<Product>();
   @Input() dataSource!: MatTableDataSource<Product>;
   @Input() displayedColumns!: string[];
 
@@ -61,8 +60,4 @@ export class ProductTableComponent implements OnInit {
     });
   }
 
-  // Emit buyProduct event when Buy button is clicked
-  onBuyProduct(product: Product) {
-    this.buyProduct.emit(product);
-  }
 }
