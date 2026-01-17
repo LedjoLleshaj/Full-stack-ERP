@@ -64,6 +64,9 @@ import { RestocksTableComponent } from "./shared/components/restocks-table/resto
 import { AddSaleViewComponent } from "./views/add-sale-view/add-sale-view.component";
 import { NgxEchartsModule } from "ngx-echarts";
 
+// Shared Pipes
+import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from "./shared/pipes";
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -133,6 +136,10 @@ import { NgxEchartsModule } from "ngx-echarts";
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts')
     }),
+    // Shared Pipes (standalone)
+    PaymentStatusPipe,
+    AlbanianCurrencyPipe,
+    AlbanianDatePipe,
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],
