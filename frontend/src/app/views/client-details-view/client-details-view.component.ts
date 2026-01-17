@@ -143,25 +143,13 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
   }
 
   // ========= SALES TABLE HELPERS =========
+  // Used by Excel export - kept for non-template usage
   formatSaleDate(dateStr: string): string {
     const date = new Date(dateStr);
     return date.toLocaleDateString('sq-AL', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  formatSaleCurrency(amount: number, currency: string): string {
-    const symbols: { [key: string]: string } = { 'EUR': '€', 'USD': '$', 'LEK': 'Lek' };
-    return `${amount.toFixed(2)} ${symbols[currency] || currency}`;
-  }
-
-  getSaleStatusClass(status: string): string {
-    const classes: { [key: string]: string } = {
-      'COMPLETED': 'status-completed',
-      'PARTIAL': 'status-partial',
-      'PENDING': 'status-pending'
-    };
-    return classes[status] || 'status-pending';
-  }
-
+  // Used by Excel export - kept for non-template usage
   getSaleStatusLabel(status: string): string {
     const labels: { [key: string]: string } = {
       'COMPLETED': 'Paguar',
