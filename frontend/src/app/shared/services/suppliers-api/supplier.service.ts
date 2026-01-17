@@ -40,6 +40,10 @@ export class SupplierService {
     return this.http.get<SupplierRestock[]>(`${this.apiUrl}/restocks-by-supplier/${supplierId}`);
   }
 
+  getAllRestocksBySupplier(supplierId: number): Observable<SupplierRestock[]> {
+    return this.http.get<SupplierRestock[]>(`${this.apiUrl}/restocks-by-supplier/${supplierId}?all=true`);
+  }
+
   getRestockDetails(restockId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/restock/${restockId}`);
   }
