@@ -54,9 +54,21 @@
 
   <!-- Section 2: Recent Sales -->
   <mat-card class="client-details-card recent-sales-section">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>shopping_cart</mat-icon>
-      <mat-card-title>Shitjet e Papaguara ({{ recentSales.length }})</mat-card-title>
+    <mat-card-header class="flex items-center">
+      <div class="flex items-center">
+        <mat-icon mat-card-avatar>shopping_cart</mat-icon>
+        <mat-card-title>Shitjet e Papaguara ({{ recentSales.length }})</mat-card-title>
+      </div>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="exportToExcel(); $event.stopPropagation()"
+        [disabled]="isExporting"
+        class="export-btn ml-auto"
+      >
+        <mat-icon>download</mat-icon>
+        {{ isExporting ? "Duke eksportuar..." : "Eksporto të gjitha" }}
+      </button>
     </mat-card-header>
     <mat-divider></mat-divider>
     <mat-card-content>

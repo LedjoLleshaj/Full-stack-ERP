@@ -9,6 +9,7 @@ import { ProductService } from "src/app/shared/services/product-api/product.serv
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
 import { CurrencyExchangeService } from "src/app/shared/services/currency-exchange/currency-exchange.service";
 import { Router } from "@angular/router";
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: "app-client-details-view",
@@ -38,6 +39,7 @@ export class ClientDetailsViewComponent implements OnInit {
   // Recent sales
   recentSales: any[] = [];
   isLoadingSales = false;
+  isExporting = false;
   salesColumns = ['date', 'product_name', 'quantity', 'price', 'status'];
 
   constructor(
@@ -276,6 +278,99 @@ export class ClientDetailsViewComponent implements OnInit {
 
   goToSale(saleId: number): void {
     this.router.navigate(['/sale', saleId]);
+  }
+
+  exportToExcel(): void {
+    if (!this.client) return;
+    
+    this.isExporting = true;
+    const clientName = `${this.client.firstname}_${this.client.lastname}`.replace(/\s+/g, '_');
+    
+    // Fetch ALL sales for this client (not just unpaid)
+    this.clientService.getClientSales(this.clientId).subscribe({
+      next: (allSales) => {
+        // Transform sales to export format with autoincrement
+        let num = 1;
+        const exportData = allSales.map(s => ({
+          'Num': num++,
+          'ID': s.id,
+          'Data': this.formatSaleDate(s.sale_date),
+          'Produkti': s.product?.name || 'N/A',
+          'Kategoria': s.product?.category || 'N/A',
+          'Sasia (kg)': s.quantity,
+          'Cmimi': s.prod_price,
+          'Valuta': s.currency || 'EUR',
+          'Totali': (s.quantity * s.prod_price).toFixed(2),
+          'Statusi': this.getSaleStatusLabel(s.payment_status)
+        }));
+
+        if (exportData.length === 0) {
+          this.snackBar.open('Nuk ka shitje për të eksportuar', 'Mbyll', { duration: 3000 });
+          this.isExporting = false;
+          return;
+        }
+
+        // Create workbook and worksheet
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        
+        // Auto-size columns
+        const columnWidths = this.getColumnWidths(exportData);
+        worksheet['!cols'] = columnWidths;
+        
+        // Apply red background to unpaid status cells
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+        const statusColIndex = 9; // 'Statusi' is the 10th column (0-indexed = 9)
+        
+        for (let row = 1; row <= range.e.r; row++) { // Skip header row (row 0)
+          const statusCellRef = XLSX.utils.encode_cell({ r: row, c: statusColIndex });
+          const statusCell = worksheet[statusCellRef];
+          
+          if (statusCell && (statusCell.v === 'Pa Paguar' || statusCell.v === 'Pjesërisht')) {
+            // Apply red background style
+            statusCell.s = {
+              fill: {
+                patternType: 'solid',
+                fgColor: { rgb: 'FFCCCC' } // Light red
+              },
+              font: {
+                color: { rgb: 'CC0000' } // Dark red text
+              }
+            };
+          }
+        }
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Shitjet');
+        
+        // Generate filename with client name and date
+        const filename = `shitje_${clientName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        
+        // Write and download (use bookType with cellStyles for styling support)
+        XLSX.writeFile(workbook, filename, { cellStyles: true });
+        
+        this.isExporting = false;
+        this.snackBar.open('Raporti u shkarkua me sukses', 'Mbyll', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Failed to export sales:', err);
+        this.snackBar.open('Gabim gjatë eksportimit', 'Mbyll', { duration: 3000 });
+        this.isExporting = false;
+      }
+    });
+  }
+
+  private getColumnWidths(data: any[]): { wch: number }[] {
+    if (!data || data.length === 0) return [];
+    
+    const headers = Object.keys(data[0]);
+    return headers.map(header => {
+      const maxLength = Math.max(
+        header.length,
+        ...data.map(row => String(row[header] || '').length)
+      );
+      return { wch: Math.min(maxLength + 2, 50) };
+    });
   }
 }
 
