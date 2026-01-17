@@ -146,7 +146,7 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width no-outline-gap">
         <mat-label>Kerko dhe Zgjidh Produktin .</mat-label>
-        <input type="text" matInput [(ngModel)]="searchText" [matAutocomplete]="auto" placeholder="Shkruaj produktin" />
+        <input type="text" matInput [(ngModel)]="state.productSearchText" [matAutocomplete]="auto" placeholder="Shkruaj produktin" />
         <mat-icon matSuffix>search</mat-icon>
         <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onProductSelect($event)">
           <mat-option *ngFor="let product of filteredProducts()" [value]="product">
@@ -162,12 +162,12 @@
     </div>
 
     <!-- Selected Product Details -->
-    <div class="selected-product-card" *ngIf="selectedProduct">
+    <div class="selected-product-card" *ngIf="state.selectedProduct">
       <div class="product-details">
-        <h3>{{ selectedProduct.name }}</h3>
-        <p class="stock-info">Sasia ne Inventar: {{ selectedProduct.disponibility }}</p>
-        <p class="price-info">Çmimi aktual: {{ salePrice | currency:currency }}</p>
-        <p class="price-info" *ngIf="lastSoldPrice !== null && lastSoldCurrency !== null">Cmimi i fundit: {{ lastSoldPrice | currency:lastSoldCurrency! }}</p>
+        <h3>{{ state.selectedProduct.name }}</h3>
+        <p class="stock-info">Sasia ne Inventar: {{ state.selectedProduct.disponibility }}</p>
+        <p class="price-info">Çmimi aktual: {{ state.salePrice | currency:state.currency }}</p>
+        <p class="price-info" *ngIf="state.lastSoldPrice !== null && state.lastSoldCurrency !== null">Cmimi i fundit: {{ state.lastSoldPrice | currency:state.lastSoldCurrency! }}</p>
       </div>
 
       <mat-divider></mat-divider>
@@ -181,17 +181,17 @@
               matInput
               type="number"
               min="1"
-              [max]="selectedProduct.disponibility"
-              [(ngModel)]="saleQuantity"
+              [max]="state.selectedProduct.disponibility"
+              [(ngModel)]="state.saleQuantity"
               placeholder="0"
               (input)="enforceMax($event)"
             />
-            <mat-hint>Max: {{ selectedProduct.disponibility }}</mat-hint>
+            <mat-hint>Max: {{ state.selectedProduct.disponibility }}</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Çmimi per Copë</mat-label>
-            <input matInput type="number" min="0" step="0.01" [(ngModel)]="salePrice" placeholder="0.00" />
+            <input matInput type="number" min="0" step="0.01" [(ngModel)]="state.salePrice" placeholder="0.00" />
             <mat-hint>Modifiko per zbritje/rritje</mat-hint>
           </mat-form-field>
         </div>
@@ -199,12 +199,12 @@
         <div class="form-row">
           <div class="total-display">
             <span class="total-label">Totali:</span>
-            <span class="total-value">{{ getTotal() | currency:currency }}</span>
+            <span class="total-value">{{ getTotal() | currency:state.currency }}</span>
           </div>
         </div>
 
         <div class="form-row">
-          <mat-radio-group [(ngModel)]="isPaid" class="payment-radio-group">
+          <mat-radio-group [(ngModel)]="state.isPaid" class="payment-radio-group">
             <mat-label class="payment-label">Status Pagese:</mat-label>
             <mat-radio-button [value]="true" color="primary">Paguar</mat-radio-button>
             <mat-radio-button [value]="false" color="warn">Pa Paguar (Borxh)</mat-radio-button>
@@ -212,20 +212,20 @@
         </div>
 
         <!-- Payment Method and Currency Selection (only shown when paid) -->
-        <div class="form-row payment-options" *ngIf="isPaid">
+        <div class="form-row payment-options" *ngIf="state.isPaid">
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Metoda e Pagesës</mat-label>
-            <mat-select [(ngModel)]="paymentMethod">
+            <mat-select [(ngModel)]="state.paymentMethod">
               <mat-option *ngFor="let method of paymentMethods" [value]="method">
                 {{ method === 'CASH' ? 'Cash' : 'Kartë' }}
               </mat-option>
             </mat-select>
-            <mat-icon matPrefix>{{ paymentMethod === 'CASH' ? 'payments' : 'credit_card' }}</mat-icon>
+            <mat-icon matPrefix>{{ state.paymentMethod === 'CASH' ? 'payments' : 'credit_card' }}</mat-icon>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Monedha</mat-label>
-            <mat-select [(ngModel)]="currency" (selectionChange)="onCurrencyChange()">
+            <mat-select [(ngModel)]="state.currency" (selectionChange)="onCurrencyChange()">
               <mat-option *ngFor="let curr of currencies" [value]="curr">
                 {{ curr }}
               </mat-option>
@@ -248,7 +248,7 @@
     </div>
 
     <!-- Empty State -->
-    <div class="empty-state" *ngIf="!selectedProduct">
+    <div class="empty-state" *ngIf="!state.selectedProduct">
       <mat-icon>shopping_cart</mat-icon>
       <p>Zgjidh nje produkt per te filluar shitjen</p>
     </div>
