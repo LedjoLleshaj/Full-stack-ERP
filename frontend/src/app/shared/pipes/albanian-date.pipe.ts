@@ -11,7 +11,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class AlbanianDatePipe implements PipeTransform {
   transform(
     value: string | Date | null | undefined,
-    format: 'short' | 'medium' | 'long' | 'full' = 'medium'
+    format: 'short' | 'medium' | 'long' | 'full' | 'datetime' = 'medium'
   ): string {
     if (!value) return '';
 
@@ -37,6 +37,9 @@ export class AlbanianDatePipe implements PipeTransform {
       case 'full':
         // "E premte, 17 Janar 2026"
         return { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+      case 'datetime':
+        // "17 Janar 2026, 14:30"
+        return { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
       default:
         return { day: '2-digit', month: 'short', year: 'numeric' };
     }
