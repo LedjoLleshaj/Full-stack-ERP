@@ -238,31 +238,7 @@ export class SaleDetailsViewComponent implements OnInit {
     return (this.saleDetails?.payment_summary?.remaining || 0) > 0;
   }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case "COMPLETED":
-        return "status-completed";
-      case "PARTIAL":
-        return "status-partial";
-      case "PENDING":
-        return "status-pending";
-      default:
-        return "";
-    }
-  }
-
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case "COMPLETED":
-        return "Paguar";
-      case "PARTIAL":
-        return "Pjesërisht";
-      case "PENDING":
-        return "Pa Paguar";
-      default:
-        return status;
-    }
-  }
+  // Note: getStatusClass and getStatusLabel replaced by paymentStatus pipe
 
   getPaymentMethodLabel(method: string): string {
     return method === "CASH" ? "Cash" : "Kartë";
