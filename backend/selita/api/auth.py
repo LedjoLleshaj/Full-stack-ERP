@@ -43,6 +43,7 @@ def login(request):
             # Return response with user details and set cookies
             response = Response(
                 {
+                    "user_id": user.id,
                     "first_name": user.firstname,
                     "last_name": user.lastname,
                     "username": user.username,
