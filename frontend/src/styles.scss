@@ -104,6 +104,14 @@ $se-dark-theme: mat.define-dark-theme(
   .se-toolbar {
     border-color: #535353 !important;
   }
+
+  // Make autocomplete dropdown secondary text more visible
+  .mat-mdc-autocomplete-panel {
+    .client-info,
+    .product-info {
+      color: #ccc !important;
+    }
+  }
 }
 
 @tailwind base;
