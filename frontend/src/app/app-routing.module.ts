@@ -24,6 +24,7 @@ import { ProductDetailsViewComponent } from "./views/product-details-view/produc
 import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supplier-details-view.component";
 import { RestockDetailsViewComponent } from "./views/restock-details-view/restock-details-view.component";
 import { RestocksViewComponent } from "./views/restocks-view/restocks-view.component";
+import { AddSaleViewComponent } from "./views/add-sale-view/add-sale-view.component";
 
 const routes: Routes = [
   {
@@ -110,6 +111,7 @@ const routes: Routes = [
       { path: "add-product", component: AddProductViewComponent },
       { path: "add-client", component: AddClientViewComponent },
       { path: "add-supplier", component: AddSupplierViewComponent },
+      { path: "add-sale", component: AddSaleViewComponent, title: "Add Sale - Selita" },
       {
         path: "sale/:id",
         component: SaleDetailsViewComponent,
