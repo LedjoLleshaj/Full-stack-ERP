@@ -21,11 +21,11 @@
       </button>
       <div class="header-info">
         <h1>Shitja #{{ saleDetails.id }}</h1>
-        <span class="status-badge" [ngClass]="getStatusClass(saleDetails.transaction?.status || 'PENDING')">
-          {{ getStatusLabel(saleDetails.transaction?.status || "PENDING") }}
+        <span class="status-badge" [ngClass]="(saleDetails.transaction?.status || 'PENDING') | paymentStatus:'class'">
+          {{ (saleDetails.transaction?.status || 'PENDING') | paymentStatus }}
         </span>
       </div>
-      <span class="sale-date">{{ formatDate(saleDetails.sale_date) }}</span>
+      <span class="sale-date">{{ saleDetails.sale_date | albanianDate:'datetime' }}</span>
     </div>
 
     <!-- Main grid -->
@@ -145,7 +145,7 @@
           <!-- Payment Date Column -->
           <ng-container matColumnDef="payment_date">
             <th mat-header-cell *matHeaderCellDef>Data</th>
-            <td mat-cell *matCellDef="let payment">{{ formatDate(payment.payment_date) }}</td>
+            <td mat-cell *matCellDef="let payment">{{ payment.payment_date | albanianDate:'datetime' }}</td>
           </ng-container>
 
           <!-- Amount Column -->
