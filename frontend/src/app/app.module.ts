@@ -62,6 +62,7 @@ import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supp
 import { RestockDetailsViewComponent } from "./views/restock-details-view/restock-details-view.component";
 import { RestocksViewComponent } from "./views/restocks-view/restocks-view.component";
 import { RestocksTableComponent } from "./shared/components/restocks-table/restocks-table.component";
+import { AddSaleViewComponent } from "./views/add-sale-view/add-sale-view.component";
 import { NgxEchartsModule } from "ngx-echarts";
 
 @NgModule({
@@ -96,6 +97,7 @@ import { NgxEchartsModule } from "ngx-echarts";
     SupplierDetailsViewComponent,
     RestockDetailsViewComponent,
     RestocksViewComponent,
+    AddSaleViewComponent,
   ],
   imports: [
     BrowserModule,
