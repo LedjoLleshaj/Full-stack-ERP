@@ -54,15 +54,33 @@
       </div>
       <mat-divider></mat-divider>
       <button
+        class="flex flex-row"
         mat-list-item
         aria-label="Hap historikun e shitjeve"
         title="Hap historikun e shitjeve"
-        [activated]="this.router.url === '/sales'"
-        (click)="this.router.navigate(['/sales'])"
+        [activated]="this.router.url === '/sales' || this.router.url === '/add-sale'"
+        (click)="navigateToSales()"
       >
         <mat-icon matListItemIcon>history</mat-icon>
-        <div matListItemTitle>Shitjet</div>
+        <div matListItemTitle class="flex items-center">
+          Shitjet
+          <mat-icon *ngIf="!isSaleMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isSaleMenuOpen">expand_more</mat-icon>
+        </div>
       </button>
+
+      <div *ngIf="isSaleMenuOpen" class="submenu">
+        <button
+          mat-list-item
+          aria-label="Shto nje shitje"
+          title="Shto nje shitje"
+          [activated]="this.router.url === '/add-sale'"
+          (click)="this.router.navigate(['/add-sale'])"
+        >
+          <mat-icon matListItemIcon>add</mat-icon>
+          <div matListItemTitle>Shto nje shitje</div>
+        </button>
+      </div>
       <mat-divider></mat-divider>
       <button
         mat-list-item
