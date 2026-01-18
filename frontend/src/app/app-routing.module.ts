@@ -56,7 +56,8 @@ const routes: Routes = [
       },
       {
         path: "add-product",
-        loadChildren: () => import("./features/products/products.module").then(m => m.ProductsModule),
+        redirectTo: "products/add",
+        pathMatch: "full",
       },
       {
         path: "reports",
@@ -76,15 +77,18 @@ const routes: Routes = [
       },
       {
         path: "add-supplier",
-        loadChildren: () => import("./features/suppliers/suppliers.module").then(m => m.SuppliersModule),
+        redirectTo: "suppliers/add",
+        pathMatch: "full",
       },
       {
         path: "add-client",
-        loadChildren: () => import("./features/clients/clients.module").then(m => m.ClientsModule),
+        redirectTo: "clients/add",
+        pathMatch: "full",
       },
       {
         path: "add-sale",
-        loadChildren: () => import("./features/sales/sales.module").then(m => m.SalesModule),
+        redirectTo: "sales/add",
+        pathMatch: "full",
       },
     ],
   },
