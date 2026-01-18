@@ -4,9 +4,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 // Feature components
-import { ClientViewComponent } from '../../views/clients-view/client-view.component';
-import { AddClientViewComponent } from '../../views/add-client-view/add-client-view.component';
-import { ClientDetailsViewComponent } from '../../views/client-details-view/client-details-view.component';
+import { ClientViewComponent } from './views/clients-view/client-view.component';
+import { AddClientViewComponent } from './views/add-client-view/add-client-view.component';
+import { ClientDetailsViewComponent } from './views/client-details-view/client-details-view.component';
 
 // Standalone components
 import { ClientTableComponent } from '../../shared/components/client-table/client-table.component';

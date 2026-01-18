@@ -2,8 +2,8 @@ import { Component, ViewChild } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
-import { SupplierService } from "../../shared/services/suppliers-api/supplier.service";
-import { Supplier } from "../../models/supplier.model";
+import { SupplierService } from "../../../../shared/services/suppliers-api/supplier.service";
+import { Supplier } from "../../../../models/supplier.model";
 
 @Component({
   selector: "app-supplier-view",

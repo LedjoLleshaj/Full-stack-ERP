@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EChartsOption } from 'echarts';
-import { ProductService, ProductHistory, RecentSale, RecentRestock } from '../../shared/services/product-api/product.service';
-import { DarkModeService } from '../../shared/services/dark-mode/dark-mode.service';
+import { ProductService, ProductHistory, RecentSale, RecentRestock } from '../../../../shared/services/product-api/product.service';
+import { DarkModeService } from '../../../../shared/services/dark-mode/dark-mode.service';
 
 @Component({
   selector: 'app-product-details-view',

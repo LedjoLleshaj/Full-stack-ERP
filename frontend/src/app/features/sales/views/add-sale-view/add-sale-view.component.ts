@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { Subscription } from "rxjs";
 
-import { Client } from "src/app/models/client.model";
-import { Product } from "src/app/models/product.model";
+import { Client } from "../../../../models/client.model";
+import { Product } from "../../../../models/product.model";
 import { SaleFormService, SaleFormState } from "src/app/shared/services/sale-form/sale-form.service";
 
 @Component({

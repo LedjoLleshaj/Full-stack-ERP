@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { ClientService } from "../../shared/services/clients-api/client.service";
+import { ClientService } from "../../../../shared/services/clients-api/client.service";
 import { Router } from "@angular/router";
 
 import { InventoryService } from "src/app/shared/services/inventory-api/inventory.service";

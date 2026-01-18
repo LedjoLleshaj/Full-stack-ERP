@@ -1,15 +1,15 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { RestockResponse } from "../../models/restock.model";
-import { RestocksApiService } from "../../shared/services/restocks-api/restocks-api.service";
+import { Sale, SaleResponse } from "../../../../models/sale.model";
+import { SalesApiService } from "../../../../shared/services/sales-api/sales-api.service";
 import * as XLSX from 'xlsx';
 
 @Component({
-  selector: "app-restocks-view",
-  templateUrl: "./restocks-view.component.html",
+  selector: "app-sales-view",
+  templateUrl: "./sales-view.component.html",
 })
-export class RestocksViewComponent implements OnInit, OnDestroy {
-  data: RestockResponse[] = [];
+export class SalesViewComponent implements OnInit, OnDestroy {
+  data: SaleResponse[] = [];
   total: number = 0;
   periodicUpdate: any;
   
@@ -18,17 +18,17 @@ export class RestocksViewComponent implements OnInit, OnDestroy {
   endDateControl = new FormControl();
   isExporting = false;
 
-  constructor(private restocksApiService: RestocksApiService) {}
+  constructor(private saleApiService: SalesApiService) {}
 
   ngOnInit() {
-    this.fetchRestocks();
+    this.fetchHistory();
     this.periodicUpdate = setInterval(() => {
-      this.fetchRestocks();
+      this.fetchHistory();
     }, 10000);
   }
 
-  fetchRestocks() {
-    this.restocksApiService.getRestocks().subscribe((data) => {
+  fetchHistory() {
+    this.saleApiService.getSales().subscribe((data) => {
       this.total = data.length;
       this.data = data;
     });
@@ -45,7 +45,7 @@ export class RestocksViewComponent implements OnInit, OnDestroy {
       ? this.formatDate(this.endDateControl.value) 
       : undefined;
 
-    this.restocksApiService.getRestocksReport(startDate, endDate).subscribe({
+    this.saleApiService.getSalesReport(startDate, endDate).subscribe({
       next: (data) => {
         if (data.length === 0) {
           alert('Nuk ka të dhëna për këtë periudhë');
@@ -62,10 +62,10 @@ export class RestocksViewComponent implements OnInit, OnDestroy {
         worksheet['!cols'] = columnWidths;
         
         // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Raporti i Furnizimeve');
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Raporti i Shitjeve');
         
         // Generate filename with date
-        const filename = `raporti_furnizimeve_${new Date().toISOString().split('T')[0]}.xlsx`;
+        const filename = `raporti_shitjeve_${new Date().toISOString().split('T')[0]}.xlsx`;
         
         // Write and download
         XLSX.writeFile(workbook, filename);
@@ -73,7 +73,7 @@ export class RestocksViewComponent implements OnInit, OnDestroy {
         this.isExporting = false;
       },
       error: (error) => {
-        console.error('Error exporting restocks report:', error);
+        console.error('Error exporting sales report:', error);
         alert('Gabim gjatë eksportimit të raportit');
         this.isExporting = false;
       }

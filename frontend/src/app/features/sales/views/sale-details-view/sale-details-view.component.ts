@@ -4,7 +4,7 @@ import { MatSnackBar } from "@angular/material/snack-bar";
 
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
 import { CurrencyExchangeService } from "src/app/shared/services/currency-exchange/currency-exchange.service";
-import { SaleDetails, PaymentRequest } from "src/app/models/sale.model";
+import { SaleDetails, PaymentRequest } from "../../../../models/sale.model";
 
 @Component({
   selector: "app-sale-details-view",

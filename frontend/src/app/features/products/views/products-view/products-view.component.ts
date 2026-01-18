@@ -2,8 +2,8 @@ import { Component, OnInit, ViewChild } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
-import { ProductService } from "../../shared/services/product-api/product.service";
-import { Product } from "../../models/product.model";
+import { ProductService } from "../../../../shared/services/product-api/product.service";
+import { Product } from "../../../../models/product.model";
 
 @Component({
   selector: "app-products-view",

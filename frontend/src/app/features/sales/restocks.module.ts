@@ -2,8 +2,8 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 
-import { RestocksViewComponent } from '../../views/restocks-view/restocks-view.component';
-import { RestockDetailsViewComponent } from '../../views/restock-details-view/restock-details-view.component';
+import { RestocksViewComponent } from './views/restocks-view/restocks-view.component';
+import { RestockDetailsViewComponent } from './views/restock-details-view/restock-details-view.component';
 
 // Standalone components
 import { RestocksTableComponent } from '../../shared/components/restocks-table/restocks-table.component';

@@ -7,11 +7,9 @@ import { SalesTableComponent } from '../../shared/components/sales-table/sales-t
 import { RestocksTableComponent } from '../../shared/components/restocks-table/restocks-table.component';
 
 // Feature components
-import { SalesViewComponent } from '../../views/sales-view/sales-view.component';
-import { AddSaleViewComponent } from '../../views/add-sale-view/add-sale-view.component';
-import { SaleDetailsViewComponent } from '../../views/sale-details-view/sale-details-view.component';
-import { RestocksViewComponent } from '../../views/restocks-view/restocks-view.component';
-import { RestockDetailsViewComponent } from '../../views/restock-details-view/restock-details-view.component';
+import { SalesViewComponent } from './views/sales-view/sales-view.component';
+import { AddSaleViewComponent } from './views/add-sale-view/add-sale-view.component';
+import { SaleDetailsViewComponent } from './views/sale-details-view/sale-details-view.component';
 
 // Material modules needed
 import { MatTableModule } from '@angular/material/table';

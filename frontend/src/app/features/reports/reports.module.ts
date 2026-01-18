@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 
 // Feature components
-import { ReportsViewComponent } from '../../views/reports-view/reports-view.component';
-import { RevenueViewComponent } from '../../views/revenue-view/revenue-view.component';
-import { PaidVsUnpaidViewComponent } from '../../views/paid-vs-unpaid-view/paid-vs-unpaid-view.component';
-import { TopProductsViewComponent } from '../../views/top-products-view/top-products-view.component';
-import { ProfitByCategoryViewComponent } from '../../views/profit-by-category-view/profit-by-category-view.component';
-import { TopClientsViewComponent } from '../../views/top-clients-view/top-clients-view.component';
-import { AlertsViewComponent } from '../../views/alerts-view/alerts-view.component';
+import { ReportsViewComponent } from './views/reports-view/reports-view.component';
+import { RevenueViewComponent } from './views/revenue-view/revenue-view.component';
+import { PaidVsUnpaidViewComponent } from './views/paid-vs-unpaid-view/paid-vs-unpaid-view.component';
+import { TopProductsViewComponent } from './views/top-products-view/top-products-view.component';
+import { ProfitByCategoryViewComponent } from './views/profit-by-category-view/profit-by-category-view.component';
+import { TopClientsViewComponent } from './views/top-clients-view/top-clients-view.component';
+import { AlertsViewComponent } from './views/alerts-view/alerts-view.component';
 
 // Material
 import { MatButtonModule } from '@angular/material/button';
