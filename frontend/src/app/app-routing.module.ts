@@ -2,28 +2,7 @@ import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 import { LayoutComponent } from "./layout/layout.component";
 import { LoginComponent } from "./views/login-view/login.component";
-import { ProductsViewComponent } from "./views/products-view/products-view.component";
-import { AddProductViewComponent } from "./views/add-product-view/add-product-view.component";
 import { AuthGuard, PublicGuard } from "./core";
-import { SalesViewComponent } from "./views/sales-view/sales-view.component";
-import { ClientViewComponent } from "./views/clients-view/client-view.component";
-import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
-import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
-import { ReportsViewComponent } from "./views/reports-view/reports-view.component";
-import { RevenueViewComponent } from "./views/revenue-view/revenue-view.component";
-import { PaidVsUnpaidViewComponent } from "./views/paid-vs-unpaid-view/paid-vs-unpaid-view.component";
-import { TopProductsViewComponent } from "./views/top-products-view/top-products-view.component";
-import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
-import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
-import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
-import { SupplierViewComponent } from "./views/suppliers-view/supplier-view.component";
-import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier-view.component";
-import { TopClientsViewComponent } from "./views/top-clients-view/top-clients-view.component";
-import { ProductDetailsViewComponent } from "./views/product-details-view/product-details-view.component";
-import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supplier-details-view.component";
-import { RestockDetailsViewComponent } from "./views/restock-details-view/restock-details-view.component";
-import { RestocksViewComponent } from "./views/restocks-view/restocks-view.component";
-import { AddSaleViewComponent } from "./views/add-sale-view/add-sale-view.component";
 
 const routes: Routes = [
   {
@@ -42,94 +21,70 @@ const routes: Routes = [
         redirectTo: "sales",
         pathMatch: "full",
       },
+      // Lazy-loaded feature modules
       {
         path: "sales",
-        component: SalesViewComponent,
-        title: "Sale History - Selita",
+        loadChildren: () => import("./features/sales/sales.module").then(m => m.SalesModule),
+      },
+      {
+        path: "sale",
+        loadChildren: () => import("./features/sales/sales.module").then(m => m.SalesModule),
       },
       {
         path: "restocks",
-        component: RestocksViewComponent,
-        title: "Restock History - Selita",
+        loadChildren: () => import("./features/sales/restocks.module").then(m => m.RestocksModule),
+      },
+      {
+        path: "restock",
+        loadChildren: () => import("./features/sales/restocks.module").then(m => m.RestocksModule),
       },
       {
         path: "clients",
-        component: ClientViewComponent,
-        title: "Client List - Selita",
+        loadChildren: () => import("./features/clients/clients.module").then(m => m.ClientsModule),
       },
       {
-        path: "suppliers",
-        component: SupplierViewComponent,
-        title: "Supplier List - Selita",
+        path: "client",
+        loadChildren: () => import("./features/clients/clients.module").then(m => m.ClientsModule),
       },
       {
         path: "products",
-        component: ProductsViewComponent,
-        title: "Products - Selita",
+        loadChildren: () => import("./features/products/products.module").then(m => m.ProductsModule),
+      },
+      {
+        path: "product",
+        loadChildren: () => import("./features/products/products.module").then(m => m.ProductsModule),
+      },
+      {
+        path: "add-product",
+        loadChildren: () => import("./features/products/products.module").then(m => m.ProductsModule),
       },
       {
         path: "reports",
-        component: ReportsViewComponent,
-        title: "Reports - Selita",
-      },
-      {
-        path: "reports/revenue",
-        component: RevenueViewComponent,
-        title: "Revenue Trend - Selita",
-      },
-      {
-        path: "reports/paid-vs-unpaid",
-        component: PaidVsUnpaidViewComponent,
-        title: "Paid vs Unpaid - Selita",
-      },
-      {
-        path: "reports/top-products",
-        component: TopProductsViewComponent,
-        title: "Top Products - Selita",
-      },
-      {
-        path: "reports/profit-by-category",
-        component: ProfitByCategoryViewComponent,
-        title: "Profit By Category - Selita",
-      },
-      {
-        path: "reports/top-clients",
-        component: TopClientsViewComponent,
-        title: "Top Clients - Selita",
+        loadChildren: () => import("./features/reports/reports.module").then(m => m.ReportsModule),
       },
       {
         path: "alerts",
-        component: AlertsViewComponent,
-        title: "Alerts - Selita",
+        loadChildren: () => import("./features/reports/reports.module").then(m => m.ReportsModule),
       },
       {
-        path: "client/:id",
-        component: ClientDetailsViewComponent,
-        title: "Client Details - Selita",
-      },
-      { path: "add-product", component: AddProductViewComponent },
-      { path: "add-client", component: AddClientViewComponent },
-      { path: "add-supplier", component: AddSupplierViewComponent },
-      { path: "add-sale", component: AddSaleViewComponent, title: "Add Sale - Selita" },
-      {
-        path: "sale/:id",
-        component: SaleDetailsViewComponent,
-        title: "Sale Details - Selita",
+        path: "suppliers",
+        loadChildren: () => import("./features/suppliers/suppliers.module").then(m => m.SuppliersModule),
       },
       {
-        path: "product/:id",
-        component: ProductDetailsViewComponent,
-        title: "Product Details - Selita",
+        path: "supplier",
+        loadChildren: () => import("./features/suppliers/suppliers.module").then(m => m.SuppliersModule),
       },
       {
-        path: "supplier/:id",
-        component: SupplierDetailsViewComponent,
-        title: "Supplier Details - Selita",
+        path: "add-supplier",
+        loadChildren: () => import("./features/suppliers/suppliers.module").then(m => m.SuppliersModule),
       },
       {
-        path: "restock/:id",
-        component: RestockDetailsViewComponent,
-        title: "Restock Details - Selita",
+        path: "add-client",
+        loadChildren: () => import("./features/clients/clients.module").then(m => m.ClientsModule),
+      },
+      {
+        path: "add-sale",
+        loadChildren: () => import("./features/sales/sales.module").then(m => m.SalesModule),
       },
     ],
   },
