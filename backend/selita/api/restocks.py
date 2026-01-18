@@ -21,44 +21,65 @@ from decimal import Decimal
 @permission_classes([permissions.IsAuthenticated])
 def getRestocks(request):
     try:
-        restocks = Restock.objects.select_related('transaction', 'prod').all().order_by("-restock_date")
-        serializer = RestockSerializer(restocks, many=True)
-
-        # Add product and transaction/payment info
-        for restock_data in serializer.data:
-            try:
-                product = Product.objects.get(id=restock_data["prod"])
-                product_serializer = ProductSerializer(product)
+        # Optimized query: prefetch all related data in ONE query
+        restocks = Restock.objects.select_related(
+            'prod',
+            'transaction',
+            'transaction__supplier'
+        ).prefetch_related(
+            'transaction__payments'
+        ).order_by("-restock_date")
+        
+        # Build response data directly from prefetched objects
+        results = []
+        for restock in restocks:
+            restock_data = {
+                "id": restock.id,
+                "prod": restock.prod_id,
+                "quantity": float(restock.quantity),
+                "restock_price": float(restock.restock_price),
+                "restock_date": restock.restock_date.isoformat() if restock.restock_date else None,
+                "transaction": restock.transaction_id,
+            }
+            
+            # Product info (already loaded via select_related)
+            if restock.prod:
                 restock_data["product_info"] = {
-                    "name": product_serializer.data.get("name"),
-                    "category": product_serializer.data.get("category"),
-                    "price": product_serializer.data.get("price"),
+                    "name": restock.prod.name,
+                    "category": restock.prod.category,
+                    "price": float(restock.prod.price) if restock.prod.price else None,
                 }
-            except ObjectDoesNotExist:
+            else:
                 restock_data["product_info"] = None
-
-            # Get payment info through transaction
-            try:
-                transaction = Transaction.objects.get(id=restock_data["transaction"])
+            
+            # Transaction info (already loaded via select_related)
+            if restock.transaction:
                 restock_data["transaction_info"] = {
-                    "id": transaction.id,
-                    "status": transaction.status,
-                    "total_amount": float(transaction.total_amount),
-                    "currency": transaction.currency,
+                    "id": restock.transaction.id,
+                    "status": restock.transaction.status,
+                    "total_amount": float(restock.transaction.total_amount),
+                    "currency": restock.transaction.currency,
                 }
                 
-                # Get payments for this transaction
-                payments = Payment.objects.filter(transaction=transaction)
-                if payments.exists():
-                    payment_serializer = PaymentSerializer(payments, many=True)
-                    restock_data["payments"] = payment_serializer.data
-                else:
-                    restock_data["payments"] = []
-            except ObjectDoesNotExist:
+                # Payments (already loaded via prefetch_related)
+                payments = restock.transaction.payments.all()
+                restock_data["payments"] = [
+                    {
+                        "id": p.id,
+                        "amount": float(p.amount),
+                        "currency": p.currency,
+                        "payment_method": p.payment_method,
+                        "payment_date": p.payment_date.isoformat() if p.payment_date else None,
+                    }
+                    for p in payments
+                ]
+            else:
                 restock_data["transaction_info"] = None
                 restock_data["payments"] = []
-
-        return Response(serializer.data)
+            
+            results.append(restock_data)
+        
+        return Response(results)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},

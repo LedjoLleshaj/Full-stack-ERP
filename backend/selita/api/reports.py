@@ -374,62 +374,74 @@ def profit_by_category(request):
     """
     Get profit by product category.
     Returns category names and their total profit (sales revenue - purchase cost).
+    Optimized to use fewer database queries.
     """
-    from ..models import Product, ExchangeRate, Restock
+    from ..models import Product, Restock
+    from selita.utils.currency import get_all_rates_dict, convert_to_eur
     from decimal import Decimal
+    from collections import defaultdict
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
+    
+    def convert_eur(amount, currency):
+        """Fast conversion using cached rates"""
         if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+            return Decimal(str(amount))
+        rate_key = f"{currency}_EUR"
+        rate = rates.get(rate_key, Decimal("1"))
+        return Decimal(str(amount)) * rate
     
-    # Get all unique categories from products (use set to ensure uniqueness)
+    # Get all categories (1 query)
     categories = set(Product.objects.values_list('category', flat=True))
     
-    result = []
-    for category_name in categories:
-        # Get sales revenue for this category
-        category_sales = (
-            Sales.objects
-            .filter(prod__category=category_name)
-            .exclude(transaction__status="CANCELLED")
-        )
-        
-        sales_revenue = Decimal("0")
-        for sale in category_sales:
-            # Get currency from transaction and convert to EUR
+    # Initialize aggregation dictionaries
+    category_revenue = defaultdict(lambda: Decimal("0"))
+    category_cost = defaultdict(lambda: Decimal("0"))
+    
+    # Process all sales at once with prefetched transactions (1 query)
+    sales = (
+        Sales.objects
+        .select_related('prod', 'transaction')
+        .exclude(transaction__status="CANCELLED")
+        .only('prod__category', 'quantity', 'prod_price', 'transaction__currency')
+    )
+    
+    for sale in sales:
+        category = sale.prod.category if sale.prod else None
+        if category:
             currency = sale.transaction.currency if sale.transaction else "EUR"
             amount = sale.quantity * sale.prod_price
-            sales_revenue += convert_to_eur(amount, currency)
-        
-        # Get purchase cost for this category (from restocks)
-        category_restocks = (
-            Restock.objects
-            .filter(prod__category=category_name)
-            .exclude(transaction__status="CANCELLED")
-        )
-        
-        purchase_cost = Decimal("0")
-        for restock in category_restocks:
-            # restock_price is the per-unit purchase price
-            # Get currency from transaction and convert to EUR
+            category_revenue[category] += convert_eur(amount, currency)
+    
+    # Process all restocks at once with prefetched transactions (1 query)
+    restocks = (
+        Restock.objects
+        .select_related('prod', 'transaction')
+        .exclude(transaction__status="CANCELLED")
+        .only('prod__category', 'quantity', 'restock_price', 'transaction__currency')
+    )
+    
+    for restock in restocks:
+        category = restock.prod.category if restock.prod else None
+        if category:
             currency = restock.transaction.currency if restock.transaction else "EUR"
             total_cost = restock.restock_price * restock.quantity
-            purchase_cost += convert_to_eur(total_cost, currency)
+            category_cost[category] += convert_eur(total_cost, currency)
+    
+    # Build result
+    result = []
+    for category_name in categories:
+        revenue = category_revenue.get(category_name, Decimal("0"))
+        cost = category_cost.get(category_name, Decimal("0"))
+        profit = revenue - cost
         
-        profit = sales_revenue - purchase_cost
-        
-        if sales_revenue > 0 or purchase_cost > 0:  # Only include categories with data
+        if revenue > 0 or cost > 0:  # Only include categories with data
             result.append({
                 "name": category_name,
                 "profit": float(profit),
-                "revenue": float(sales_revenue),
-                "cost": float(purchase_cost)
+                "revenue": float(revenue),
+                "cost": float(cost)
             })
     
     # Sort by profit descending
