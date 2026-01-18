@@ -209,31 +209,3 @@
   </mat-sidenav-content>
 </mat-sidenav-container>
 
-<mat-sidenav-container>
-  <mat-sidenav
-    class="right-sidenav"
-    #rightNav
-    [opened]="isRightNavOpen"
-    position="end"
-    [style.width]="'300px'"
-    [style.height]="'50%'"
-    role="region"
-    fixedInViewport="true"
-  >
-    <div class="header">
-      <h2>Shopping Menu</h2>
-      <button mat-icon-button (click)="toggleRightNav()" aria-label="Close right nav">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-
-    <div class="right-nav-content">
-      <div *ngFor="let item of cartItems" class="cart-item-card">
-        <h3>{{ item.name }}</h3>
-        <p>Kategoria: {{ item.category }}</p>
-        <p>Cmimi: {{ item.price | currency }}</p>
-        <p>Sasia: {{ item.count }}x</p>
-      </div>
-    </div>
-  </mat-sidenav>
-</mat-sidenav-container>

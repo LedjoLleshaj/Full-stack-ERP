@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject, Observable } from "rxjs";
-import { LOCAL_STORAGE_KEYS } from "../../constants";
+import { LOCAL_STORAGE_KEYS } from "../../../core";
 
 @Injectable({
   providedIn: "root",

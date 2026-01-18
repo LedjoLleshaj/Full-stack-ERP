@@ -80,6 +80,16 @@ $se-dark-theme: mat.define-dark-theme(
   --text-primary: #212121;
   --text-secondary: #757575;
   --primary-color: #1976d2;
+  
+  // Status colors
+  --success-color: #22c55e;
+  --warning-color: #f97316;
+  --danger-color: #ef4444;
+  
+  // Status gradients for badges
+  --gradient-paid: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+  --gradient-partial: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+  --gradient-pending: linear-gradient(135deg, #f44336 0%, #ff5252 100%);
 }
 
 .dark-mode {

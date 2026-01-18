@@ -1,7 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { LOCAL_STORAGE_KEYS } from "../../shared/constants";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { DarkModeService } from "../../shared/services/dark-mode/dark-mode.service";
 import { AuthApiService } from "../../shared/services/auth-api/auth-api.service";

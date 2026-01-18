@@ -1,20 +1,31 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
-import { MatPaginator } from "@angular/material/paginator";
-import { MatSort } from "@angular/material/sort";
-import { MatTableDataSource } from "@angular/material/table";
+import { Component, Input, OnInit, ViewChild } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
+import { MatSort, MatSortModule } from "@angular/material/sort";
+import { MatTableDataSource, MatTableModule } from "@angular/material/table";
 import { Router } from "@angular/router";
 import { ProductService } from "../../services/product-api/product.service";
 import { Product } from "src/app/models/product.model";
 import { EditPriceDialogComponent } from "../../../dialogs/edit-price-dialog/edit-price-dialog.component";
 import { MatDialog } from "@angular/material/dialog";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: "app-product-table",
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   templateUrl: "./product-table.component.html",
   styleUrls: ["./product-table.component.scss"],
 })
 export class ProductTableComponent implements OnInit {
-  @Output() buyProduct = new EventEmitter<Product>();
   @Input() dataSource!: MatTableDataSource<Product>;
   @Input() displayedColumns!: string[];
 
@@ -61,8 +72,4 @@ export class ProductTableComponent implements OnInit {
     });
   }
 
-  // Emit buyProduct event when Buy button is clicked
-  onBuyProduct(product: Product) {
-    this.buyProduct.emit(product);
-  }
 }

@@ -1,18 +1,20 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
-import { environment } from "src/environment/environments";
+import { environment } from "src/environments/environment";
 import { Product } from "src/app/models/product.model";
 import { ProductCategory } from "src/app/models/product-category.model";
 import { ProductName } from "src/app/models/product-name.model";
 
+import { BaseApiService } from "../base-api.service";
+
 @Injectable({
   providedIn: "root",
 })
-export class ProductService {
-  private apiUrl = environment.apiUrl;
-
-  constructor(private http: HttpClient) {}
+export class ProductService extends BaseApiService {
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   addProduct(productData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}${environment.addProduct}`, productData);
@@ -44,7 +46,8 @@ export class ProductService {
   }
 
   getProductHistory(productId: number, months: number = 3): Observable<ProductHistory> {
-    return this.http.get<ProductHistory>(`${this.apiUrl}/product-history/${productId}?months=${months}`);
+    const params = this.createParams({ months });
+    return this.http.get<ProductHistory>(`${this.apiUrl}/product-history/${productId}`, { params });
   }
 }
 

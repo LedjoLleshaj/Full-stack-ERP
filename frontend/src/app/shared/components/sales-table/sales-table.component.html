@@ -46,7 +46,7 @@
         Cmimi
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
-        {{ sale.prod_price }} {{ sale.currency === 'EUR' ? '€' : (sale.currency === 'USD' ? '$' : 'Lek') }}
+        {{ sale.prod_price | albanianCurrency:(sale.currency || 'EUR') }}
       </td>
     </ng-container>
 
@@ -57,7 +57,7 @@
         Data e shitjes
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
-        {{ sale.sale_date | date : "dd/MM/yyyy" }}
+        {{ sale.sale_date | albanianDate }}
       </td>
     </ng-container>
 
@@ -89,7 +89,7 @@
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
         <!-- {{ sale.payment ? sale.payment.amount + " €" : "In progress" }} -->
-        {{ sale.quantity * sale.prod_price }} {{ sale.currency === 'EUR' ? '€' : (sale.currency === 'USD' ? '$' : 'Lek') }}
+        {{ (sale.quantity * sale.prod_price) | albanianCurrency:(sale.currency || 'EUR') }}
       </td>
     </ng-container>
 

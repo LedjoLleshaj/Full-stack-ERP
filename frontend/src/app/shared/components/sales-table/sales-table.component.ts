@@ -20,12 +20,17 @@ import { MatTooltipModule } from "@angular/material/tooltip";
 import { DatePipe, NgClass, NgFor, NgIf } from "@angular/common";
 import { Sale, SaleResponse } from "../../../models/sale.model";
 import { SalesApiService } from "../../services/sales-api/sales-api.service";
+import { AlbanianCurrencyPipe, AlbanianDatePipe, PaymentStatusPipe } from "../../pipes";
 
 @Component({
   selector: "app-sales-table",
   templateUrl: "./sales-table.component.html",
   standalone: true,
-  imports: [MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, NgIf, DatePipe, RouterModule, MatTooltipModule],
+  imports: [
+    MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, 
+    NgIf, DatePipe, RouterModule, MatTooltipModule,
+    AlbanianCurrencyPipe, AlbanianDatePipe, PaymentStatusPipe
+  ],
   styleUrls: ["./sales-table.component.scss"],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
