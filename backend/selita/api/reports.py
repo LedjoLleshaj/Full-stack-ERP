@@ -69,96 +69,94 @@ def sales_report(request):
 
 @api_view(["GET"])
 def dashboard_stats(request):
-    from ..models import ExchangeRate
+    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
     
     today = date.today()
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
+    
+    def convert_eur(amount, currency):
+        """Fast conversion using cached rates"""
         if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            # Fallback: return as-is if no rate found
-            return amount
+            return Decimal(str(amount))
+        rate_key = f"{currency}_EUR"
+        rate = rates.get(rate_key, Decimal("1"))
+        return Decimal(str(amount)) * rate
 
-    # 1. Revenue Today - convert all currencies to EUR
+    # Get ALL transactions at once (1 query)
+    all_transactions = list(Transaction.objects.exclude(status="CANCELLED"))
+    
+    # Calculate metrics in memory (no additional queries)
     revenue_today = Decimal("0")
-    today_sales = Transaction.objects.filter(
-        transaction_type="SALE",
-        created_date__date=today
-    ).exclude(status="CANCELLED")
-    for sale in today_sales:
-        revenue_today += convert_to_eur(sale.total_amount, sale.currency)
-
-    # 2. Revenue Month - convert all currencies to EUR
     revenue_month = Decimal("0")
-    month_sales = Transaction.objects.filter(
-        transaction_type="SALE",
-        created_date__year=today.year,
-        created_date__month=today.month
-    ).exclude(status="CANCELLED")
-    for sale in month_sales:
-        revenue_month += convert_to_eur(sale.total_amount, sale.currency)
-
-    # 3. Profit (Total Sales - Total Purchases) - convert all currencies to EUR
     total_sales = Decimal("0")
-    all_sales = Transaction.objects.filter(
-        transaction_type="SALE"
-    ).exclude(status="CANCELLED")
-    for sale in all_sales:
-        total_sales += convert_to_eur(sale.total_amount, sale.currency)
-
     total_purchases = Decimal("0")
-    all_purchases = Transaction.objects.filter(
-        transaction_type="PURCHASE"
-    ).exclude(status="CANCELLED")
-    for purchase in all_purchases:
-        total_purchases += convert_to_eur(purchase.total_amount, purchase.currency)
+    pending_sale_ids = []
+    pending_sales_map = {}
+    
+    for trans in all_transactions:
+        amount_eur = convert_eur(trans.total_amount, trans.currency)
+        
+        if trans.transaction_type == "SALE":
+            total_sales += amount_eur
+            
+            # Check if created today
+            if trans.created_date and trans.created_date.date() == today:
+                revenue_today += amount_eur
+            
+            # Check if created this month
+            if trans.created_date and trans.created_date.year == today.year and trans.created_date.month == today.month:
+                revenue_month += amount_eur
+            
+            # Track pending sales for debt calculation
+            if trans.status in ["PENDING", "PARTIAL"]:
+                pending_sale_ids.append(trans.id)
+                pending_sales_map[trans.id] = {
+                    "total": trans.total_amount,
+                    "currency": trans.currency
+                }
+                
+        elif trans.transaction_type == "PURCHASE":
+            total_purchases += amount_eur
 
     profit = total_sales - total_purchases
 
-    # 4. Get all accounts with individual balances (grouped by type and currency)
+    # Get account balances (1 query)
     accounts = Account.objects.all().values('account_type', 'currency', 'current_balance', 'account_name')
-    
-    # Build account balances list
-    account_balances = []
-    for acc in accounts:
-        account_balances.append({
+    account_balances = [
+        {
             "name": acc['account_name'],
             "type": acc['account_type'],
             "currency": acc['currency'],
             "balance": float(acc['current_balance']),
-        })
+        }
+        for acc in accounts
+    ]
 
-    # 5. Debt (Total pending/partial sales amount - Total paid for those sales)
-    # Convert all amounts to EUR before summing
-    pending_sales = Transaction.objects.filter(
-        transaction_type="SALE",
-        status__in=["PENDING", "PARTIAL"]
-    )
-    
+    # Calculate debt - get all payments for pending sales (1 query)
     debt = Decimal("0")
-    for sale in pending_sales:
-        # Get total payments made for this transaction
-        payments_made = Payment.objects.filter(
-            transaction=sale
-        ).aggregate(sum_val=Sum("amount"))["sum_val"] or Decimal("0")
+    if pending_sale_ids:
+        from django.db.models import Sum
+        payments_by_trans = dict(
+            Payment.objects.filter(transaction_id__in=pending_sale_ids)
+            .values('transaction_id')
+            .annotate(total_paid=Sum('amount'))
+            .values_list('transaction_id', 'total_paid')
+        )
         
-        # Calculate remaining for this transaction
-        remaining = sale.total_amount - payments_made
-        if remaining > 0:
-            # Convert to EUR
-            debt += convert_to_eur(remaining, sale.currency)
+        for trans_id, sale_info in pending_sales_map.items():
+            paid = payments_by_trans.get(trans_id, Decimal("0")) or Decimal("0")
+            remaining = sale_info["total"] - paid
+            if remaining > 0:
+                debt += convert_eur(remaining, sale_info["currency"])
 
     data = {
         "revenue_today": revenue_today,
         "revenue_month": revenue_month,
         "profit": profit,
-        "accounts": account_balances,  # All accounts with individual balances
+        "accounts": account_balances,
         "debt": debt,
     }
 

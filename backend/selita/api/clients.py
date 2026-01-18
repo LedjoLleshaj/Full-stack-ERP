@@ -14,46 +14,57 @@ from rest_framework import status
 @permission_classes([permissions.IsAuthenticated])
 def getClients(request):
     try:
-        clients = Client.objects.all()
-        # for each client get the balance by summing the amount they have to pay in unpaid sales
-        serializer = ClientSerializer(clients, many=True)
-        
-        from ..models import Payment, ExchangeRate
-        from django.db.models import Sum
+        from ..models import Payment, Transaction
+        from selita.utils.currency import get_all_rates_dict
+        from django.db.models import Sum, Prefetch
         from decimal import Decimal
+        from collections import defaultdict
         
-        def convert_to_eur(amount, currency):
-            """Convert amount from any currency to EUR"""
+        # Cache exchange rates upfront (1 query)
+        rates = get_all_rates_dict()
+        
+        def convert_eur(amount, currency):
+            """Fast conversion using cached rates"""
             if currency == "EUR":
                 return Decimal(str(amount))
-            try:
-                rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-                return Decimal(str(amount)) * rate.rate
-            except ExchangeRate.DoesNotExist:
-                # Fallback: return as-is if no rate found
-                return Decimal(str(amount))
+            rate_key = f"{currency}_EUR"
+            rate = rates.get(rate_key, Decimal("1"))
+            return Decimal(str(amount)) * rate
         
-        for client in serializer.data:
-            # Get sales through transaction relationship
-            sales = Sales.objects.filter(
-                transaction__client_id=client["id"],
-                transaction__status__in=["PENDING", "PARTIAL"]  # Not fully paid
-            ).select_related('transaction')
-            
-            total_amount = Decimal("0")
-            for sale in sales:
-                # Calculate remaining balance for this sale's transaction
-                total_paid = Payment.objects.filter(
-                    transaction=sale.transaction
-                ).aggregate(total=Sum('amount'))['total'] or 0
-                
-                remaining = Decimal(str(sale.transaction.total_amount)) - Decimal(str(total_paid))
-                # Convert remaining balance to EUR using the transaction's currency
-                currency = sale.transaction.currency if sale.transaction else "EUR"
-                total_amount += convert_to_eur(remaining, currency)
-                
-            client["unpaidBalance"] = round(float(total_amount), 2)
-        return Response(serializer.data)
+        # Pre-calculate unpaid balances per client in memory
+        # Step 1: Get all unpaid transactions with their payments (2 queries)
+        unpaid_transactions = Transaction.objects.filter(
+            client__isnull=False,
+            status__in=["PENDING", "PARTIAL"]
+        ).select_related('client').prefetch_related('payments')
+        
+        # Step 2: Calculate remaining balance per client
+        client_balances = defaultdict(lambda: Decimal("0"))
+        
+        for transaction in unpaid_transactions:
+            total_paid = sum(p.amount for p in transaction.payments.all())
+            remaining = transaction.total_amount - total_paid
+            remaining_eur = convert_eur(remaining, transaction.currency)
+            client_balances[transaction.client_id] += remaining_eur
+        
+        # Step 3: Get all clients (1 query)
+        clients = Client.objects.all()
+        
+        # Build response
+        results = []
+        for client in clients:
+            results.append({
+                "id": client.id,
+                "firstname": client.firstname,
+                "lastname": client.lastname,
+                "phone": client.phone,
+                "email": client.email,
+                "address": client.address,
+                "city": client.city,
+                "unpaidBalance": round(float(client_balances.get(client.id, Decimal("0"))), 2),
+            })
+        
+        return Response(results)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
