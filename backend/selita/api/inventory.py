@@ -4,6 +4,9 @@ from rest_framework.decorators import api_view, permission_classes
 from ..serializers import InventorySerializer, ProductSerializer, RestockSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+import logging
+
+logger = logging.getLogger(__name__)
 from rest_framework.permissions import IsAuthenticated
 from decimal import Decimal
 
@@ -82,7 +85,7 @@ def addProductToInventory(request):
         supplier_id = request.data.get("supplier_id")
         description = request.data.get("description", "")  # Default to empty string
         is_paid = request.data.get("is_paid", True)  # Default to True (paid)
-        print("addProductToInventory", name, quantity, price, "supplier_id:", supplier_id, "description:", description, "is_paid:", is_paid)
+        logger.debug("addProductToInventory: %s, qty=%s, price=%s, supplier=%s", name, quantity, price, supplier_id)
         
         if quantity <= 0:
             return Response(
@@ -115,7 +118,7 @@ def addProductToInventory(request):
         # Check if the product already exists
         try:
             product = Product.objects.get(name=name)
-            print("Product already exists", product)
+            logger.debug("Product already exists: %s (id=%s)", product.name, product.id)
             # Update description if a new one is provided, or if current is empty, use name
             if description:
                 product.description = description
@@ -185,7 +188,7 @@ def addProductToInventory(request):
             except Account.DoesNotExist:
                 # If no CASH EUR account exists, skip payment creation
                 # Transaction status is already set to COMPLETED
-                print("Warning: No CASH EUR account found, payment record not created")
+                logger.warning("No CASH EUR account found, payment record not created for restock #%s", restock.id)
         
         # Update inventory quantity
         try:
