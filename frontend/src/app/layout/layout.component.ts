@@ -1,7 +1,7 @@
 import { MediaMatcher } from "@angular/cdk/layout";
 import { ChangeDetectorRef, Component, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
-import { LOCAL_STORAGE_KEYS } from "../shared/constants";
+import { LOCAL_STORAGE_KEYS } from "../core";
 import { DarkModeService } from "../shared/services/dark-mode/dark-mode.service";
 import { AuthApiService } from "../shared/services/auth-api/auth-api.service";
 
