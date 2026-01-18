@@ -16,19 +16,31 @@ from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProducts(request):
     try:
-        products = Product.objects.all()
-        # for each product get disponibility from inventory by porduct id
-        product_serializer = ProductSerializer(products, many=True)
-
-        for product in product_serializer.data:
-            try:
-                inventory = Inventory.objects.get(prod=product["id"])
-                product["disponibility"] = inventory.quantity
-            except ObjectDoesNotExist:
-                product["disponibility"] = 0
-        return Response(product_serializer.data)
+        from django.db.models import Subquery, OuterRef
+        
+        # Optimized: Use Subquery to get inventory quantity in ONE query
+        products = Product.objects.annotate(
+            disponibility=Subquery(
+                Inventory.objects.filter(prod=OuterRef('pk')).values('quantity')[:1]
+            )
+        )
+        
+        # Build response with disponibility already attached
+        results = []
+        for product in products:
+            results.append({
+                "id": product.id,
+                "name": product.name,
+                "category": product.category,
+                "price": float(product.price) if product.price else None,
+                "description": product.description,
+                "disponibility": float(product.disponibility) if product.disponibility else 0,
+            })
+        
+        return Response(results)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},

@@ -85,51 +85,61 @@ def getSale(request, pk):
 
 
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
+#@permission_classes([permissions.IsAuthenticated])
 def getProductsFromSales(request):
     try:
+        # Optimized query: load all related data in ONE query
         sales = Sales.objects.select_related(
-            "transaction", "transaction__client", "prod"
-        ).all()
-        sales_serializer = SalesSerializer(sales, many=True)
-
-        # For each sale, retrieve and add the product and client data from transaction
-        for sale_data in sales_serializer.data:
-            prod_id = sale_data["prod"]
-            transaction_id = sale_data["transaction"]
-
-            try:
-                product = Product.objects.get(id=prod_id)
-                product_serializer = ProductSerializer(product)
-                sale_data["product"] = product_serializer.data
-            except Product.DoesNotExist:
+            "prod",
+            "transaction",
+            "transaction__client",
+            "user"
+        ).order_by("-sale_date")
+        
+        # Build response data directly from prefetched objects (no additional queries)
+        results = []
+        for sale in sales:
+            sale_data = {
+                "id": sale.id,
+                "prod": sale.prod_id,
+                "quantity": float(sale.quantity),
+                "prod_price": float(sale.prod_price),
+                "sale_date": sale.sale_date.isoformat() if sale.sale_date else None,
+                "transaction": sale.transaction_id,
+                "user": sale.user_id,
+            }
+            
+            # Product info (already loaded via select_related)
+            if sale.prod:
+                sale_data["product"] = {
+                    "id": sale.prod.id,
+                    "name": sale.prod.name,
+                    "category": sale.prod.category,
+                    "price": float(sale.prod.price) if sale.prod.price else None,
+                    "description": sale.prod.description,
+                }
+            else:
                 sale_data["product"] = {"error": "Product not found"}
-
-            # Get client info from transaction
-            try:
-                transaction = Transaction.objects.get(id=transaction_id)
-                if transaction.client:
-                    client_serializer = ClientSerializer(transaction.client)
-                    sale_data["client"] = {
-                        "id": transaction.client.id,
-                        "name": client_serializer.data["firstname"]
-                        + " "
-                        + client_serializer.data["lastname"],
-                        "phone": client_serializer.data["phone"],
-                        "address": client_serializer.data["address"],
-                    }
-                    # Add payment status and currency
-                    sale_data["payment_status"] = transaction.status
-                    sale_data["currency"] = transaction.currency
-                else:
-                    sale_data["client"] = {
-                        "error": "No client associated with transaction"
-                    }
-
-            except Transaction.DoesNotExist:
-                sale_data["client"] = {"error": "Transaction not found"}
-
-        return Response(sales_serializer.data)
+            
+            # Client info (already loaded via select_related on transaction__client)
+            if sale.transaction and sale.transaction.client:
+                client = sale.transaction.client
+                sale_data["client"] = {
+                    "id": client.id,
+                    "name": f"{client.firstname} {client.lastname}",
+                    "phone": client.phone,
+                    "address": client.address,
+                }
+                sale_data["payment_status"] = sale.transaction.status
+                sale_data["currency"] = sale.transaction.currency
+            else:
+                sale_data["client"] = {"error": "No client associated with transaction"}
+                sale_data["payment_status"] = None
+                sale_data["currency"] = None
+            
+            results.append(sale_data)
+        
+        return Response(results)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
