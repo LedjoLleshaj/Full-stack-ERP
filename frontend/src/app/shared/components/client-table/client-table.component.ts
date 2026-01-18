@@ -1,14 +1,26 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
+import { CommonModule } from "@angular/common";
 import { Router } from "@angular/router";
-import { MatPaginator } from "@angular/material/paginator";
-import { MatSort } from "@angular/material/sort";
-import { MatTableDataSource } from "@angular/material/table";
+import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
+import { MatSort, MatSortModule } from "@angular/material/sort";
+import { MatTableDataSource, MatTableModule } from "@angular/material/table";
 import { ClientService } from "../../services/clients-api/client.service";
 import { Client } from "src/app/models/client.model";
 import { MatDialog } from "@angular/material/dialog";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: "app-client-table",
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   templateUrl: "./client-table.component.html",
   styleUrls: ["./client-table.component.scss"],
 })
