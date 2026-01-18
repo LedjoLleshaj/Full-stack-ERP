@@ -11,7 +11,6 @@ import { LayoutComponent } from "./layout/layout.component";
 import { LoginComponent } from "./views/login-view/login.component";
 
 // Dialogs (used globally)
-import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
 
 // Material modules needed for Layout and Login
 import { MatSidenavModule } from "@angular/material/sidenav";
@@ -36,7 +35,6 @@ import { NgxEchartsModule } from "ngx-echarts";
     AppComponent,
     LayoutComponent,
     LoginComponent,
-    ConfirmDialogComponent,
   ],
   imports: [
     BrowserModule,
