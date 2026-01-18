@@ -4,8 +4,8 @@ import { MatSnackBar } from "@angular/material/snack-bar";
 import { Subscription } from "rxjs";
 import * as XLSX from 'xlsx';
 
-import { Client } from "src/app/models/client.model";
-import { Product } from "src/app/models/product.model";
+import { Client } from "../../../../models/client.model";
+import { Product } from "../../../../models/product.model";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
 import { SaleFormService, SaleFormState } from "src/app/shared/services/sale-form/sale-form.service";
 

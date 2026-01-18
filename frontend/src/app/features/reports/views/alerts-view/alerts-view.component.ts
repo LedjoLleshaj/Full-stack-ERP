@@ -1,8 +1,8 @@
 import { Component, OnInit } from "@angular/core";
 import { ProductService } from "src/app/shared/services/product-api/product.service";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
-import { Product } from "src/app/models/product.model";
-import { Client } from "src/app/models/client.model";
+import { Product } from "../../../../models/product.model";
+import { Client } from "../../../../models/client.model";
 
 @Component({
   selector: "app-alerts-view",

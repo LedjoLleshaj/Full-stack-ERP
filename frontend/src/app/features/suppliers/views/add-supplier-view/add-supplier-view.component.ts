@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { SupplierService } from "../../shared/services/suppliers-api/supplier.service";
+import { SupplierService } from "../../../../shared/services/suppliers-api/supplier.service";
 import { Router } from "@angular/router";
 
 @Component({

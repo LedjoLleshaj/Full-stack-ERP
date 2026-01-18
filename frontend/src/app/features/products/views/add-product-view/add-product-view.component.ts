@@ -1,12 +1,12 @@
 import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { ProductService } from "../../shared/services/product-api/product.service";
+import { ProductService } from "../../../../shared/services/product-api/product.service";
 import { Router } from "@angular/router";
-import { ProductCategory } from "../../models/product-category.model";
-import { ProductName } from "../../models/product-name.model";
+import { ProductCategory } from "../../../../models/product-category.model";
+import { ProductName } from "../../../../models/product-name.model";
 import { InventoryService } from "src/app/shared/services/inventory-api/inventory.service";
 import { SupplierService } from "src/app/shared/services/suppliers-api/supplier.service";
-import { Supplier } from "src/app/models/supplier.model";
+import { Supplier } from "../../../../models/supplier.model";
 
 @Component({
   selector: "app-add-product-view",

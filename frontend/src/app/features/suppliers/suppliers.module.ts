@@ -4,9 +4,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 // Feature components
-import { SupplierViewComponent } from '../../views/suppliers-view/supplier-view.component';
-import { AddSupplierViewComponent } from '../../views/add-supplier-view/add-supplier-view.component';
-import { SupplierDetailsViewComponent } from '../../views/supplier-details-view/supplier-details-view.component';
+import { SupplierViewComponent } from './views/suppliers-view/supplier-view.component';
+import { AddSupplierViewComponent } from './views/add-supplier-view/add-supplier-view.component';
+import { SupplierDetailsViewComponent } from './views/supplier-details-view/supplier-details-view.component';
 
 // Standalone components
 import { SupplierTableComponent } from '../../shared/components/supplier-table/supplier-table.component';

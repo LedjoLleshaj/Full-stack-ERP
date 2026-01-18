@@ -4,9 +4,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 // Feature components
-import { ProductsViewComponent } from '../../views/products-view/products-view.component';
-import { AddProductViewComponent } from '../../views/add-product-view/add-product-view.component';
-import { ProductDetailsViewComponent } from '../../views/product-details-view/product-details-view.component';
+import { ProductsViewComponent } from './views/products-view/products-view.component';
+import { AddProductViewComponent } from './views/add-product-view/add-product-view.component';
+import { ProductDetailsViewComponent } from './views/product-details-view/product-details-view.component';
 
 // Standalone components
 import { ProductTableComponent } from '../../shared/components/product-table/product-table.component';
