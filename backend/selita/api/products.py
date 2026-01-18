@@ -70,7 +70,6 @@ def addProduct(request):
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def updatePrice(request, pk):
-    print(request.data)
     try:
         product = Product.objects.get(id=pk)
         serializer = ProductSerializer(instance=product, data=request.data)
