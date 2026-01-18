@@ -5,13 +5,15 @@ import { environment } from "src/environments/environment";
 import { RestockResponse, RestockReportRow } from "src/app/models/restock.model";
 import { map } from "rxjs/operators";
 
+import { BaseApiService } from "../base-api.service";
+
 @Injectable({
   providedIn: "root",
 })
-export class RestocksApiService {
-  private apiUrl = environment.apiUrl;
-
-  constructor(private http: HttpClient) {}
+export class RestocksApiService extends BaseApiService {
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   getRestocks(): Observable<RestockResponse[]> {
     return this.http.get<RestockResponse[]>(`${this.apiUrl}/restocks`);

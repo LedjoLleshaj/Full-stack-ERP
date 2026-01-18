@@ -4,13 +4,15 @@ import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
 import { Supplier } from "src/app/models/supplier.model";
 
+import { BaseApiService } from "../base-api.service";
+
 @Injectable({
   providedIn: "root",
 })
-export class SupplierService {
-  private apiUrl = environment.apiUrl;
-
-  constructor(private http: HttpClient) {}
+export class SupplierService extends BaseApiService {
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   getSuppliers(): Observable<Supplier[]> {
     return this.http.get<Supplier[]>(`${this.apiUrl}/suppliers`);
