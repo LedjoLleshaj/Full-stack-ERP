@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Observable, BehaviorSubject, throwError, of } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
 import { LoginResponse } from "../../../models/auth.model";
-import { environment } from "../../../../environment/environments";
+import { environment } from "src/environments/environment";
 import { LOCAL_STORAGE_KEYS } from "../../constants";
 import { Router } from "@angular/router";
 
