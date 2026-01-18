@@ -9,7 +9,7 @@ import {
 import { Observable, throwError, BehaviorSubject } from "rxjs";
 import { catchError, filter, take, switchMap } from "rxjs/operators";
 import { AuthApiService } from "./auth-api.service";
-import { environment } from "../../../../environment/environments";
+import { environment } from "src/environments/environment";
 import { CookieService } from "../cookie.service";
 
 @Injectable()

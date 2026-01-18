@@ -1,68 +1,33 @@
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { HttpClientModule } from "@angular/common/http";
+import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { LoginComponent } from "./views/login-view/login.component";
-import { CustomMaterialModule } from "./material.modules";
-import { MatListModule } from "@angular/material/list";
-import { MatGridListModule } from "@angular/material/grid-list";
-import { HTTP_INTERCEPTORS, HttpClientModule } from "@angular/common/http";
-import { ReactiveFormsModule, FormsModule } from "@angular/forms";
+import { CoreModule } from "./core";
 import { LayoutComponent } from "./layout/layout.component";
-import { MatSidenavModule } from "@angular/material/sidenav";
-import { MatIconModule } from "@angular/material/icon";
-import { MatSnackBarModule } from "@angular/material/snack-bar";
-import { MatPaginatorModule } from "@angular/material/paginator";
-import { MatMenuModule } from "@angular/material/menu";
-import { MatDialogModule } from "@angular/material/dialog";
-import { MatChipsModule } from "@angular/material/chips";
-import { ChipsComponent } from "./shared/components/chips/chips.component";
-import { MatStepperModule } from "@angular/material/stepper";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { SalesViewComponent } from "./views/sales-view/sales-view.component";
-import { SalesTableComponent } from "./shared/components/sales-table/sales-table.component"; // Import MatFormFieldModule
-import { MatTableModule } from "@angular/material/table";
-import { ProductsViewComponent } from "./views/products-view/products-view.component";
-import { MatSortModule } from "@angular/material/sort";
-import { AddProductViewComponent } from "./views/add-product-view/add-product-view.component";
-import { MatSelectModule } from "@angular/material/select";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatRadioModule } from "@angular/material/radio";
-import { MatAutocompleteModule } from "@angular/material/autocomplete";
-import { MatDatepickerModule } from "@angular/material/datepicker";
-import { MatNativeDateModule } from "@angular/material/core";
-import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { MatButtonToggleModule } from "@angular/material/button-toggle";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { ProductBuyDialogComponent } from "./shared/components/dialogs/product-buy-dialog/product-buy-dialog.component";
-import { ProductDetailsViewComponent } from "./views/product-details-view/product-details-view.component";
-import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
+import { LoginComponent } from "./views/login-view/login.component";
 
-import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
-import { ClientTableComponent } from "./shared/components/client-table/client-table.component";
-import { ClientViewComponent } from "./views/clients-view/client-view.component";
-import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
-import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
-import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
-import { EditPriceDialogComponent } from "./dialogs/edit-price-dialog/edit-price-dialog.component";
-import { ReportsViewComponent } from "./views/reports-view/reports-view.component";
-import { RevenueViewComponent } from "./views/revenue-view/revenue-view.component";
-import { PaidVsUnpaidViewComponent } from "./views/paid-vs-unpaid-view/paid-vs-unpaid-view.component";
-import { TopProductsViewComponent } from "./views/top-products-view/top-products-view.component";
-import { ProfitByCategoryViewComponent } from "./views/profit-by-category-view/profit-by-category-view.component";
-import { AlertsViewComponent } from "./views/alerts-view/alerts-view.component";
-import { SaleDetailsViewComponent } from "./views/sale-details-view/sale-details-view.component";
-import { SupplierViewComponent } from "./views/suppliers-view/supplier-view.component";
-import { SupplierTableComponent } from "./shared/components/supplier-table/supplier-table.component";
-import { AddSupplierViewComponent } from "./views/add-supplier-view/add-supplier-view.component";
-import { TopClientsViewComponent } from "./views/top-clients-view/top-clients-view.component";
-import { SupplierDetailsViewComponent } from "./views/supplier-details-view/supplier-details-view.component";
-import { RestockDetailsViewComponent } from "./views/restock-details-view/restock-details-view.component";
-import { RestocksViewComponent } from "./views/restocks-view/restocks-view.component";
-import { RestocksTableComponent } from "./shared/components/restocks-table/restocks-table.component";
-import { AddSaleViewComponent } from "./views/add-sale-view/add-sale-view.component";
+// Dialogs (used globally)
+
+// Material modules needed for Layout and Login
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatListModule } from "@angular/material/list";
+import { MatIconModule } from "@angular/material/icon";
+import { MatMenuModule } from "@angular/material/menu";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { MatButtonModule } from "@angular/material/button";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatDialogModule } from "@angular/material/dialog";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatDividerModule } from "@angular/material/divider";
+import { MatCardModule } from "@angular/material/card";
+
+// ECharts for lazy-loaded modules
 import { NgxEchartsModule } from "ngx-echarts";
 
 @NgModule({
@@ -70,73 +35,35 @@ import { NgxEchartsModule } from "ngx-echarts";
     AppComponent,
     LayoutComponent,
     LoginComponent,
-    ProductsViewComponent,
-    ClientViewComponent,
-    AddProductViewComponent,
-    ProductBuyDialogComponent,
-    ProductDetailsViewComponent,
-    EditPriceDialogComponent,
-    ProductTableComponent,
-    ClientTableComponent,
-    ClientDetailsViewComponent,
-    AddClientViewComponent,
-    SalesViewComponent,
-    ReportsViewComponent,
-    RevenueViewComponent,
-    PaidVsUnpaidViewComponent,
-    TopProductsViewComponent,
-    ProfitByCategoryViewComponent,
-    AlertsViewComponent,
-    ConfirmDialogComponent,
-    EditPriceDialogComponent,
-    SaleDetailsViewComponent,
-    SupplierViewComponent,
-    SupplierTableComponent,
-    AddSupplierViewComponent,
-    TopClientsViewComponent,
-    SupplierDetailsViewComponent,
-    RestockDetailsViewComponent,
-    RestocksViewComponent,
-    AddSaleViewComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    CustomMaterialModule,
-    MatListModule,
-    MatGridListModule,
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
+    CoreModule,
+    // Material for Layout/Login
     MatSidenavModule,
+    MatListModule,
     MatIconModule,
-    MatSnackBarModule,
-    MatPaginatorModule,
-    ChipsComponent,
     MatMenuModule,
-    MatDialogModule,
-    MatChipsModule,
-    MatStepperModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-    MatSortModule,
-    MatSelectModule,
+    MatSnackBarModule,
+    MatButtonModule,
     MatFormFieldModule,
-    MatRadioModule,
-    MatAutocompleteModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    SalesTableComponent,
-    RestocksTableComponent,
-    MatProgressBarModule,
-    MatButtonToggleModule,
-    MatCheckboxModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    MatDialogModule,
+    MatToolbarModule,
+    MatDividerModule,
+    MatCardModule,
+    // ECharts config (must be in root)
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts')
     }),
   ],
-  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
+  providers: [],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

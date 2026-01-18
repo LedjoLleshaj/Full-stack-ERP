@@ -1,7 +1,7 @@
 import { MediaMatcher } from "@angular/cdk/layout";
 import { ChangeDetectorRef, Component, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
-import { LOCAL_STORAGE_KEYS } from "../shared/constants";
+import { LOCAL_STORAGE_KEYS } from "../core";
 import { DarkModeService } from "../shared/services/dark-mode/dark-mode.service";
 import { AuthApiService } from "../shared/services/auth-api/auth-api.service";
 
@@ -17,11 +17,9 @@ export class LayoutComponent {
   firstName: string = "";
   lastName: string = "";
   isProductMenuOpen: boolean = false; // Track product menu state
-  isRightNavOpen: boolean = false; // Track right nav state
   isClientMenuOpen: boolean = false; // Track client menu state
   isSupplierMenuOpen: boolean = false; // Track supplier menu state
   isSaleMenuOpen: boolean = false; // Track sale menu state
-  cartItems: any[] = []; // Store unique cart items with their counts
 
   constructor(
     public router: Router,
@@ -39,7 +37,6 @@ export class LayoutComponent {
     this.username = localStorage.getItem(LOCAL_STORAGE_KEYS.USERNAME) || "";
     this.firstName = localStorage.getItem(LOCAL_STORAGE_KEYS.FIRST_NAME) || "";
     this.lastName = localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_NAME) || "";
-    this.loadCartItems();
   }
 
   ngOnDestroy(): void {
@@ -68,27 +65,4 @@ export class LayoutComponent {
     this.router.navigate(["/sales"]);
   }
 
-  // Shopping cart menu open-close function
-  toggleRightNav() {
-    this.isRightNavOpen = !this.isRightNavOpen;
-  }
-
-  // TODO:
-  loadCartItems() {
-    const storedItems = JSON.parse(localStorage.getItem("cartItems") || "[]");
-    const itemCounts: { [key: string]: { count: number; item: any } } = {};
-
-    storedItems.forEach((item: any) => {
-      if (itemCounts[item.id]) {
-        itemCounts[item.id].count++;
-      } else {
-        itemCounts[item.id] = { count: 1, item };
-      }
-    });
-
-    this.cartItems = Object.values(itemCounts).map((entry) => ({
-      ...entry.item,
-      count: entry.count,
-    }));
-  }
 }

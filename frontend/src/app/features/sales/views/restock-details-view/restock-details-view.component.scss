@@ -1,0 +1,37 @@
+// Import shared transaction details styles
+@use 'src/styles/transaction-details';
+
+// Container class (only unique part)
+.restock-details-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .restock-details-container {
+    padding: 16px;
+  }
+
+  .header {
+    h1 {
+      font-size: 22px;
+    }
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payments-table {
+    display: block;
+    overflow-x: auto;
+
+    th.mat-header-cell,
+    td.mat-cell {
+      padding: 12px;
+      font-size: 13px;
+    }
+  }
+}
