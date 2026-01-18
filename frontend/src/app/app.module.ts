@@ -8,7 +8,7 @@ import { LoginComponent } from "./views/login-view/login.component";
 import { CustomMaterialModule } from "./material.modules";
 import { MatListModule } from "@angular/material/list";
 import { MatGridListModule } from "@angular/material/grid-list";
-import { HTTP_INTERCEPTORS, HttpClientModule } from "@angular/common/http";
+import { HttpClientModule } from "@angular/common/http";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { LayoutComponent } from "./layout/layout.component";
 import { MatSidenavModule } from "@angular/material/sidenav";
@@ -39,7 +39,7 @@ import { MatCheckboxModule } from "@angular/material/checkbox";
 import { ProductDetailsViewComponent } from "./views/product-details-view/product-details-view.component";
 import { ProductTableComponent } from "./shared/components/product-table/product-table.component";
 
-import { AuthInterceptor } from "./shared/services/auth-api/auth.interceptor";
+import { CoreModule } from "./core";
 import { ClientTableComponent } from "./shared/components/client-table/client-table.component";
 import { ClientViewComponent } from "./views/clients-view/client-view.component";
 import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
@@ -77,8 +77,6 @@ import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from "./sha
     AddProductViewComponent,
     ProductDetailsViewComponent,
     EditPriceDialogComponent,
-    ProductTableComponent,
-    ClientTableComponent,
     ClientDetailsViewComponent,
     AddClientViewComponent,
     SalesViewComponent,
@@ -92,7 +90,6 @@ import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from "./sha
     EditPriceDialogComponent,
     SaleDetailsViewComponent,
     SupplierViewComponent,
-    SupplierTableComponent,
     AddSupplierViewComponent,
     TopClientsViewComponent,
     SupplierDetailsViewComponent,
@@ -104,6 +101,7 @@ import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from "./sha
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
+    CoreModule,
     CustomMaterialModule,
     MatListModule,
     MatGridListModule,
@@ -130,6 +128,9 @@ import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from "./sha
     MatNativeDateModule,
     SalesTableComponent,
     RestocksTableComponent,
+    ProductTableComponent,
+    ClientTableComponent,
+    SupplierTableComponent,
     MatProgressBarModule,
     MatButtonToggleModule,
     MatCheckboxModule,
@@ -141,7 +142,7 @@ import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from "./sha
     AlbanianCurrencyPipe,
     AlbanianDatePipe,
   ],
-  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
+  providers: [],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

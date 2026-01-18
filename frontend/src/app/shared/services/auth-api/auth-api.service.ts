@@ -4,7 +4,7 @@ import { Observable, BehaviorSubject, throwError, of } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
 import { LoginResponse } from "../../../models/auth.model";
 import { environment } from "src/environments/environment";
-import { LOCAL_STORAGE_KEYS } from "../../constants";
+import { LOCAL_STORAGE_KEYS } from "../../../core";
 import { Router } from "@angular/router";
 
 export interface User {
