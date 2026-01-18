@@ -20,8 +20,9 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     "0.0.0.0", 
     "127.0.0.1", 
-    "localhost"
-] + os.getenv('ADDITIONAL_HOSTS', '').split(',') if os.getenv('ADDITIONAL_HOSTS') else ["0.0.0.0", "127.0.0.1", "localhost"]
+    "localhost",
+    "testserver"  # Required for Django test client (benchmark.py)
+] + os.getenv('ADDITIONAL_HOSTS', '').split(',') if os.getenv('ADDITIONAL_HOSTS') else ["0.0.0.0", "127.0.0.1", "localhost", "testserver"]
 
 # Application definition
 
@@ -36,9 +37,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
+    # "silk",  # Disabled - adds overhead to queries
 ]
 
 MIDDLEWARE = [
+    # "silk.middleware.SilkyMiddleware",  # Disabled - adds overhead to queries
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
