@@ -65,7 +65,8 @@ const routes: Routes = [
       },
       {
         path: "alerts",
-        loadChildren: () => import("./features/reports/reports.module").then(m => m.ReportsModule),
+        redirectTo: "reports/alerts",
+        pathMatch: "full",
       },
       {
         path: "suppliers",
