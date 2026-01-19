@@ -5,10 +5,14 @@ from ..models import Sales, Transaction, Account, Payment
 from ..serializers import SalesReportSerializer
 from django.db.models import F, ExpressionWrapper, DecimalField, Sum
 from datetime import date
+from selita.utils.responses import api_error_handler
+from selita.utils.currency import get_all_rates_dict, convert_to_eur_with_rates
+from selita.constants import TransactionStatus, TransactionType
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def sales_report(request):
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
@@ -38,10 +42,10 @@ def sales_report(request):
     
     # Status labels in Albanian with emoji indicators
     status_map = {
-        "COMPLETED": "✅ Paguar",
-        "PARTIAL": "⚠️ Paguar pjeserisht",
-        "PENDING": "❌ Pa paguar",
-        "CANCELLED": "🚫 Anuluar"
+        TransactionStatus.COMPLETED: "✅ Paguar",
+        TransactionStatus.PARTIAL: "⚠️ Paguar pjeserisht",
+        TransactionStatus.PENDING: "❌ Pa paguar",
+        TransactionStatus.CANCELLED: "🚫 Anuluar"
     }
     
     for sale in sales_qs:
@@ -51,7 +55,7 @@ def sales_report(request):
         client_address = client.address if client else "N/A"
         
         # Get payment status from transaction
-        transaction_status = sale.transaction.status if sale.transaction else "PENDING"
+        transaction_status = sale.transaction.status if sale.transaction else TransactionStatus.PENDING
         payment_status = status_map.get(transaction_status, "N/A")
         
         report_data.append({
@@ -71,22 +75,14 @@ def sales_report(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def dashboard_stats(request):
-    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
     
     today = date.today()
     
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
-    
-    def convert_eur(amount, currency):
-        """Fast conversion using cached rates"""
-        if currency == "EUR":
-            return Decimal(str(amount))
-        rate_key = f"{currency}_EUR"
-        rate = rates.get(rate_key, Decimal("1"))
-        return Decimal(str(amount)) * rate
 
     # Get ALL transactions at once (1 query)
     all_transactions = list(Transaction.objects.exclude(status="CANCELLED"))
@@ -100,9 +96,9 @@ def dashboard_stats(request):
     pending_sales_map = {}
     
     for trans in all_transactions:
-        amount_eur = convert_eur(trans.total_amount, trans.currency)
+        amount_eur = convert_to_eur_with_rates(trans.total_amount, trans.currency, rates)
         
-        if trans.transaction_type == "SALE":
+        if trans.transaction_type == TransactionType.SALE:
             total_sales += amount_eur
             
             # Check if created today
@@ -114,14 +110,14 @@ def dashboard_stats(request):
                 revenue_month += amount_eur
             
             # Track pending sales for debt calculation
-            if trans.status in ["PENDING", "PARTIAL"]:
+            if trans.status in TransactionStatus.UNPAID_STATUSES:
                 pending_sale_ids.append(trans.id)
                 pending_sales_map[trans.id] = {
                     "total": trans.total_amount,
                     "currency": trans.currency
                 }
                 
-        elif trans.transaction_type == "PURCHASE":
+        elif trans.transaction_type == TransactionType.PURCHASE:
             total_purchases += amount_eur
 
     profit = total_sales - total_purchases
@@ -153,7 +149,7 @@ def dashboard_stats(request):
             paid = payments_by_trans.get(trans_id, Decimal("0")) or Decimal("0")
             remaining = sale_info["total"] - paid
             if remaining > 0:
-                debt += convert_eur(remaining, sale_info["currency"])
+                debt += convert_to_eur_with_rates(remaining, sale_info["currency"], rates)
 
     data = {
         "revenue_today": revenue_today,
@@ -168,6 +164,7 @@ def dashboard_stats(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def daily_profit(request):
     """
     Get daily profit data for a specified time period.
@@ -175,7 +172,6 @@ def daily_profit(request):
     - days: Number of days to look back (default: 30, max: 365, use 0 for all time)
     Returns an array of {date, sales, purchases, profit} objects for chart visualization.
     """
-    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
     from datetime import timedelta
     
@@ -202,17 +198,9 @@ def daily_profit(request):
     # Cache exchange rates upfront (1 query instead of N queries)
     rates = get_all_rates_dict()
     
-    def convert_eur(amount, currency):
-        """Fast conversion using cached rates"""
-        if currency == "EUR":
-            return Decimal(str(amount))
-        rate_key = f"{currency}_EUR"
-        rate = rates.get(rate_key, Decimal("1"))
-        return Decimal(str(amount)) * rate
-    
     # Get all transactions in the date range (2 queries total)
     sales = Transaction.objects.filter(
-        transaction_type="SALE",
+        transaction_type=TransactionType.SALE,
         created_date__date__gte=start_date,
         created_date__date__lte=today
     ).exclude(status="CANCELLED")
@@ -227,14 +215,14 @@ def daily_profit(request):
     daily_sales = {}
     for sale in sales:
         sale_date = sale.created_date.date()
-        amount_eur = convert_eur(sale.total_amount, sale.currency)
+        amount_eur = convert_to_eur_with_rates(sale.total_amount, sale.currency, rates)
         daily_sales[sale_date] = daily_sales.get(sale_date, Decimal("0")) + amount_eur
     
     # Build daily purchase totals (in EUR) - no additional queries
     daily_purchases = {}
     for purchase in purchases:
         purchase_date = purchase.created_date.date()
-        amount_eur = convert_eur(purchase.total_amount, purchase.currency)
+        amount_eur = convert_to_eur_with_rates(purchase.total_amount, purchase.currency, rates)
         daily_purchases[purchase_date] = daily_purchases.get(purchase_date, Decimal("0")) + amount_eur
     
     # Build result with all dates in range
@@ -258,6 +246,7 @@ def daily_profit(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def paid_vs_unpaid(request):
     """
     Get paid vs unpaid sales statistics for pie chart visualization.
@@ -267,24 +256,14 @@ def paid_vs_unpaid(request):
     - Partial: Remaining debt on partial sales only
     - Unpaid: Pending sales total (nothing paid yet)
     """
-    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
-    from django.db.models import Sum
     
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
     
-    def convert_eur(amount, currency):
-        """Fast conversion using cached rates"""
-        if currency == "EUR":
-            return Decimal(str(amount))
-        rate_key = f"{currency}_EUR"
-        rate = rates.get(rate_key, Decimal("1"))
-        return Decimal(str(amount)) * rate
-    
     # Get all sales transactions with prefetched payments (2 queries total)
     all_sales = Transaction.objects.filter(
-        transaction_type="SALE"
+        transaction_type=TransactionType.SALE
     ).exclude(status="CANCELLED").prefetch_related('payments')
     
     # Initialize counters
@@ -296,18 +275,18 @@ def paid_vs_unpaid(request):
     partial_count = 0  # Count of partial sales
     
     for sale in all_sales:
-        amount_eur = convert_eur(sale.total_amount, sale.currency)
+        amount_eur = convert_to_eur_with_rates(sale.total_amount, sale.currency, rates)
         
-        if sale.status == "COMPLETED":
+        if sale.status == TransactionStatus.COMPLETED:
             # Fully paid - entire amount goes to "Paid"
             paid_amount += amount_eur
             paid_count += 1
-        elif sale.status == "PARTIAL":
+        elif sale.status == TransactionStatus.PARTIAL:
             # Get total payments from prefetched data (no additional query)
             payments_made = sum(p.amount for p in sale.payments.all())
             
             # Convert payments to EUR
-            payments_eur = convert_eur(payments_made, sale.currency)
+            payments_eur = convert_to_eur_with_rates(payments_made, sale.currency, rates)
             
             # Add paid portion to "Paid"
             paid_amount += payments_eur
@@ -347,6 +326,7 @@ def paid_vs_unpaid(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def top_products(request):
     """
     Get the top 5 best-selling products by quantity sold.
@@ -375,6 +355,7 @@ def top_products(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def profit_by_category(request):
     """
     Get profit by product category.
@@ -382,20 +363,11 @@ def profit_by_category(request):
     Optimized to use fewer database queries.
     """
     from ..models import Product, Restock
-    from selita.utils.currency import get_all_rates_dict, convert_to_eur
     from decimal import Decimal
     from collections import defaultdict
     
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
-    
-    def convert_eur(amount, currency):
-        """Fast conversion using cached rates"""
-        if currency == "EUR":
-            return Decimal(str(amount))
-        rate_key = f"{currency}_EUR"
-        rate = rates.get(rate_key, Decimal("1"))
-        return Decimal(str(amount)) * rate
     
     # Get all categories (1 query)
     categories = set(Product.objects.values_list('category', flat=True))
@@ -417,7 +389,7 @@ def profit_by_category(request):
         if category:
             currency = sale.transaction.currency if sale.transaction else "EUR"
             amount = sale.quantity * sale.prod_price
-            category_revenue[category] += convert_eur(amount, currency)
+            category_revenue[category] += convert_to_eur_with_rates(amount, currency, rates)
     
     # Process all restocks at once with prefetched transactions (1 query)
     restocks = (
@@ -432,7 +404,7 @@ def profit_by_category(request):
         if category:
             currency = restock.transaction.currency if restock.transaction else "EUR"
             total_cost = restock.restock_price * restock.quantity
-            category_cost[category] += convert_eur(total_cost, currency)
+            category_cost[category] += convert_to_eur_with_rates(total_cost, currency, rates)
     
     # Build result
     result = []
@@ -457,6 +429,7 @@ def profit_by_category(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def top_clients(request):
     """
     Get the top 5 clients by total purchase amount.
@@ -464,24 +437,15 @@ def top_clients(request):
     Optimized to use minimal database queries.
     """
     from ..models import Client
-    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
     from collections import defaultdict
     
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
     
-    def convert_eur(amount, currency):
-        """Fast conversion using cached rates TODO:refactor"""
-        if currency == "EUR":
-            return Decimal(str(amount))
-        rate_key = f"{currency}_EUR"
-        rate = rates.get(rate_key, Decimal("1"))
-        return Decimal(str(amount)) * rate
-    
     # Get all sale transactions with client info in ONE query
     transactions = Transaction.objects.filter(
-        transaction_type="SALE",
+        transaction_type=TransactionType.SALE,
         client__isnull=False
     ).exclude(status="CANCELLED").select_related('client')
     
@@ -490,7 +454,7 @@ def top_clients(request):
     
     for trans in transactions:
         client_id = trans.client_id
-        amount_eur = convert_eur(trans.total_amount, trans.currency)
+        amount_eur = convert_to_eur_with_rates(trans.total_amount, trans.currency, rates)
         client_data[client_id]["total"] += amount_eur
         client_data[client_id]["count"] += 1
         client_data[client_id]["name"] = f"{trans.client.firstname} {trans.client.lastname}"
@@ -511,4 +475,3 @@ def top_clients(request):
     top_5 = client_totals[:5]
     
     return Response(top_5)
-

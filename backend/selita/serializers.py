@@ -5,7 +5,8 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = "__all__"
+        fields = ["id", "username", "email", "firstname", "lastname"]
+        # Explicitly exclude password - never expose password hashes in API responses
 
 
 class SupplierSerializer(serializers.ModelSerializer):
