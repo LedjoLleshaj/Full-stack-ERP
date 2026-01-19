@@ -32,17 +32,26 @@ def getInventory(request):
 @permission_classes([IsAuthenticated])
 def getProductsFromInventory(request):
     try:
-        inventory = Inventory.objects.all()
-        serializer = InventorySerializer(inventory, many=True)
-
-        for i in range(len(serializer.data)):
-            prod_id = serializer.data[i]["prod"]
-
-            product = Product.objects.get(id=prod_id)
-            p_serializer = ProductSerializer(product, many=False)
-            serializer.data[i]["product"] = p_serializer.data
-
-        return Response(serializer.data)
+        # Optimized: Use select_related to load products in ONE query
+        inventory = Inventory.objects.select_related('prod').all()
+        
+        # Build response with product info already loaded
+        results = []
+        for inv in inventory:
+            results.append({
+                "id": inv.id,
+                "prod": inv.prod_id,
+                "quantity": float(inv.quantity) if inv.quantity else 0,
+                "product": {
+                    "id": inv.prod.id,
+                    "name": inv.prod.name,
+                    "category": inv.prod.category,
+                    "price": float(inv.prod.price) if inv.prod.price else None,
+                    "description": inv.prod.description,
+                } if inv.prod else None
+            })
+        
+        return Response(results)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
