@@ -151,24 +151,33 @@ def getProductsFromSales(request):
 @permission_classes([IsAuthenticated])
 def getUsersFromSales(request):
     try:
-        sales = Sales.objects.all()
-        sales_serializer = SalesSerializer(sales, many=True)
-
-        # For each sale, retrieve and add the user data
-        for sale_data in sales_serializer.data:
-            user_id = sale_data["user"]
-
-            try:
-                user = Users.objects.get(id=user_id)
-                user_serializer = UserSerializer(user)
+        # Optimized: Use select_related to load user data in ONE query
+        sales = Sales.objects.select_related('user').all()
+        
+        # Build response directly from prefetched data (no additional queries)
+        results = []
+        for sale in sales:
+            sale_data = {
+                "id": sale.id,
+                "prod": sale.prod_id,
+                "quantity": float(sale.quantity),
+                "prod_price": float(sale.prod_price),
+                "sale_date": sale.sale_date.isoformat() if sale.sale_date else None,
+                "transaction": sale.transaction_id,
+            }
+            
+            # User info (already loaded via select_related)
+            if sale.user:
                 sale_data["user"] = {
-                    "firstname": user_serializer.data["firstname"],
-                    "lastname": user_serializer.data["lastname"],
+                    "firstname": sale.user.firstname,
+                    "lastname": sale.user.lastname,
                 }
-            except Users.DoesNotExist:
+            else:
                 sale_data["user"] = {"error": "User not found"}
-
-        return Response(sales_serializer.data)
+            
+            results.append(sale_data)
+        
+        return Response(results)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
@@ -233,12 +242,15 @@ def paySale(request, pk):
 @permission_classes([IsAuthenticated])
 def createSale(request):
     """Create a new sale with transaction and optional payment"""
+    from selita.services.inventory_service import InventoryService, InventoryError
+    from selita.services.payment_service import PaymentService, PaymentError
+    
     try:
         # Extract data from request
         client_id = request.data.get("client_id")
         product_id = request.data.get("prod")
         prod_price = Decimal(str(request.data.get("prod_price")))
-        quantity = request.data.get("quantity")
+        quantity = Decimal(str(request.data.get("quantity")))
         user_id = request.data.get("user")
         currency = request.data.get("currency", "EUR")
         payment_data = request.data.get("payment")  # Optional payment info
@@ -258,18 +270,19 @@ def createSale(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if product exists and enough quantity is available
+        # Check if product exists
         try:
             product = Product.objects.get(id=product_id)
-            inventory = Inventory.objects.get(prod=product)
-            if inventory.quantity < quantity:
-                return Response(
-                    {"error": "Not enough product in inventory"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
         except ObjectDoesNotExist:
             return Response(
                 {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Use InventoryService to check availability
+        if not InventoryService.check_availability(product, quantity):
+            return Response(
+                {"error": "Not enough product in inventory"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Calculate total amount
@@ -294,56 +307,25 @@ def createSale(request):
             quantity=quantity,
         )
 
-        # Reduce inventory
-        inventory.quantity -= quantity
-        inventory.save()
+        # Use InventoryService to reduce inventory
+        InventoryService.reduce_inventory(product, quantity, allow_negative=True)
 
-        # If payment data provided, create payment
+        # If payment data provided, use PaymentService
         if payment_data:
             payment_amount = Decimal(str(payment_data.get("amount", 0)))
             if payment_amount > 0:
-                payment_method = payment_data.get("payment_method", "CASH")
-                payment_currency = payment_data.get("currency", currency)
-                
-                # Determine account type based on payment method
-                # CASH payment → CASH account, CARD payment → BANK account
-                account_type = "CASH" if payment_method == "CASH" else "BANK"
-                
-                # Find the appropriate account based on type and currency
-                from ..models import Account
                 try:
-                    account = Account.objects.get(
-                        account_type=account_type,
-                        currency=payment_currency
+                    PaymentService.create_payment(
+                        transaction=transaction,
+                        amount=payment_amount,
+                        payment_currency=payment_data.get("currency", currency),
+                        payment_method=payment_data.get("payment_method", "CASH"),
+                        notes=payment_data.get("notes", ""),
                     )
-                except Account.DoesNotExist:
-                    return Response(
-                        {"error": f"No {account_type} account found for currency {payment_currency}"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                
-                payment = Payment.objects.create(
-                    transaction=transaction,
-                    account=account,
-                    amount=payment_amount,
-                    currency=payment_currency,
-                    original_amount=payment_amount,  # Same currency, so original = converted
-                    original_currency=payment_currency,
-                    payment_method=payment_method,
-                    notes=payment_data.get("notes", ""),
-                )
-
-                # Update account balance (SALE = money coming in, so increase balance)
-                account.current_balance += payment_amount
-                account.save()
-
-                # Update transaction status based on payment
-                if payment_amount >= total_amount:
-                    transaction.status = "COMPLETED"
-                    transaction.completed_date = timezone.now()
-                elif payment_amount > 0:
-                    transaction.status = "PARTIAL"
-                transaction.save()
+                except PaymentError as e:
+                    # Payment failed but sale was created - log and continue
+                    transaction.notes += f" (Payment failed: {str(e)})"
+                    transaction.save()
 
         return Response(
             {
