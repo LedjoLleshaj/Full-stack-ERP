@@ -472,7 +472,7 @@ def top_clients(request):
     rates = get_all_rates_dict()
     
     def convert_eur(amount, currency):
-        """Fast conversion using cached rates"""
+        """Fast conversion using cached rates TODO:refactor"""
         if currency == "EUR":
             return Decimal(str(amount))
         rate_key = f"{currency}_EUR"

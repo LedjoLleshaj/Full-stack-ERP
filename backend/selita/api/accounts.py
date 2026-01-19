@@ -1,10 +1,10 @@
 from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework import permissions, status
 from ..models import Account, AccountTransaction
 from rest_framework.decorators import api_view, permission_classes
 from ..serializers import AccountSerializer, AccountTransactionSerializer
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status
+from selita.utils.responses import api_error_handler, not_found_response
 
 
 # ======== ACCOUNTS ========
@@ -12,20 +12,16 @@ from rest_framework import status
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def getAccounts(request):
-    try:
-        accounts = Account.objects.all()
-        serializer = AccountSerializer(accounts, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    accounts = Account.objects.all()
+    serializer = AccountSerializer(accounts, many=True)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def getAccount(request, pk):
     try:
         account = Account.objects.get(id=pk)
@@ -42,34 +38,23 @@ def getAccount(request, pk):
 
         return Response(response_data)
     except ObjectDoesNotExist:
-        return Response(
-            {"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND
-        )
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return not_found_response("Account")
 
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def addAccount(request):
-    try:
-        serializer = AccountSerializer(data=request.data)
-        if serializer.is_valid():
-            account = serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    serializer = AccountSerializer(data=request.data)
+    if serializer.is_valid():
+        account = serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["PUT"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def updateAccount(request, pk):
     try:
         account = Account.objects.get(id=pk)
@@ -79,29 +64,16 @@ def updateAccount(request, pk):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist:
-        return Response(
-            {"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND
-        )
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return not_found_response("Account")
 
 
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def deleteAccount(request, pk):
     try:
         account = Account.objects.get(id=pk)
         account.delete()
         return Response("Account deleted successfully")
     except ObjectDoesNotExist:
-        return Response(
-            {"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND
-        )
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return not_found_response("Account")
