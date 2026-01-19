@@ -4,8 +4,8 @@ from ..models import Users
 from rest_framework.decorators import api_view, permission_classes
 from ..serializers import UserSerializer
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status
 from django.contrib.auth.hashers import make_password
+from selita.utils.responses import api_error_handler, not_found_response
 
 
 # ======== USERS ========
@@ -13,55 +13,47 @@ from django.contrib.auth.hashers import make_password
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def getUsers(request):
-    try:
-        users = Users.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    users = Users.objects.all()
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def getUser(request, pk):
     try:
         user = Users.objects.get(id=pk)
         serializer = UserSerializer(user, many=False)
         return Response(serializer.data)
     except ObjectDoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        return not_found_response("User")
 
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
+@api_error_handler
 def createUser(request):
-    try:
-        data = request.data
-        user = Users.objects.create(
-            username=data["username"],
-            password=make_password(
-                data["password"]
-            ),  # Hash the password here            email=data["email"],
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            phone=data["phone"],
-            city=data["city"],
-        )
-        serializer = UserSerializer(user, many=False)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    data = request.data
+    user = Users.objects.create(
+        username=data["username"],
+        password=make_password(
+            data["password"]
+        ),  # Hash the password here            email=data["email"],
+        first_name=data["first_name"],
+        last_name=data["last_name"],
+        phone=data["phone"],
+        city=data["city"],
+    )
+    serializer = UserSerializer(user, many=False)
+    return Response(serializer.data)
 
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def updateUser(request, pk):
     try:
         user = Users.objects.get(id=pk)
@@ -77,25 +69,16 @@ def updateUser(request, pk):
         serializer = UserSerializer(user, many=False)
         return Response(serializer.data)
     except ObjectDoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return not_found_response("User")
 
 
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def deleteUser(request, pk):
     try:
         user = Users.objects.get(id=pk)
         user.delete()
         return Response("User deleted successfully")
     except ObjectDoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return not_found_response("User")
