@@ -91,6 +91,7 @@ def updatePrice(request, pk):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProduct(request, pk):
     try:
         product = Product.objects.get(id=pk)
@@ -108,6 +109,7 @@ def getProduct(request, pk):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProductByName(request, name):
     try:
         product = Product.objects.get(name=name)
@@ -125,6 +127,7 @@ def getProductByName(request, name):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProductCategories(request):
     try:
         categories = Product_Categories.objects.all()
@@ -138,6 +141,7 @@ def getProductCategories(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProductNames(request):
     try:
         names = Product_Names.objects.all()
@@ -151,6 +155,7 @@ def getProductNames(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProductsByCategory(request, category):
     try:
         products = Product.objects.filter(category=category)
@@ -164,6 +169,7 @@ def getProductsByCategory(request, category):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def filterByCategories(request):
     # Get the 'categories' parameter from the query string
     categories = request.GET.get("categories", "")
@@ -190,6 +196,7 @@ def filterByCategories(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProductByNames(request, name):
     name = Product.objects.filter(name=name)
     serializer = ProductSerializer(name, many=False)
@@ -197,6 +204,7 @@ def getProductByNames(request, name):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def checkDisponibility(request, pk):
     try:
         product = Product.objects.get(id=pk)
