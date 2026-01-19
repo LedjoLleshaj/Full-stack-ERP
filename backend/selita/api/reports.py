@@ -1,4 +1,5 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from ..models import Sales, Transaction, Account, Payment
 from ..serializers import SalesReportSerializer
@@ -7,6 +8,7 @@ from datetime import date
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def sales_report(request):
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
@@ -68,6 +70,7 @@ def sales_report(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def dashboard_stats(request):
     from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
@@ -164,6 +167,7 @@ def dashboard_stats(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def daily_profit(request):
     """
     Get daily profit data for a specified time period.
@@ -252,6 +256,7 @@ def daily_profit(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def paid_vs_unpaid(request):
     """
     Get paid vs unpaid sales statistics for pie chart visualization.
@@ -341,6 +346,7 @@ def paid_vs_unpaid(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def top_products(request):
     """
     Get the top 5 best-selling products by quantity sold.
@@ -368,6 +374,7 @@ def top_products(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def profit_by_category(request):
     """
     Get profit by product category.
@@ -449,6 +456,7 @@ def profit_by_category(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def top_clients(request):
     """
     Get the top 5 clients by total purchase amount.
