@@ -100,6 +100,40 @@ def get_all_rates_dict() -> Dict[str, Decimal]:
     return rates
 
 
+def convert_to_eur_with_rates(amount, currency: str, rates: Dict[str, Decimal]) -> Decimal:
+    """
+    Convert amount to EUR using a pre-fetched rates dictionary.
+    
+    Use this when you need to convert many amounts in a loop to avoid
+    repeated database queries. First call get_all_rates_dict() once,
+    then pass the result to this function for each conversion.
+    
+    Args:
+        amount: Amount to convert (can be Decimal, float, int, or str)
+        currency: Source currency code
+        rates: Pre-fetched rates dict from get_all_rates_dict()
+    
+    Returns:
+        Amount in EUR as Decimal
+        
+    Example:
+        rates = get_all_rates_dict()
+        for transaction in transactions:
+            eur_amount = convert_to_eur_with_rates(
+                transaction.total_amount, 
+                transaction.currency, 
+                rates
+            )
+    """
+    if amount is None:
+        return Decimal("0")
+    if currency == "EUR":
+        return Decimal(str(amount))
+    rate_key = f"{currency}_EUR"
+    rate = rates.get(rate_key, Decimal("1"))
+    return Decimal(str(amount)) * rate
+
+
 def build_eur_conversion_case(amount_field: str, currency_field: str):
     """
     Build a Django Case expression for converting amounts to EUR in database queries.
