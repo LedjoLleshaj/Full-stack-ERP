@@ -173,8 +173,9 @@ def getProductsByCategory(request, category):
 def filterByCategories(request):
     # Get the 'categories' parameter from the query string
     categories = request.GET.get("categories", "")
+    from django.db.models import Subquery, OuterRef
 
-    # If the 'categories' parameter is empty, return an empty list
+    # If the 'categories' parameter is empty, return all products
     if not categories:
         products = Product.objects.all()
     else:
@@ -183,16 +184,27 @@ def filterByCategories(request):
 
         # Filter products whose category is in the list of categories
         products = Product.objects.filter(category__in=categories_list)
-
-    product_serializer = ProductSerializer(products, many=True)
-
-    for product in product_serializer.data:
-        try:
-            inventory = Inventory.objects.get(prod=product["id"])
-            product["disponibility"] = inventory.quantity
-        except ObjectDoesNotExist:
-            product["disponibility"] = 0
-    return Response(product_serializer.data)
+    
+    # Optimized: Use Subquery to get inventory quantity in ONE query
+    products = products.annotate(
+        disponibility=Subquery(
+            Inventory.objects.filter(prod=OuterRef('pk')).values('quantity')[:1]
+        )
+    )
+    
+    # Build response with disponibility already attached
+    results = []
+    for product in products:
+        results.append({
+            "id": product.id,
+            "name": product.name,
+            "category": product.category,
+            "price": float(product.price) if product.price else None,
+            "description": product.description,
+            "disponibility": float(product.disponibility) if product.disponibility else 0,
+        })
+    
+    return Response(results)
 
 
 @api_view(["GET"])

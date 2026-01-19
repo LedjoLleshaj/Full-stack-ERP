@@ -175,7 +175,7 @@ def daily_profit(request):
     - days: Number of days to look back (default: 30, max: 365, use 0 for all time)
     Returns an array of {date, sales, purchases, profit} objects for chart visualization.
     """
-    from ..models import ExchangeRate
+    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
     from datetime import timedelta
     
@@ -199,17 +199,18 @@ def daily_profit(request):
         days = min(max(days, 1), 365)  # Clamp between 1 and 365
         start_date = today - timedelta(days=days)
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
-        if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+    # Cache exchange rates upfront (1 query instead of N queries)
+    rates = get_all_rates_dict()
     
-    # Get all transactions in the date range
+    def convert_eur(amount, currency):
+        """Fast conversion using cached rates"""
+        if currency == "EUR":
+            return Decimal(str(amount))
+        rate_key = f"{currency}_EUR"
+        rate = rates.get(rate_key, Decimal("1"))
+        return Decimal(str(amount)) * rate
+    
+    # Get all transactions in the date range (2 queries total)
     sales = Transaction.objects.filter(
         transaction_type="SALE",
         created_date__date__gte=start_date,
@@ -222,18 +223,18 @@ def daily_profit(request):
         created_date__date__lte=today
     ).exclude(status="CANCELLED")
     
-    # Build daily sales totals (in EUR)
+    # Build daily sales totals (in EUR) - no additional queries
     daily_sales = {}
     for sale in sales:
         sale_date = sale.created_date.date()
-        amount_eur = convert_to_eur(sale.total_amount, sale.currency)
+        amount_eur = convert_eur(sale.total_amount, sale.currency)
         daily_sales[sale_date] = daily_sales.get(sale_date, Decimal("0")) + amount_eur
     
-    # Build daily purchase totals (in EUR)
+    # Build daily purchase totals (in EUR) - no additional queries
     daily_purchases = {}
     for purchase in purchases:
         purchase_date = purchase.created_date.date()
-        amount_eur = convert_to_eur(purchase.total_amount, purchase.currency)
+        amount_eur = convert_eur(purchase.total_amount, purchase.currency)
         daily_purchases[purchase_date] = daily_purchases.get(purchase_date, Decimal("0")) + amount_eur
     
     # Build result with all dates in range
@@ -266,24 +267,25 @@ def paid_vs_unpaid(request):
     - Partial: Remaining debt on partial sales only
     - Unpaid: Pending sales total (nothing paid yet)
     """
-    from ..models import ExchangeRate
+    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
     from django.db.models import Sum
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
-        if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
     
-    # Get all sales transactions (excluding cancelled)
+    def convert_eur(amount, currency):
+        """Fast conversion using cached rates"""
+        if currency == "EUR":
+            return Decimal(str(amount))
+        rate_key = f"{currency}_EUR"
+        rate = rates.get(rate_key, Decimal("1"))
+        return Decimal(str(amount)) * rate
+    
+    # Get all sales transactions with prefetched payments (2 queries total)
     all_sales = Transaction.objects.filter(
         transaction_type="SALE"
-    ).exclude(status="CANCELLED")
+    ).exclude(status="CANCELLED").prefetch_related('payments')
     
     # Initialize counters
     paid_amount = Decimal("0")
@@ -294,20 +296,18 @@ def paid_vs_unpaid(request):
     partial_count = 0  # Count of partial sales
     
     for sale in all_sales:
-        amount_eur = convert_to_eur(sale.total_amount, sale.currency)
+        amount_eur = convert_eur(sale.total_amount, sale.currency)
         
         if sale.status == "COMPLETED":
             # Fully paid - entire amount goes to "Paid"
             paid_amount += amount_eur
             paid_count += 1
         elif sale.status == "PARTIAL":
-            # Get total payments made for this sale
-            payments_made = Payment.objects.filter(transaction=sale).aggregate(
-                total=Sum("amount")
-            )["total"] or Decimal("0")
+            # Get total payments from prefetched data (no additional query)
+            payments_made = sum(p.amount for p in sale.payments.all())
             
-            # Convert payments to EUR (assuming payments are in same currency as sale)
-            payments_eur = convert_to_eur(payments_made, sale.currency)
+            # Convert payments to EUR
+            payments_eur = convert_eur(payments_made, sale.currency)
             
             # Add paid portion to "Paid"
             paid_amount += payments_eur
@@ -461,43 +461,50 @@ def top_clients(request):
     """
     Get the top 5 clients by total purchase amount.
     Returns client names and their total purchase amounts.
+    Optimized to use minimal database queries.
     """
-    from ..models import Client, ExchangeRate
+    from ..models import Client
+    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
+    from collections import defaultdict
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
+    
+    def convert_eur(amount, currency):
+        """Fast conversion using cached rates"""
         if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+            return Decimal(str(amount))
+        rate_key = f"{currency}_EUR"
+        rate = rates.get(rate_key, Decimal("1"))
+        return Decimal(str(amount)) * rate
     
-    # Get all clients with their transactions
-    clients = Client.objects.all()
+    # Get all sale transactions with client info in ONE query
+    transactions = Transaction.objects.filter(
+        transaction_type="SALE",
+        client__isnull=False
+    ).exclude(status="CANCELLED").select_related('client')
     
-    client_totals = []
-    for client in clients:
-        # Get all completed/partial sales transactions for this client
-        client_transactions = Transaction.objects.filter(
-            client=client,
-            transaction_type="SALE"
-        ).exclude(status="CANCELLED")
-        
-        total_amount = Decimal("0")
-        transaction_count = 0
-        for transaction in client_transactions:
-            total_amount += convert_to_eur(transaction.total_amount, transaction.currency)
-            transaction_count += 1
-        
-        if total_amount > 0:
-            client_totals.append({
-                "name": f"{client.firstname} {client.lastname}",
-                "total_amount": float(total_amount),
-                "transaction_count": transaction_count
-            })
+    # Aggregate in memory (no additional queries)
+    client_data = defaultdict(lambda: {"total": Decimal("0"), "count": 0, "name": ""})
+    
+    for trans in transactions:
+        client_id = trans.client_id
+        amount_eur = convert_eur(trans.total_amount, trans.currency)
+        client_data[client_id]["total"] += amount_eur
+        client_data[client_id]["count"] += 1
+        client_data[client_id]["name"] = f"{trans.client.firstname} {trans.client.lastname}"
+    
+    # Build result list
+    client_totals = [
+        {
+            "name": data["name"],
+            "total_amount": float(data["total"]),
+            "transaction_count": data["count"]
+        }
+        for data in client_data.values()
+        if data["total"] > 0
+    ]
     
     # Sort by total amount descending and take top 5
     client_totals.sort(key=lambda x: x['total_amount'], reverse=True)

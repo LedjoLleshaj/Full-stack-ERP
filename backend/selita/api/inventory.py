@@ -86,9 +86,11 @@ def updateInventory(request, pk):
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def addProductToInventory(request):
+    from selita.services.inventory_service import InventoryService
+    from selita.services.payment_service import PaymentService, PaymentError
+    
     try:
         name = request.data.get("name")
-        # category = request.data.get("category")
         quantity = request.data.get("quantity")
         price = request.data.get("price")
         supplier_id = request.data.get("supplier_id")
@@ -123,6 +125,7 @@ def addProductToInventory(request):
         
         # Convert price to Decimal for accurate calculations
         price = Decimal(str(price))
+        quantity = Decimal(str(quantity))
         
         # Check if the product already exists
         try:
@@ -175,38 +178,28 @@ def addProductToInventory(request):
             restock_price=price
         )
         
-        # If marked as paid, create a payment record and update account balance
+        # If marked as paid, use PaymentService
         if is_paid:
             try:
-                # Auto-select CASH account in EUR (default)
-                account = Account.objects.get(
-                    account_type="CASH",
-                    currency="EUR"
-                )
-                Payment.objects.create(
+                PaymentService.create_payment(
                     transaction=transaction,
-                    account=account,
                     amount=total_amount,
-                    currency="EUR",
+                    payment_currency="EUR",
                     payment_method="CASH",
-                    notes=f"Initial payment for restock #{restock.id}"
+                    notes=f"Initial payment for restock #{restock.id}",
                 )
-                # Decrease account balance (PURCHASE = money going out)
-                account.current_balance -= total_amount
-                account.save()
-            except Account.DoesNotExist:
-                # If no CASH EUR account exists, skip payment creation
-                # Transaction status is already set to COMPLETED
-                logger.warning("No CASH EUR account found, payment record not created for restock #%s", restock.id)
+            except PaymentError as e:
+                # If payment fails, update transaction status and log
+                transaction.status = "PENDING"
+                transaction.notes += f" (Payment failed: {str(e)})"
+                transaction.save()
+                logger.warning("Payment failed for restock #%s: %s", restock.id, str(e))
         
-        # Update inventory quantity
-        try:
-            inventory = Inventory.objects.get(prod=product)
-            inventory.quantity += quantity
-            inventory.save()
-        except ObjectDoesNotExist:
-            # Create a new inventory item if it doesn't exist
-            inventory = Inventory.objects.create(prod=product, quantity=quantity)
+        # Use InventoryService to update inventory
+        new_quantity = InventoryService.add_inventory(product, quantity)
+        
+        # Get inventory record for response
+        inventory = Inventory.objects.get(prod=product)
         
         # Serialize the response
         inventory_serializer = InventorySerializer(inventory)
