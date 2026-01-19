@@ -180,149 +180,48 @@ def getUsersFromSales(request):
 @permission_classes([IsAuthenticated])
 def paySale(request, pk):
     """Add a payment to a sale's transaction"""
-    from ..models import ExchangeRate, Account
+    from selita.services.payment_service import PaymentService, PaymentError
 
     try:
         sale = Sales.objects.select_related("transaction").get(id=pk)
         transaction = sale.transaction
-
-        if transaction.status == "COMPLETED":
-            return Response(
-                {"error": "Sale already fully paid"}, status=status.HTTP_400_BAD_REQUEST
-            )
 
         # Get payment details from request
         amount = Decimal(str(request.data.get("amount", 0)))
         payment_currency = request.data.get("currency", "EUR")
         payment_method = request.data.get("payment_method", "CASH")
         notes = request.data.get("notes", "")
-        transaction_currency = transaction.currency
-        pay_remaining = request.data.get("pay_remaining", False)  # User clicked MAX button
-
-        if amount <= 0:
-            return Response(
-                {"error": "Payment amount must be greater than zero"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Calculate total paid so far (in transaction currency)
-        total_paid = Payment.objects.filter(transaction=transaction).aggregate(
-            total=models.Sum("amount")
-        )["total"] or Decimal("0")
-
-        remaining = transaction.total_amount - total_paid
-
-        # Convert payment amount to transaction currency if different
-        amount_in_transaction_currency = amount
-        exchange_rate = Decimal("1.0")
-        
-        if payment_currency != transaction_currency:
-            try:
-                # Get exchange rate: payment_currency -> transaction_currency
-                # E.g., if paying in LEK for EUR transaction, get LEK -> EUR rate
-                rate_obj = ExchangeRate.objects.get(
-                    from_currency=payment_currency,
-                    to_currency=transaction_currency
-                )
-                exchange_rate = rate_obj.rate
-                amount_in_transaction_currency = amount * exchange_rate
-            except ExchangeRate.DoesNotExist:
-                return Response(
-                    {"error": f"Exchange rate not found for {payment_currency} to {transaction_currency}. Please sync exchange rates."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        # If pay_remaining is True, use exact remaining balance (avoids rounding issues)
-        if pay_remaining:
-            # Check that the converted amount is reasonably close to remaining (within 5%)
-            tolerance = remaining * Decimal("0.05")  # 5% tolerance
-            if abs(amount_in_transaction_currency - remaining) <= tolerance:
-                amount_in_transaction_currency = remaining
-            # If not close enough, fall through to normal validation
-
-        # Check if payment amount exceeds remaining balance (compare in transaction currency)
-        
-        # Allow small tolerance for rounding errors (0.01)
-        if amount_in_transaction_currency > remaining + Decimal("0.01"):
-            return Response(
-                {
-                    "error": f"Payment amount ({amount_in_transaction_currency:.2f} {transaction_currency}) exceeds remaining balance ({remaining:.2f} {transaction_currency})"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Auto-select account based on payment method and currency
-        try:
-            account_type = "CASH" if payment_method == "CASH" else "BANK"
-            account = Account.objects.get(
-                account_type=account_type,
-                currency=payment_currency
-            )
-        except Account.DoesNotExist:
-            return Response(
-                {"error": f"No {account_type} account found for currency {payment_currency}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        pay_remaining = request.data.get("pay_remaining", False)
 
         # Generate default note if not provided
         if not notes or notes.strip() == "":
             method_label = "Cash" if payment_method == "CASH" else "Kartë"
-            if payment_currency != transaction_currency:
-                notes = f"Pagesë me {method_label}: {amount} {payment_currency} → {amount_in_transaction_currency:.2f} {transaction_currency}"
-            else:
-                notes = f"Pagesë me {method_label}: {amount} {payment_currency}"
+            notes = f"Pagesë me {method_label}: {amount} {payment_currency}"
 
-        # Create payment record with original and converted amounts
-        payment = Payment.objects.create(
+        # Use PaymentService for all payment logic
+        result = PaymentService.create_payment(
             transaction=transaction,
-            account=account,
-            amount=amount_in_transaction_currency,  # Converted amount in transaction currency
-            currency=transaction_currency,  # Transaction currency
-            original_amount=amount,  # Original amount in payment currency
-            original_currency=payment_currency,  # Payment currency used by customer
-            exchange_rate=exchange_rate if payment_currency != transaction_currency else None,
+            amount=amount,
+            payment_currency=payment_currency,
             payment_method=payment_method,
             notes=notes,
+            pay_remaining=pay_remaining,
         )
 
-        # Update account balance (SALE = money coming in, so increase balance)
-        # Note: Payment amount is stored in payment currency for the account
-        account.current_balance += amount
-        account.save()
-
-        # Update transaction status
-        new_total_paid = total_paid + amount_in_transaction_currency
-        
-        # Check completion with tolerance for rounding errors (0.01 tolerance)
-        # This handles cases where currency conversion causes tiny discrepancies
-        remaining_after_payment = transaction.total_amount - new_total_paid
-        if remaining_after_payment <= Decimal("0.01"):
-            # Transaction is effectively complete
-            transaction.status = "COMPLETED"
-            transaction.completed_date = timezone.now()
-            # Ensure remaining shows as 0, not a tiny negative/positive value
-            remaining_after_payment = Decimal("0.00")
-        elif new_total_paid > 0:
-            transaction.status = "PARTIAL"
-
-        transaction.save()
-
-        return Response(
-            {
-                "message": "Payment added successfully",
-                "payment_id": payment.id,
-                "transaction_status": transaction.status,
-                "total_paid": float(new_total_paid),
-                "remaining": float(remaining_after_payment),
-                "payment_amount": float(amount),
-                "payment_currency": payment_currency,
-                "converted_amount": float(amount_in_transaction_currency),
-                "transaction_currency": transaction_currency,
-            }
-        )
+        return Response({
+            "message": "Payment added successfully",
+            "payment_id": result["payment_id"],
+            "transaction_status": result["transaction_status"],
+            "total_paid": result["total_paid"],
+            "remaining": result["remaining"],
+            "payment_amount": float(amount),
+            "payment_currency": payment_currency,
+        })
 
     except Sales.DoesNotExist:
         return Response({"error": "Sale not found"}, status=status.HTTP_404_NOT_FOUND)
+    except PaymentError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
