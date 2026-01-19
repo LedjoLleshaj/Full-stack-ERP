@@ -5,6 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from ..serializers import ClientSerializer, ProductSerializer, SalesSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from selita.utils.responses import api_error_handler, not_found_response
+from selita.utils.currency import get_all_rates_dict, convert_to_eur_with_rates
+from selita.constants import TransactionStatus
 
 
 # ======== CLIENTS ========
@@ -15,7 +17,6 @@ from selita.utils.responses import api_error_handler, not_found_response
 @api_error_handler
 def getClients(request):
     from ..models import Payment, Transaction
-    from selita.utils.currency import get_all_rates_dict
     from django.db.models import Sum, Prefetch
     from decimal import Decimal
     from collections import defaultdict
@@ -23,19 +24,11 @@ def getClients(request):
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
     
-    def convert_eur(amount, currency):
-        """Fast conversion using cached rates"""
-        if currency == "EUR":
-            return Decimal(str(amount))
-        rate_key = f"{currency}_EUR"
-        rate = rates.get(rate_key, Decimal("1"))
-        return Decimal(str(amount)) * rate
-    
     # Pre-calculate unpaid balances per client in memory
     # Step 1: Get all unpaid transactions with their payments (2 queries)
     unpaid_transactions = Transaction.objects.filter(
         client__isnull=False,
-        status__in=["PENDING", "PARTIAL"]
+        status__in=TransactionStatus.UNPAID_STATUSES
     ).select_related('client').prefetch_related('payments')
     
     # Step 2: Calculate remaining balance per client
@@ -44,7 +37,7 @@ def getClients(request):
     for transaction in unpaid_transactions:
         total_paid = sum(p.amount for p in transaction.payments.all())
         remaining = transaction.total_amount - total_paid
-        remaining_eur = convert_eur(remaining, transaction.currency)
+        remaining_eur = convert_to_eur_with_rates(remaining, transaction.currency, rates)
         client_balances[transaction.client_id] += remaining_eur
     
     # Step 3: Get all clients (1 query)
@@ -72,7 +65,6 @@ def getClients(request):
 @api_error_handler
 def getClient(request, pk):
     from ..models import Payment, Transaction
-    from selita.utils.currency import get_all_rates_dict
     from decimal import Decimal
     
     try:
@@ -86,14 +78,6 @@ def getClient(request, pk):
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
     
-    def convert_eur(amount, currency):
-        """Fast conversion using cached rates"""
-        if currency == "EUR":
-            return Decimal(str(amount))
-        rate_key = f"{currency}_EUR"
-        rate = rates.get(rate_key, Decimal("1"))
-        return Decimal(str(amount)) * rate
-    
     # Get sales with prefetched transactions and payments (2 queries)
     sales = Sales.objects.filter(
         transaction__client_id=client_data["id"]
@@ -105,13 +89,13 @@ def getClient(request, pk):
     for sale in sales:
         sale_total = Decimal(str(sale.prod_price)) * sale.quantity
         currency = sale.transaction.currency if sale.transaction else "EUR"
-        totalBought += convert_eur(sale_total, currency)
+        totalBought += convert_to_eur_with_rates(sale_total, currency, rates)
         
         # Calculate remaining from prefetched payments (no additional query)
         total_paid = sum(p.amount for p in sale.transaction.payments.all())
         remaining = Decimal(str(sale.transaction.total_amount)) - Decimal(str(total_paid))
         if remaining > 0:
-            unpaidBalance += convert_eur(remaining, currency)
+            unpaidBalance += convert_to_eur_with_rates(remaining, currency, rates)
     
     client_data["unpaidBalance"] = round(float(unpaidBalance), 2)
     client_data["totalBought"] = round(float(totalBought), 2)
@@ -212,7 +196,7 @@ def getClientSales(request, pk):
             sale_data["payment_status"] = sale.transaction.status
             sale_data["currency"] = sale.transaction.currency
         else:
-            sale_data["payment_status"] = "PENDING"
+            sale_data["payment_status"] = TransactionStatus.PENDING
             sale_data["currency"] = "EUR"
         
         results.append(sale_data)
