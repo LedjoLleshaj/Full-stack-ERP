@@ -1,12 +1,12 @@
 from django.db import models
+from selita.constants import (
+    Currency, TransactionStatus, TransactionType, 
+    AccountType, PaymentMethod
+)
 
 
-# Reusable choice constants
-CURRENCY_CHOICES = [
-    ("EUR", "Euro"),
-    ("USD", "US Dollar"),
-    ("LEK", "Albanian Lek"),
-]
+# Use centralized constants
+CURRENCY_CHOICES = Currency.CHOICES
 
 
 class ExchangeRate(models.Model):
@@ -117,14 +117,9 @@ class Client(models.Model):
 
 
 class Account(models.Model):
-    ACCOUNT_TYPE_CHOICES = [
-        ("CASH", "Cash"),
-        ("BANK", "Bank"),
-    ]
-
     account_name = models.CharField(max_length=100)
-    account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES)
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    account_type = models.CharField(max_length=20, choices=AccountType.CHOICES)
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)
     current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
@@ -150,18 +145,7 @@ class Account(models.Model):
 
 
 class Transaction(models.Model):
-    TRANSACTION_TYPE_CHOICES = [
-        ("PURCHASE", "Purchase"),
-        ("SALE", "Sale"),
-    ]
-    STATUS_CHOICES = [
-        ("PENDING", "Pending"),
-        ("PARTIAL", "Partial"),
-        ("COMPLETED", "Completed"),
-        ("CANCELLED", "Cancelled"),
-    ]
-
-    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES)
+    transaction_type = models.CharField(max_length=20, choices=TransactionType.CHOICES)
     supplier = models.ForeignKey(
         Supplier,
         on_delete=models.SET_NULL,
@@ -177,8 +161,8 @@ class Transaction(models.Model):
         related_name="transactions",
     )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)
+    status = models.CharField(max_length=20, choices=TransactionStatus.CHOICES, default=TransactionStatus.PENDING)
     created_date = models.DateTimeField(auto_now_add=True)
     completed_date = models.DateTimeField(null=True, blank=True)
     invoice_number = models.CharField(max_length=100, null=True, blank=True)
@@ -201,11 +185,6 @@ class Transaction(models.Model):
 
 
 class Payment(models.Model):
-    PAYMENT_METHOD_CHOICES = [
-        ("CASH", "Cash"),
-        ("CARD", "Card"),
-    ]
-
     transaction = models.ForeignKey(
         Transaction, on_delete=models.CASCADE, related_name="payments"
     )
@@ -213,12 +192,12 @@ class Payment(models.Model):
         Account, on_delete=models.CASCADE, related_name="payments"
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)  # Amount in transaction currency
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)  # Transaction currency
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)  # Transaction currency
     # Original payment details (before currency conversion)
     original_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    original_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, null=True, blank=True)
+    original_currency = models.CharField(max_length=3, choices=Currency.CHOICES, null=True, blank=True)
     exchange_rate = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)  # Rate used for conversion
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.CHOICES)
     payment_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 

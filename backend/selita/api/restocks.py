@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from decimal import Decimal
 from selita.utils.responses import api_error_handler, not_found_response, bad_request_response
+from selita.constants import TransactionStatus, TransactionType
 
 
 # ======== RESTOCKS ========
@@ -136,11 +137,11 @@ def addRestock(request):
 
     # Create Transaction record
     transaction = Transaction.objects.create(
-        transaction_type='PURCHASE',
+        transaction_type=TransactionType.PURCHASE,
         supplier_id=supplier_id,
         total_amount=restock_price,
         currency=currency,
-        status='PENDING',
+        status=TransactionStatus.PENDING,
         notes=f"Restock of {quantity} units of {product.name}"
     )
 
@@ -170,10 +171,10 @@ def addRestock(request):
 
             # Update transaction status based on payment
             if payment_amount >= restock_price:
-                transaction.status = 'COMPLETED'
+                transaction.status = TransactionStatus.COMPLETED
                 transaction.completed_date = timezone.now()
             elif payment_amount > 0:
-                transaction.status = 'PARTIAL'
+                transaction.status = TransactionStatus.PARTIAL
             transaction.save()
 
     serializer = RestockSerializer(restock)
@@ -266,7 +267,7 @@ def getRestocksBySupplier(request, supplier_id):
             "quantity": restock.quantity,
             "price": float(restock.restock_price),
             "currency": transaction.currency if transaction else "EUR",
-            "status": transaction.status if transaction else "PENDING",
+            "status": transaction.status if transaction else TransactionStatus.PENDING,
             "transaction_id": transaction.id if transaction else None
         })
     

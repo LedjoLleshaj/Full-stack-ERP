@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from decimal import Decimal
 from selita.utils.responses import api_error_handler, not_found_response, bad_request_response
+from selita.constants import TransactionStatus, TransactionType
 
 
 # ======== SALES ========
@@ -242,11 +243,11 @@ def createSale(request):
 
     # Create Transaction record
     transaction = Transaction.objects.create(
-        transaction_type="SALE",
+        transaction_type=TransactionType.SALE,
         client_id=client_id,
         total_amount=total_amount,
         currency=currency,
-        status="PENDING",
+        status=TransactionStatus.PENDING,
         notes=f"Sale of {quantity} units of {product.name}",
     )
 
