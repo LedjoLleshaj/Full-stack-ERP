@@ -87,7 +87,8 @@ def addProductToInventory(request):
     description = data['description']
     is_paid = data['is_paid']  # Properly parsed boolean
     
-    logger.debug("addProductToInventory: %s, qty=%s, price=%s, supplier=%s", name, quantity, price, supplier_id)
+    logger.debug("addProductToInventory: %s, qty=%s, price=%s, supplier=%s, is_paid=%s (type=%s)", 
+                 name, quantity, price, supplier_id, is_paid, type(is_paid).__name__)
     
     # Get the supplier
     try:
@@ -124,17 +125,14 @@ def addProductToInventory(request):
             description=description if description else name
         )
     
-    # Determine transaction status based on is_paid
-    transaction_status = "COMPLETED" if is_paid else "PENDING"
-    
-    # Create purchase transaction to track the expense
+    # Create purchase transaction (start as PENDING, PaymentService will update to COMPLETED)
     total_amount = price * quantity
     transaction = Transaction.objects.create(
         transaction_type="PURCHASE",
         supplier=supplier,
         total_amount=total_amount,
         currency="EUR",
-        status=transaction_status,
+        status="PENDING",  # Start as PENDING, payment will update to COMPLETED
         notes=f"Restock: {quantity} x {product.name} @ {price}/unit"
     )
     
