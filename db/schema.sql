@@ -7,42 +7,42 @@
 
 CREATE TABLE Users   (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) NOT NULL,
+    username VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    firstname VARCHAR(255) NOT NULL,
-    lastname VARCHAR(255) NOT NULL,
-    role VARCHAR(255) NOT NULL
+    firstname VARCHAR(50) NOT NULL,
+    lastname VARCHAR(50) NOT NULL,
+    role VARCHAR(20) NOT NULL
 );
 
 -- Suppliers/Producers table (must be created before Transaction)
 CREATE TABLE Supplier (
     id SERIAL PRIMARY KEY,
-    firstname VARCHAR(255) NOT NULL,
-    lastname VARCHAR(255) NOT NULL,
-    phone VARCHAR(50),
-    email VARCHAR(255),
-    address VARCHAR(255) NOT NULL
+    firstname VARCHAR(50) NOT NULL,
+    lastname VARCHAR(50) NOT NULL,
+    phone VARCHAR(25),
+    email VARCHAR(100),
+    address VARCHAR(150) NOT NULL
 );
 
 -- Clients table (must be created before Transaction)
 CREATE TABLE Client (
     id SERIAL PRIMARY KEY,
-    firstname VARCHAR(255) NOT NULL,
-    lastname VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE,
-    phone VARCHAR(255) UNIQUE NOT NULL,
-    address VARCHAR(255) NOT NULL,
-    city VARCHAR(255) NOT NULL
+    firstname VARCHAR(50) NOT NULL,
+    lastname VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    phone VARCHAR(25) UNIQUE NOT NULL,
+    address VARCHAR(150) NOT NULL,
+    city VARCHAR(50) NOT NULL
 );
 
 -- Account types (where money is stored)
 CREATE TABLE Account (
     id SERIAL PRIMARY KEY,
-    account_name VARCHAR(100) NOT NULL,
+    account_name VARCHAR(50) NOT NULL,
     account_type VARCHAR(20) NOT NULL CHECK (account_type IN ('CASH', 'BANK')),
     currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'LEK')),
-    current_balance DECIMAL(10, 2) DEFAULT 0.00,
+    current_balance DECIMAL(8, 2) DEFAULT 0.00,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
     UNIQUE(account_type, currency) -- One cash account per currency, one bank per currency
@@ -72,12 +72,12 @@ CREATE TABLE Transaction (
     supplier_id INTEGER REFERENCES Supplier(id) ON DELETE SET NULL,
     client_id INTEGER REFERENCES Client(id) ON DELETE SET NULL,
     
-    total_amount DECIMAL(10, 2) NOT NULL,
+    total_amount DECIMAL(8, 2) NOT NULL,
     currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'LEK')), -- LEK is Albanian Lek
     status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PARTIAL', 'COMPLETED', 'CANCELLED')),
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_date TIMESTAMP,
-    invoice_number VARCHAR(100),
+    invoice_number VARCHAR(50),
     notes TEXT,
     
     -- Ensure only one of supplier_id or client_id is set
@@ -92,10 +92,10 @@ CREATE TABLE Payment (
     id SERIAL PRIMARY KEY,
     transaction_id INTEGER NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
     account_id INTEGER NOT NULL REFERENCES Account(id), -- Which account was used
-    amount DECIMAL(10, 2) NOT NULL,
+    amount DECIMAL(8, 2) NOT NULL,
     currency VARCHAR(3) NOT NULL CHECK (currency IN ('EUR', 'USD', 'LEK')),
     -- Original payment details (before currency conversion)
-    original_amount DECIMAL(10, 2),
+    original_amount DECIMAL(8, 2),
     original_currency VARCHAR(3) CHECK (original_currency IN ('EUR', 'USD', 'LEK')),
     exchange_rate DECIMAL(12, 6),  -- Rate used for conversion
     payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CASH', 'CARD')),
@@ -109,28 +109,28 @@ CREATE TABLE AccountTransaction (
     account_id INTEGER NOT NULL REFERENCES Account(id) ON DELETE CASCADE,
     payment_id INTEGER REFERENCES Payment(id) ON DELETE SET NULL,
     transaction_type VARCHAR(20) NOT NULL CHECK (transaction_type IN ('DEPOSIT', 'WITHDRAWAL', 'TRANSFER')),
-    amount DECIMAL(10, 2) NOT NULL,
-    balance_after DECIMAL(10, 2) NOT NULL,
+    amount DECIMAL(8, 2) NOT NULL,
+    balance_after DECIMAL(8, 2) NOT NULL,
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     notes TEXT
 );
 
 CREATE TABLE Product (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL, --has table with possible names
-    category VARCHAR(255) NOT NULL, --has table with possible categories
-    price DECIMAL(10, 2) NOT NULL, -- price per kg
+    name VARCHAR(100) UNIQUE NOT NULL, --has table with possible names
+    category VARCHAR(50) NOT NULL, --has table with possible categories
+    price DECIMAL(8, 2) NOT NULL, -- price per kg
     description TEXT NOT NULL
 );
 
 CREATE TABLE Product_Categories (
     id SERIAL PRIMARY KEY,
-    category_name VARCHAR(255) NOT NULL UNIQUE
+    category_name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE Product_Names (
     id SERIAL PRIMARY KEY,
-    product_name VARCHAR(255) UNIQUE NOT NULL,
+    product_name VARCHAR(100) UNIQUE NOT NULL,
     category_id INT NOT NULL,
     FOREIGN KEY (category_id) REFERENCES Product_Categories(id)
 );
@@ -147,7 +147,7 @@ CREATE TABLE Sales (
     id SERIAL PRIMARY KEY,
     transaction_id INT NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
     prod_id INT NOT NULL,
-    prod_price DECIMAL(10, 2) NOT NULL,
+    prod_price DECIMAL(8, 2) NOT NULL,
     user_id INT NOT NULL,
     quantity INT NOT NULL,
     sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -160,10 +160,74 @@ CREATE TABLE Restock (
     transaction_id INT NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
     prod_id INT NOT NULL,
     quantity INT NOT NULL,
-    restock_price DECIMAL(10, 2) NOT NULL,
+    restock_price DECIMAL(8, 2) NOT NULL,
     restock_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (prod_id) REFERENCES Product(id)
 );
+
+
+-- =====================================================================================
+-- INDEXES FOR QUERY OPTIMIZATION
+-- These indexes match those defined in Django models.py for consistency
+-- =====================================================================================
+
+-- Users indexes
+CREATE INDEX users_username_idx ON Users(username);
+CREATE INDEX users_email_idx ON Users(email);
+
+-- Supplier indexes
+CREATE INDEX supplier_name_idx ON Supplier(lastname, firstname);
+CREATE INDEX supplier_phone_idx ON Supplier(phone);
+
+-- Client indexes
+CREATE INDEX client_name_idx ON Client(lastname, firstname);
+CREATE INDEX client_phone_idx ON Client(phone);
+CREATE INDEX client_city_idx ON Client(city);
+
+-- Account indexes
+CREATE INDEX account_type_curr_idx ON Account(account_type, currency);
+
+-- Transaction indexes
+CREATE INDEX trans_type_idx ON Transaction(transaction_type);
+CREATE INDEX trans_status_idx ON Transaction(status);
+CREATE INDEX trans_invoice_idx ON Transaction(invoice_number);
+CREATE INDEX trans_created_idx ON Transaction(created_date DESC);
+
+-- Payment indexes
+CREATE INDEX payment_method_idx ON Payment(payment_method);
+CREATE INDEX payment_date_idx ON Payment(payment_date DESC);
+
+-- AccountTransaction indexes
+CREATE INDEX acct_trans_type_idx ON AccountTransaction(transaction_type);
+CREATE INDEX acct_trans_date_idx ON AccountTransaction(transaction_date DESC);
+
+-- Product indexes
+CREATE INDEX product_category_idx ON Product(category);
+CREATE INDEX product_name_idx ON Product(name);
+
+-- Inventory indexes
+CREATE INDEX inventory_date_idx ON Inventory(restock_date DESC);
+
+-- Sales indexes (FK indexes auto-created by PostgreSQL)
+CREATE INDEX sales_date_idx ON Sales(sale_date DESC);
+
+-- Restock indexes (FK indexes auto-created by PostgreSQL)
+CREATE INDEX restock_date_idx ON Restock(restock_date DESC);
+
+-- =====================================================================================
+-- PERFORMANCE INDEXES (Essential only)
+-- These target the most common query patterns for debt tracking and payments
+-- =====================================================================================
+
+-- For client debt queries (finding unpaid transactions per client)
+CREATE INDEX trans_client_status_idx ON Transaction(client_id, status);
+
+-- For payment lookup by transaction (used in debt calculations)
+CREATE INDEX payment_transaction_idx ON Payment(transaction_id);
+
+-- Partial index: Only unpaid transactions (smaller, faster for debt queries)
+CREATE INDEX trans_unpaid_idx ON Transaction(client_id, total_amount) 
+WHERE status IN ('PENDING', 'PARTIAL');
 
 
 -- Inserting data
