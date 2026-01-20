@@ -60,7 +60,8 @@
 
         <tr mat-header-row *matHeaderRowDef="stockColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: stockColumns;"
-            class="hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors"></tr>
+            class="hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors cursor-pointer"
+            [routerLink]="['/products', row.id]"></tr>
       </table>
     </mat-card-content>
   </mat-card>
