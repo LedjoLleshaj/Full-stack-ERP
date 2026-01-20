@@ -5,14 +5,14 @@ API endpoints for exchange rates.
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 from decimal import Decimal
-
 from selita.models import ExchangeRate, CURRENCY_CHOICES
+from selita.utils.responses import api_error_handler, not_found_response, bad_request_response
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def get_exchange_rates(request):
     """
     Get all exchange rates.
@@ -41,6 +41,7 @@ def get_exchange_rates(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def get_exchange_rate(request, from_currency, to_currency):
     """
     Get a specific exchange rate between two currencies.
@@ -68,14 +69,12 @@ def get_exchange_rate(request, from_currency, to_currency):
             "last_updated": rate.last_updated.isoformat()
         })
     except ExchangeRate.DoesNotExist:
-        return Response(
-            {"error": f"Exchange rate not found for {from_currency} to {to_currency}"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return not_found_response(f"Exchange rate for {from_currency} to {to_currency}")
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def convert_currency(request):
     """
     Convert an amount from one currency to another.
@@ -92,18 +91,12 @@ def convert_currency(request):
     to_currency = request.data.get("to_currency", "").upper()
     
     if amount is None:
-        return Response(
-            {"error": "Amount is required"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return bad_request_response("Amount is required")
     
     try:
         amount = Decimal(str(amount))
     except:
-        return Response(
-            {"error": "Invalid amount"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return bad_request_response("Invalid amount")
     
     # Same currency = no conversion needed
     if from_currency == to_currency:
@@ -131,7 +124,4 @@ def convert_currency(request):
             "last_updated": rate_obj.last_updated.isoformat()
         })
     except ExchangeRate.DoesNotExist:
-        return Response(
-            {"error": f"Exchange rate not found for {from_currency} to {to_currency}. Please run 'python manage.py sync_exchange_rates' to update rates."},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return not_found_response(f"Exchange rate for {from_currency} to {to_currency}. Please run 'python manage.py sync_exchange_rates' to update rates")

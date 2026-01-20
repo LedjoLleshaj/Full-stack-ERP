@@ -1,12 +1,12 @@
 from django.db import models
+from selita.constants import (
+    Currency, TransactionStatus, TransactionType, 
+    AccountType, PaymentMethod
+)
 
 
-# Reusable choice constants
-CURRENCY_CHOICES = [
-    ("EUR", "Euro"),
-    ("USD", "US Dollar"),
-    ("LEK", "Albanian Lek"),
-]
+# Use centralized constants
+CURRENCY_CHOICES = Currency.CHOICES
 
 
 class ExchangeRate(models.Model):
@@ -43,12 +43,12 @@ class ExchangeRate(models.Model):
 
 # Create your models here.
 class Users(models.Model):
-    username = models.CharField(max_length=200)
-    password = models.CharField(max_length=200)
-    email = models.CharField(max_length=200)
-    firstname = models.CharField(max_length=200)
-    lastname = models.CharField(max_length=200)
-    role = models.CharField(max_length=200)
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=255)
+    email = models.CharField(max_length=255)
+    firstname = models.CharField(max_length=50)
+    lastname = models.CharField(max_length=50)
+    role = models.CharField(max_length=20)
 
     class Meta:
         db_table = "users"
@@ -73,11 +73,11 @@ class Users(models.Model):
 
 
 class Supplier(models.Model):
-    firstname = models.CharField(max_length=255)
-    lastname = models.CharField(max_length=255)
-    phone = models.CharField(max_length=50, null=True, blank=True)
-    email = models.CharField(max_length=255, null=True, blank=True)
-    address = models.CharField(max_length=255)
+    firstname = models.CharField(max_length=50)
+    lastname = models.CharField(max_length=50)
+    phone = models.CharField(max_length=25, null=True, blank=True)
+    email = models.CharField(max_length=100, null=True, blank=True)
+    address = models.CharField(max_length=150)
 
     class Meta:
         db_table = "supplier"
@@ -94,12 +94,12 @@ class Supplier(models.Model):
 
 
 class Client(models.Model):
-    firstname = models.CharField(max_length=200)
-    lastname = models.CharField(max_length=200)
-    email = models.CharField(max_length=200, unique=True, null=True, blank=True)
-    phone = models.CharField(max_length=200, unique=True)
-    address = models.CharField(max_length=200)
-    city = models.CharField(max_length=200)
+    firstname = models.CharField(max_length=50)
+    lastname = models.CharField(max_length=50)
+    email = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    phone = models.CharField(max_length=25, unique=True)
+    address = models.CharField(max_length=150)
+    city = models.CharField(max_length=50)
 
     class Meta:
         db_table = "client"
@@ -117,15 +117,10 @@ class Client(models.Model):
 
 
 class Account(models.Model):
-    ACCOUNT_TYPE_CHOICES = [
-        ("CASH", "Cash"),
-        ("BANK", "Bank"),
-    ]
-
-    account_name = models.CharField(max_length=100)
-    account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES)
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
-    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    account_name = models.CharField(max_length=50)
+    account_type = models.CharField(max_length=20, choices=AccountType.CHOICES)
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)
+    current_balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     created_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 
@@ -150,18 +145,7 @@ class Account(models.Model):
 
 
 class Transaction(models.Model):
-    TRANSACTION_TYPE_CHOICES = [
-        ("PURCHASE", "Purchase"),
-        ("SALE", "Sale"),
-    ]
-    STATUS_CHOICES = [
-        ("PENDING", "Pending"),
-        ("PARTIAL", "Partial"),
-        ("COMPLETED", "Completed"),
-        ("CANCELLED", "Cancelled"),
-    ]
-
-    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES)
+    transaction_type = models.CharField(max_length=20, choices=TransactionType.CHOICES)
     supplier = models.ForeignKey(
         Supplier,
         on_delete=models.SET_NULL,
@@ -176,12 +160,12 @@ class Transaction(models.Model):
         blank=True,
         related_name="transactions",
     )
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
+    total_amount = models.DecimalField(max_digits=8, decimal_places=2)
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)
+    status = models.CharField(max_length=20, choices=TransactionStatus.CHOICES, default=TransactionStatus.PENDING)
     created_date = models.DateTimeField(auto_now_add=True)
     completed_date = models.DateTimeField(null=True, blank=True)
-    invoice_number = models.CharField(max_length=100, null=True, blank=True)
+    invoice_number = models.CharField(max_length=50, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -201,24 +185,19 @@ class Transaction(models.Model):
 
 
 class Payment(models.Model):
-    PAYMENT_METHOD_CHOICES = [
-        ("CASH", "Cash"),
-        ("CARD", "Card"),
-    ]
-
     transaction = models.ForeignKey(
         Transaction, on_delete=models.CASCADE, related_name="payments"
     )
     account = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="payments"
     )
-    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Amount in transaction currency
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)  # Transaction currency
+    amount = models.DecimalField(max_digits=8, decimal_places=2)  # Amount in transaction currency
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)  # Transaction currency
     # Original payment details (before currency conversion)
-    original_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    original_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, null=True, blank=True)
+    original_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    original_currency = models.CharField(max_length=3, choices=Currency.CHOICES, null=True, blank=True)
     exchange_rate = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)  # Rate used for conversion
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.CHOICES)
     payment_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 
@@ -254,8 +233,8 @@ class AccountTransaction(models.Model):
         related_name="account_transactions",
     )
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    balance_after = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    balance_after = models.DecimalField(max_digits=8, decimal_places=2)
     transaction_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 
@@ -276,9 +255,9 @@ class AccountTransaction(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=200)
-    category = models.CharField(max_length=200)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=50)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
     description = models.TextField()
 
     class Meta:
@@ -317,7 +296,7 @@ class Inventory(models.Model):
 
 
 class Product_Categories(models.Model):
-    category_name = models.CharField(max_length=200)
+    category_name = models.CharField(max_length=50)
 
     class Meta:
         db_table = "product_categories"
@@ -330,7 +309,7 @@ class Product_Categories(models.Model):
 
 
 class Product_Names(models.Model):
-    product_name = models.CharField(max_length=200)
+    product_name = models.CharField(max_length=100)
     category = models.ForeignKey(
         Product_Categories, on_delete=models.CASCADE, related_name="product_names"
     )
@@ -350,7 +329,7 @@ class Sales(models.Model):
         Transaction, on_delete=models.CASCADE, related_name="sales"
     )
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sales")
-    prod_price = models.DecimalField(max_digits=10, decimal_places=2)
+    prod_price = models.DecimalField(max_digits=8, decimal_places=2)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="sales")
     quantity = models.IntegerField()
     sale_date = models.DateTimeField(auto_now_add=True)
@@ -361,7 +340,6 @@ class Sales(models.Model):
         verbose_name_plural = "Sales"
         ordering = ["-sale_date"]
         indexes = [
-            models.Index(fields=["transaction"], name="sales_transaction_idx"),
             models.Index(fields=["-sale_date"], name="sales_date_idx"),
         ]
 
@@ -375,7 +353,7 @@ class Restock(models.Model):
     )
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="restocks")
     quantity = models.IntegerField()
-    restock_price = models.DecimalField(max_digits=10, decimal_places=2)
+    restock_price = models.DecimalField(max_digits=8, decimal_places=2)
     restock_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -384,7 +362,6 @@ class Restock(models.Model):
         verbose_name_plural = "Restocks"
         ordering = ["-restock_date"]
         indexes = [
-            models.Index(fields=["transaction"], name="restock_transaction_idx"),
             models.Index(fields=["-restock_date"], name="restock_date_idx"),
         ]
 
