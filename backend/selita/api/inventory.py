@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from ..models import Inventory, Product, Product_Names, Transaction, Restock, Supplier, Payment, Account
 from rest_framework.decorators import api_view, permission_classes
-from ..serializers import InventorySerializer, ProductSerializer, RestockSerializer
+from ..serializers import InventorySerializer, ProductSerializer, RestockSerializer, AddInventorySerializer
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 import logging
@@ -74,30 +74,26 @@ def addProductToInventory(request):
     from selita.services.inventory_service import InventoryService
     from selita.services.payment_service import PaymentService, PaymentError
     
-    name = request.data.get("name")
-    quantity = request.data.get("quantity")
-    price = request.data.get("price")
-    supplier_id = request.data.get("supplier_id")
-    description = request.data.get("description", "")  # Default to empty string
-    is_paid = request.data.get("is_paid", True)  # Default to True (paid)
-    logger.debug("addProductToInventory: %s, qty=%s, price=%s, supplier=%s", name, quantity, price, supplier_id)
+    # Validate and parse input using serializer
+    serializer = AddInventorySerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    if quantity <= 0:
-        return bad_request_response("Quantity must be greater than zero")
-    if price < 0:
-        return bad_request_response("Price must be greater than or equal to zero")
-    if not supplier_id:
-        return bad_request_response("Supplier is required")
+    data = serializer.validated_data
+    name = data['name']
+    quantity = data['quantity']  # int from serializer
+    price = data['price']  # Decimal from serializer
+    supplier_id = data['supplier_id']
+    description = data['description']
+    is_paid = data['is_paid']  # Properly parsed boolean
+    
+    logger.debug("addProductToInventory: %s, qty=%s, price=%s, supplier=%s", name, quantity, price, supplier_id)
     
     # Get the supplier
     try:
         supplier = Supplier.objects.get(id=supplier_id)
     except ObjectDoesNotExist:
         return not_found_response("Supplier")
-    
-    # Convert price to Decimal for accurate calculations
-    price = Decimal(str(price))
-    quantity = Decimal(str(quantity))
     
     # Check if the product already exists
     try:
