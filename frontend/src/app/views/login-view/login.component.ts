@@ -47,7 +47,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate(["/products"]);
       },
       error: (error) => {
-        this.snackBar.open("Username or password not correct");
+        this.snackBar.open("Username or password not correct", "Close", { duration: 3000 });
       },
     });
   }
