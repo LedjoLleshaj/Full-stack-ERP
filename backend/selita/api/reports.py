@@ -1,12 +1,18 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from ..models import Sales, Transaction, Account, Payment
 from ..serializers import SalesReportSerializer
 from django.db.models import F, ExpressionWrapper, DecimalField, Sum
 from datetime import date
+from selita.utils.responses import api_error_handler
+from selita.utils.currency import get_all_rates_dict, convert_to_eur_with_rates
+from selita.constants import TransactionStatus, TransactionType
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
 def sales_report(request):
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
@@ -36,10 +42,10 @@ def sales_report(request):
     
     # Status labels in Albanian with emoji indicators
     status_map = {
-        "COMPLETED": "✅ Paguar",
-        "PARTIAL": "⚠️ Paguar pjeserisht",
-        "PENDING": "❌ Pa paguar",
-        "CANCELLED": "🚫 Anuluar"
+        TransactionStatus.COMPLETED: "✅ Paguar",
+        TransactionStatus.PARTIAL: "⚠️ Paguar pjeserisht",
+        TransactionStatus.PENDING: "❌ Pa paguar",
+        TransactionStatus.CANCELLED: "🚫 Anuluar"
     }
     
     for sale in sales_qs:
@@ -49,7 +55,7 @@ def sales_report(request):
         client_address = client.address if client else "N/A"
         
         # Get payment status from transaction
-        transaction_status = sale.transaction.status if sale.transaction else "PENDING"
+        transaction_status = sale.transaction.status if sale.transaction else TransactionStatus.PENDING
         payment_status = status_map.get(transaction_status, "N/A")
         
         report_data.append({
@@ -68,97 +74,88 @@ def sales_report(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
 def dashboard_stats(request):
-    from ..models import ExchangeRate
     from decimal import Decimal
     
     today = date.today()
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
-        if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            # Fallback: return as-is if no rate found
-            return amount
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
 
-    # 1. Revenue Today - convert all currencies to EUR
+    # Get ALL transactions at once (1 query)
+    all_transactions = list(Transaction.objects.exclude(status="CANCELLED"))
+    
+    # Calculate metrics in memory (no additional queries)
     revenue_today = Decimal("0")
-    today_sales = Transaction.objects.filter(
-        transaction_type="SALE",
-        created_date__date=today
-    ).exclude(status="CANCELLED")
-    for sale in today_sales:
-        revenue_today += convert_to_eur(sale.total_amount, sale.currency)
-
-    # 2. Revenue Month - convert all currencies to EUR
     revenue_month = Decimal("0")
-    month_sales = Transaction.objects.filter(
-        transaction_type="SALE",
-        created_date__year=today.year,
-        created_date__month=today.month
-    ).exclude(status="CANCELLED")
-    for sale in month_sales:
-        revenue_month += convert_to_eur(sale.total_amount, sale.currency)
-
-    # 3. Profit (Total Sales - Total Purchases) - convert all currencies to EUR
     total_sales = Decimal("0")
-    all_sales = Transaction.objects.filter(
-        transaction_type="SALE"
-    ).exclude(status="CANCELLED")
-    for sale in all_sales:
-        total_sales += convert_to_eur(sale.total_amount, sale.currency)
-
     total_purchases = Decimal("0")
-    all_purchases = Transaction.objects.filter(
-        transaction_type="PURCHASE"
-    ).exclude(status="CANCELLED")
-    for purchase in all_purchases:
-        total_purchases += convert_to_eur(purchase.total_amount, purchase.currency)
+    pending_sale_ids = []
+    pending_sales_map = {}
+    
+    for trans in all_transactions:
+        amount_eur = convert_to_eur_with_rates(trans.total_amount, trans.currency, rates)
+        
+        if trans.transaction_type == TransactionType.SALE:
+            total_sales += amount_eur
+            
+            # Check if created today
+            if trans.created_date and trans.created_date.date() == today:
+                revenue_today += amount_eur
+            
+            # Check if created this month
+            if trans.created_date and trans.created_date.year == today.year and trans.created_date.month == today.month:
+                revenue_month += amount_eur
+            
+            # Track pending sales for debt calculation
+            if trans.status in TransactionStatus.UNPAID_STATUSES:
+                pending_sale_ids.append(trans.id)
+                pending_sales_map[trans.id] = {
+                    "total": trans.total_amount,
+                    "currency": trans.currency
+                }
+                
+        elif trans.transaction_type == TransactionType.PURCHASE:
+            total_purchases += amount_eur
 
     profit = total_sales - total_purchases
 
-    # 4. Get all accounts with individual balances (grouped by type and currency)
+    # Get account balances (1 query)
     accounts = Account.objects.all().values('account_type', 'currency', 'current_balance', 'account_name')
-    
-    # Build account balances list
-    account_balances = []
-    for acc in accounts:
-        account_balances.append({
+    account_balances = [
+        {
             "name": acc['account_name'],
             "type": acc['account_type'],
             "currency": acc['currency'],
             "balance": float(acc['current_balance']),
-        })
+        }
+        for acc in accounts
+    ]
 
-    # 5. Debt (Total pending/partial sales amount - Total paid for those sales)
-    # Convert all amounts to EUR before summing
-    pending_sales = Transaction.objects.filter(
-        transaction_type="SALE",
-        status__in=["PENDING", "PARTIAL"]
-    )
-    
+    # Calculate debt - get all payments for pending sales (1 query)
     debt = Decimal("0")
-    for sale in pending_sales:
-        # Get total payments made for this transaction
-        payments_made = Payment.objects.filter(
-            transaction=sale
-        ).aggregate(sum_val=Sum("amount"))["sum_val"] or Decimal("0")
+    if pending_sale_ids:
+        from django.db.models import Sum
+        payments_by_trans = dict(
+            Payment.objects.filter(transaction_id__in=pending_sale_ids)
+            .values('transaction_id')
+            .annotate(total_paid=Sum('amount'))
+            .values_list('transaction_id', 'total_paid')
+        )
         
-        # Calculate remaining for this transaction
-        remaining = sale.total_amount - payments_made
-        if remaining > 0:
-            # Convert to EUR
-            debt += convert_to_eur(remaining, sale.currency)
+        for trans_id, sale_info in pending_sales_map.items():
+            paid = payments_by_trans.get(trans_id, Decimal("0")) or Decimal("0")
+            remaining = sale_info["total"] - paid
+            if remaining > 0:
+                debt += convert_to_eur_with_rates(remaining, sale_info["currency"], rates)
 
     data = {
         "revenue_today": revenue_today,
         "revenue_month": revenue_month,
         "profit": profit,
-        "accounts": account_balances,  # All accounts with individual balances
+        "accounts": account_balances,
         "debt": debt,
     }
 
@@ -166,6 +163,8 @@ def dashboard_stats(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
 def daily_profit(request):
     """
     Get daily profit data for a specified time period.
@@ -173,7 +172,6 @@ def daily_profit(request):
     - days: Number of days to look back (default: 30, max: 365, use 0 for all time)
     Returns an array of {date, sales, purchases, profit} objects for chart visualization.
     """
-    from ..models import ExchangeRate
     from decimal import Decimal
     from datetime import timedelta
     
@@ -197,19 +195,12 @@ def daily_profit(request):
         days = min(max(days, 1), 365)  # Clamp between 1 and 365
         start_date = today - timedelta(days=days)
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
-        if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+    # Cache exchange rates upfront (1 query instead of N queries)
+    rates = get_all_rates_dict()
     
-    # Get all transactions in the date range
+    # Get all transactions in the date range (2 queries total)
     sales = Transaction.objects.filter(
-        transaction_type="SALE",
+        transaction_type=TransactionType.SALE,
         created_date__date__gte=start_date,
         created_date__date__lte=today
     ).exclude(status="CANCELLED")
@@ -220,18 +211,18 @@ def daily_profit(request):
         created_date__date__lte=today
     ).exclude(status="CANCELLED")
     
-    # Build daily sales totals (in EUR)
+    # Build daily sales totals (in EUR) - no additional queries
     daily_sales = {}
     for sale in sales:
         sale_date = sale.created_date.date()
-        amount_eur = convert_to_eur(sale.total_amount, sale.currency)
+        amount_eur = convert_to_eur_with_rates(sale.total_amount, sale.currency, rates)
         daily_sales[sale_date] = daily_sales.get(sale_date, Decimal("0")) + amount_eur
     
-    # Build daily purchase totals (in EUR)
+    # Build daily purchase totals (in EUR) - no additional queries
     daily_purchases = {}
     for purchase in purchases:
         purchase_date = purchase.created_date.date()
-        amount_eur = convert_to_eur(purchase.total_amount, purchase.currency)
+        amount_eur = convert_to_eur_with_rates(purchase.total_amount, purchase.currency, rates)
         daily_purchases[purchase_date] = daily_purchases.get(purchase_date, Decimal("0")) + amount_eur
     
     # Build result with all dates in range
@@ -254,6 +245,8 @@ def daily_profit(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
 def paid_vs_unpaid(request):
     """
     Get paid vs unpaid sales statistics for pie chart visualization.
@@ -263,24 +256,15 @@ def paid_vs_unpaid(request):
     - Partial: Remaining debt on partial sales only
     - Unpaid: Pending sales total (nothing paid yet)
     """
-    from ..models import ExchangeRate
     from decimal import Decimal
-    from django.db.models import Sum
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
-        if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
     
-    # Get all sales transactions (excluding cancelled)
+    # Get all sales transactions with prefetched payments (2 queries total)
     all_sales = Transaction.objects.filter(
-        transaction_type="SALE"
-    ).exclude(status="CANCELLED")
+        transaction_type=TransactionType.SALE
+    ).exclude(status="CANCELLED").prefetch_related('payments')
     
     # Initialize counters
     paid_amount = Decimal("0")
@@ -291,20 +275,18 @@ def paid_vs_unpaid(request):
     partial_count = 0  # Count of partial sales
     
     for sale in all_sales:
-        amount_eur = convert_to_eur(sale.total_amount, sale.currency)
+        amount_eur = convert_to_eur_with_rates(sale.total_amount, sale.currency, rates)
         
-        if sale.status == "COMPLETED":
+        if sale.status == TransactionStatus.COMPLETED:
             # Fully paid - entire amount goes to "Paid"
             paid_amount += amount_eur
             paid_count += 1
-        elif sale.status == "PARTIAL":
-            # Get total payments made for this sale
-            payments_made = Payment.objects.filter(transaction=sale).aggregate(
-                total=Sum("amount")
-            )["total"] or Decimal("0")
+        elif sale.status == TransactionStatus.PARTIAL:
+            # Get total payments from prefetched data (no additional query)
+            payments_made = sum(p.amount for p in sale.payments.all())
             
-            # Convert payments to EUR (assuming payments are in same currency as sale)
-            payments_eur = convert_to_eur(payments_made, sale.currency)
+            # Convert payments to EUR
+            payments_eur = convert_to_eur_with_rates(payments_made, sale.currency, rates)
             
             # Add paid portion to "Paid"
             paid_amount += payments_eur
@@ -343,6 +325,8 @@ def paid_vs_unpaid(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
 def top_products(request):
     """
     Get the top 5 best-selling products by quantity sold.
@@ -370,66 +354,71 @@ def top_products(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
 def profit_by_category(request):
     """
     Get profit by product category.
     Returns category names and their total profit (sales revenue - purchase cost).
+    Optimized to use fewer database queries.
     """
-    from ..models import Product, ExchangeRate, Restock
+    from ..models import Product, Restock
     from decimal import Decimal
+    from collections import defaultdict
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
-        if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
     
-    # Get all unique categories from products (use set to ensure uniqueness)
+    # Get all categories (1 query)
     categories = set(Product.objects.values_list('category', flat=True))
     
-    result = []
-    for category_name in categories:
-        # Get sales revenue for this category
-        category_sales = (
-            Sales.objects
-            .filter(prod__category=category_name)
-            .exclude(transaction__status="CANCELLED")
-        )
-        
-        sales_revenue = Decimal("0")
-        for sale in category_sales:
-            # Get currency from transaction and convert to EUR
+    # Initialize aggregation dictionaries
+    category_revenue = defaultdict(lambda: Decimal("0"))
+    category_cost = defaultdict(lambda: Decimal("0"))
+    
+    # Process all sales at once with prefetched transactions (1 query)
+    sales = (
+        Sales.objects
+        .select_related('prod', 'transaction')
+        .exclude(transaction__status="CANCELLED")
+        .only('prod__category', 'quantity', 'prod_price', 'transaction__currency')
+    )
+    
+    for sale in sales:
+        category = sale.prod.category if sale.prod else None
+        if category:
             currency = sale.transaction.currency if sale.transaction else "EUR"
             amount = sale.quantity * sale.prod_price
-            sales_revenue += convert_to_eur(amount, currency)
-        
-        # Get purchase cost for this category (from restocks)
-        category_restocks = (
-            Restock.objects
-            .filter(prod__category=category_name)
-            .exclude(transaction__status="CANCELLED")
-        )
-        
-        purchase_cost = Decimal("0")
-        for restock in category_restocks:
-            # restock_price is the per-unit purchase price
-            # Get currency from transaction and convert to EUR
+            category_revenue[category] += convert_to_eur_with_rates(amount, currency, rates)
+    
+    # Process all restocks at once with prefetched transactions (1 query)
+    restocks = (
+        Restock.objects
+        .select_related('prod', 'transaction')
+        .exclude(transaction__status="CANCELLED")
+        .only('prod__category', 'quantity', 'restock_price', 'transaction__currency')
+    )
+    
+    for restock in restocks:
+        category = restock.prod.category if restock.prod else None
+        if category:
             currency = restock.transaction.currency if restock.transaction else "EUR"
             total_cost = restock.restock_price * restock.quantity
-            purchase_cost += convert_to_eur(total_cost, currency)
+            category_cost[category] += convert_to_eur_with_rates(total_cost, currency, rates)
+    
+    # Build result
+    result = []
+    for category_name in categories:
+        revenue = category_revenue.get(category_name, Decimal("0"))
+        cost = category_cost.get(category_name, Decimal("0"))
+        profit = revenue - cost
         
-        profit = sales_revenue - purchase_cost
-        
-        if sales_revenue > 0 or purchase_cost > 0:  # Only include categories with data
+        if revenue > 0 or cost > 0:  # Only include categories with data
             result.append({
                 "name": category_name,
                 "profit": float(profit),
-                "revenue": float(sales_revenue),
-                "cost": float(purchase_cost)
+                "revenue": float(revenue),
+                "cost": float(cost)
             })
     
     # Sort by profit descending
@@ -439,51 +428,50 @@ def profit_by_category(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
 def top_clients(request):
     """
     Get the top 5 clients by total purchase amount.
     Returns client names and their total purchase amounts.
+    Optimized to use minimal database queries.
     """
-    from ..models import Client, ExchangeRate
+    from ..models import Client
     from decimal import Decimal
+    from collections import defaultdict
     
-    def convert_to_eur(amount, currency):
-        """Convert amount from any currency to EUR"""
-        if currency == "EUR":
-            return amount
-        try:
-            rate = ExchangeRate.objects.get(from_currency=currency, to_currency="EUR")
-            return amount * rate.rate
-        except ExchangeRate.DoesNotExist:
-            return amount
+    # Cache exchange rates upfront (1 query)
+    rates = get_all_rates_dict()
     
-    # Get all clients with their transactions
-    clients = Client.objects.all()
+    # Get all sale transactions with client info in ONE query
+    transactions = Transaction.objects.filter(
+        transaction_type=TransactionType.SALE,
+        client__isnull=False
+    ).exclude(status="CANCELLED").select_related('client')
     
-    client_totals = []
-    for client in clients:
-        # Get all completed/partial sales transactions for this client
-        client_transactions = Transaction.objects.filter(
-            client=client,
-            transaction_type="SALE"
-        ).exclude(status="CANCELLED")
-        
-        total_amount = Decimal("0")
-        transaction_count = 0
-        for transaction in client_transactions:
-            total_amount += convert_to_eur(transaction.total_amount, transaction.currency)
-            transaction_count += 1
-        
-        if total_amount > 0:
-            client_totals.append({
-                "name": f"{client.firstname} {client.lastname}",
-                "total_amount": float(total_amount),
-                "transaction_count": transaction_count
-            })
+    # Aggregate in memory (no additional queries)
+    client_data = defaultdict(lambda: {"total": Decimal("0"), "count": 0, "name": ""})
+    
+    for trans in transactions:
+        client_id = trans.client_id
+        amount_eur = convert_to_eur_with_rates(trans.total_amount, trans.currency, rates)
+        client_data[client_id]["total"] += amount_eur
+        client_data[client_id]["count"] += 1
+        client_data[client_id]["name"] = f"{trans.client.firstname} {trans.client.lastname}"
+    
+    # Build result list
+    client_totals = [
+        {
+            "name": data["name"],
+            "total_amount": float(data["total"]),
+            "transaction_count": data["count"]
+        }
+        for data in client_data.values()
+        if data["total"] > 0
+    ]
     
     # Sort by total amount descending and take top 5
     client_totals.sort(key=lambda x: x['total_amount'], reverse=True)
     top_5 = client_totals[:5]
     
     return Response(top_5)
-
