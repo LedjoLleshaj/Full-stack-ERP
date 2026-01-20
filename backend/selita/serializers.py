@@ -104,3 +104,13 @@ class SalesReportSerializer(serializers.Serializer):
     client_address = serializers.CharField()
     total = serializers.DecimalField(max_digits=12, decimal_places=2)
     is_paid = serializers.CharField()
+
+
+class AddInventorySerializer(serializers.Serializer):
+    """Serializer for adding products to inventory (restocks)."""
+    name = serializers.CharField()
+    quantity = serializers.IntegerField(min_value=1)  # INT in schema
+    price = serializers.DecimalField(max_digits=8, decimal_places=2, min_value=0)  # DECIMAL(8,2)
+    supplier_id = serializers.IntegerField(min_value=1)  # Must be a valid positive ID
+    description = serializers.CharField(required=False, allow_blank=True, default="")
+    is_paid = serializers.BooleanField(default=True)  # Handles bool/string conversion
