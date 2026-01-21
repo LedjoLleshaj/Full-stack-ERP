@@ -63,7 +63,7 @@
         mat-raised-button
         color="primary"
         (click)="exportToExcel(); $event.stopPropagation()"
-        [disabled]="isExporting"
+        [disabled]="isExporting || recentSales.length === 0"
         class="export-btn ml-auto"
       >
         <mat-icon>download</mat-icon>

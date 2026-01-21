@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { EChartsOption } from 'echarts';
 import { ProductService, ProductHistory, RecentSale, RecentRestock } from '../../../../shared/services/product-api/product.service';
 import { DarkModeService } from '../../../../shared/services/dark-mode/dark-mode.service';
+import { CurrencyExchangeService } from '../../../../shared/services/currency-exchange/currency-exchange.service';
 
 @Component({
   selector: 'app-product-details-view',
@@ -29,6 +30,9 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
   chartOptions: EChartsOption = {};
   isDarkMode = false;
   
+  // Exchange rates for currency conversion (to EUR)
+  private exchangeRates: { [currency: string]: number } = { EUR: 1, USD: 0.85, LEK: 0.013 };
+  
   // Tables
   salesColumns = ['date', 'client_name', 'quantity', 'price', 'status'];
   restocksColumns = ['date', 'supplier_name', 'quantity', 'price'];
@@ -39,7 +43,8 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private darkModeService: DarkModeService
+    private darkModeService: DarkModeService,
+    private currencyExchangeService: CurrencyExchangeService
   ) {}
 
   ngOnInit(): void {
@@ -50,7 +55,17 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
       }
     });
     
-    this.loadProductHistory();
+    // Load exchange rates first, then load product history
+    this.currencyExchangeService.getExchangeRates().subscribe(data => {
+      // Build a map of currency -> EUR rate
+      if (data.rates) {
+        this.exchangeRates = {};
+        for (const currency of Object.keys(data.rates)) {
+          this.exchangeRates[currency] = data.rates[currency]?.['EUR'] || 1;
+        }
+      }
+      this.loadProductHistory();
+    });
   }
 
   ngOnDestroy(): void {
@@ -85,6 +100,14 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
     this.loadProductHistory();
   }
 
+  /**
+   * Convert price to EUR using exchange rates
+   */
+  private convertToEur(price: number, currency: string): number {
+    const rate = this.exchangeRates[currency.toUpperCase()] || 1;
+    return price * rate;
+  }
+
   private initChart(): void {
     if (!this.productHistory) return;
 
@@ -96,9 +119,9 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
     restock_prices.forEach(p => allDates.add(p.date));
     const sortedDates = Array.from(allDates).sort();
     
-    // Map prices by date
-    const salePriceMap = new Map(sale_prices.map(p => [p.date, p.price]));
-    const restockPriceMap = new Map(restock_prices.map(p => [p.date, p.price]));
+    // Map prices by date, converting to EUR for consistent chart display
+    const salePriceMap = new Map(sale_prices.map(p => [p.date, this.convertToEur(p.price, p.currency)]));
+    const restockPriceMap = new Map(restock_prices.map(p => [p.date, this.convertToEur(p.price, p.currency)]));
     
     // Build data arrays (null for missing data points)
     const saleData = sortedDates.map(d => salePriceMap.get(d) ?? null);
