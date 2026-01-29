@@ -1,0 +1,82 @@
+<div class="flex flex-col items-stretch justify-start gap-6">
+  <!-- Page Header -->
+  <div class="py-2">
+    <h1 class="text-3xl font-bold">Paguar vs Pa Paguar</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-1">Krahasimi i shitjeve të paguara dhe pa paguar</p>
+  </div>
+
+  <!-- Stats Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6" *ngIf="stats && !isLoading">
+    <!-- Paid Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">Paguar</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ formatCurrency(stats.paid.amount) }}</p>
+          <mat-icon class="text-green-500">check_circle</mat-icon>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">{{ stats.paid.count }} transaksione</p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Partial Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">Pjesërisht</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ formatCurrency(stats.partial.amount) }}</p>
+          <mat-icon class="text-amber-500">pending</mat-icon>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">{{ stats.partial.count }} transaksione</p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Unpaid Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">Pa Paguar</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="flex items-center justify-between">
+          <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ formatCurrency(stats.unpaid.amount) }}</p>
+          <mat-icon class="text-red-500">cancel</mat-icon>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">{{ stats.unpaid.count }} transaksione</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Chart Card -->
+  <mat-card class="chart-card" [ngClass]="{'dark-card': isDarkMode}">
+    <mat-card-content>
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p class="text-gray-500 mt-4">Duke ngarkuar të dhënat...</p>
+      </div>
+
+      <!-- Chart -->
+      <div
+        *ngIf="!isLoading"
+        echarts
+        [options]="chartOptions"
+        class="chart-container"
+      ></div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Total Summary -->
+  <div *ngIf="stats && !isLoading" class="total-summary">
+    <div class="flex items-center justify-center gap-2">
+      <mat-icon class="text-blue-500">account_balance_wallet</mat-icon>
+      <span class="text-gray-600 dark:text-gray-400">Shuma totale:</span>
+      <span class="text-xl font-bold">{{ formatCurrency(stats.total.amount) }}</span>
+      <span class="text-gray-500">|</span>
+      <span class="text-gray-600 dark:text-gray-400">{{ stats.total.count }} transaksione gjithsej</span>
+    </div>
+  </div>
+</div>

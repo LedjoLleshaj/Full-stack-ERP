@@ -1,0 +1,77 @@
+<div class="add-product-container">
+  <h2>Shto nje produkt</h2>
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+    <div class="form-grid">
+      <!-- Product Name -->
+      <mat-form-field class="full-width">
+        <mat-label>Emri</mat-label>
+        <mat-select formControlName="name" required>
+          <mat-option *ngFor="let name of names" [value]="name.product_name">
+            {{ name.product_name }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="productForm.controls['name'].hasError('required')"> Name is required </mat-error>
+      </mat-form-field>
+
+      <!-- Product Category
+      <mat-form-field class="full-width">
+        <mat-label>Kategoria</mat-label>
+        <mat-select formControlName="category" required>
+          <mat-option *ngFor="let category of categories" [value]="category.category_name">
+            {{ category.category_name }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="productForm.controls['category'].hasError('required')"> Category is required </mat-error>
+      </mat-form-field> -->
+
+      <!-- Supplier Selection -->
+      <mat-form-field class="full-width">
+        <mat-label>Furnitori</mat-label>
+        <mat-select formControlName="supplier_id" required>
+          <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+            {{ supplier.firstname }} {{ supplier.lastname }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="productForm.controls['supplier_id'].hasError('required')"> Furnitori eshte i detyrueshem </mat-error>
+      </mat-form-field>
+
+      <!-- Product Price (per unit) -->
+      <mat-form-field class="full-width">
+        <mat-label>Cmimi blerje për njësi (€/kg)</mat-label>
+        <input matInput type="number" formControlName="price" required />
+
+        <mat-error *ngIf="productForm.controls['price'].hasError('min')">
+          Price must be greater than or equal to 0
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Product Quantity -->
+      <mat-form-field class="full-width">
+        <mat-label>Sasia</mat-label>
+        <input matInput type="number" formControlName="quantity" required />
+        <mat-error *ngIf="productForm.controls['quantity'].hasError('required')"> Quantity is required </mat-error>
+        <mat-error *ngIf="productForm.controls['quantity'].hasError('min')">
+          Quantity must be greater than or equal to 1
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Description -->
+      <mat-form-field class="full-width">
+        <mat-label>Përshkrimi</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+      </mat-form-field>
+
+      <!-- Payment Status Checkbox -->
+      <div class="checkbox-container">
+        <mat-checkbox formControlName="is_paid" color="primary">
+          Furnizimi është paguar
+        </mat-checkbox>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="button-container">
+        <button mat-raised-button color="primary" type="submit" [disabled]="!productForm.valid">Shto produktin</button>
+      </div>
+    </div>
+  </form>
+</div>

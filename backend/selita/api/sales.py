@@ -1,227 +1,392 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Sales, Product, Users, Clients, Inventory
+from ..models import Sales, Product, Users, Client, Inventory, Transaction, Payment
 from ..serializers import (
     SalesSerializer,
     ProductSerializer,
     UserSerializer,
     ClientSerializer,
     InventorySerializer,
+    TransactionSerializer,
+    PaymentSerializer,
 )
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from decimal import Decimal
+from selita.utils.responses import api_error_handler, not_found_response, bad_request_response
+from selita.constants import TransactionStatus, TransactionType
 
 
-# ======== USERS ========
+# ======== SALES ========
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def getSales(request):
-    try:
-        sales = Sales.objects.all()
-        serializer = SalesSerializer(sales, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    sales = Sales.objects.all()
+    serializer = SalesSerializer(sales, many=True)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def getSale(request, pk):
     try:
-        # Retrieve sale record by primary key
-        sale = Sales.objects.get(id=pk)
-        sale_serializer = SalesSerializer(sale)
-
-        # Extract product and user IDs from sale data
-        prod_id = sale_serializer.data["prod"]
-        user_id = sale_serializer.data["user"]
-
-        # Retrieve and serialize product data
-        try:
-            product = Product.objects.get(id=prod_id)
-            product_serializer = ProductSerializer(product)
-        except ObjectDoesNotExist:
-            return Response(
-                {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Retrieve and serialize user data
-        try:
-            user = Users.objects.get(id=user_id)
-            user_serializer = UserSerializer(user)
-        except ObjectDoesNotExist:
-            return Response(
-                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Construct the response data
-        response_data = sale_serializer.data
+        # Retrieve sale record with related data in ONE query
+        sale = Sales.objects.select_related('prod', 'user').get(id=pk)
+    except Sales.DoesNotExist:
+        return not_found_response("Sale")
+    
+    sale_serializer = SalesSerializer(sale)
+    response_data = sale_serializer.data
+    
+    # Product info (already loaded via select_related)
+    if sale.prod:
+        product_serializer = ProductSerializer(sale.prod)
         response_data["product"] = product_serializer.data
+    else:
+        return not_found_response("Product")
+    
+    # User info (already loaded via select_related)
+    if sale.user:
         response_data["user"] = {
-            "firstname": user_serializer.data["firstname"],
-            "lastname": user_serializer.data["lastname"],
+            "firstname": sale.user.firstname,
+            "lastname": sale.user.lastname,
         }
-
-        return Response(response_data)
-
-    except Sales.DoesNotExist:
-        return Response({"error": "Sale not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    else:
+        return not_found_response("User")
+    
+    return Response(response_data)
 
 
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
+#@permission_classes([permissions.IsAuthenticated])
+@api_error_handler
 def getProductsFromSales(request):
-    try:
-        sales = Sales.objects.all()
-        sales_serializer = SalesSerializer(sales, many=True)
-
-        # For each sale, retrieve and add the product data
-        for sale_data in sales_serializer.data:
-            prod_id = sale_data["prod"]
-            client_id = sale_data["client"]
-
-            try:
-                product = Product.objects.get(id=prod_id)
-                product_serializer = ProductSerializer(product)
-                sale_data["product"] = product_serializer.data
-            except Product.DoesNotExist:
-                sale_data["product"] = {"error": "Product not found"}
-            try:
-                client = Clients.objects.get(id=client_id)
-                client_serializer = ClientSerializer(client)
-                sale_data["client"] = {
-                    "name": client_serializer.data["firstname"]
-                    + " "
-                    + client_serializer.data["lastname"],
-                    "phone": client_serializer.data["phone"],
-                    "address": client_serializer.data["address"],
-                }
-
-            except Users.DoesNotExist:
-                sale_data["client"] = {"error": "Client not found"}
-        # Return the sales data with product and client information
-        # return Response(sales_serializer.data)
-
-        return Response(sales_serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    # Optimized query: load all related data in ONE query
+    sales = Sales.objects.select_related(
+        "prod",
+        "transaction",
+        "transaction__client",
+        "user"
+    ).order_by("-sale_date")
+    
+    # Build response data directly from prefetched objects (no additional queries)
+    results = []
+    for sale in sales:
+        sale_data = {
+            "id": sale.id,
+            "prod": sale.prod_id,
+            "quantity": float(sale.quantity),
+            "prod_price": float(sale.prod_price),
+            "sale_date": sale.sale_date.isoformat() if sale.sale_date else None,
+            "transaction": sale.transaction_id,
+            "user": sale.user_id,
+        }
+        
+        # Product info (already loaded via select_related)
+        if sale.prod:
+            sale_data["product"] = {
+                "id": sale.prod.id,
+                "name": sale.prod.name,
+                "category": sale.prod.category,
+                "price": float(sale.prod.price) if sale.prod.price else None,
+                "description": sale.prod.description,
+            }
+        else:
+            sale_data["product"] = {"error": "Product not found"}
+        
+        # Client info (already loaded via select_related on transaction__client)
+        if sale.transaction and sale.transaction.client:
+            client = sale.transaction.client
+            sale_data["client"] = {
+                "id": client.id,
+                "name": f"{client.firstname} {client.lastname}",
+                "phone": client.phone,
+                "address": client.address,
+            }
+            sale_data["payment_status"] = sale.transaction.status
+            sale_data["currency"] = sale.transaction.currency
+        else:
+            sale_data["client"] = {"error": "No client associated with transaction"}
+            sale_data["payment_status"] = None
+            sale_data["currency"] = None
+        
+        results.append(sale_data)
+    
+    return Response(results)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def getUsersFromSales(request):
-    try:
-        sales = Sales.objects.all()
-        sales_serializer = SalesSerializer(sales, many=True)
-
-        # For each sale, retrieve and add the user data
-        for sale_data in sales_serializer.data:
-            user_id = sale_data["user"]
-
-            try:
-                user = Users.objects.get(id=user_id)
-                user_serializer = UserSerializer(user)
-                sale_data["user"] = {
-                    "firstname": user_serializer.data["firstname"],
-                    "lastname": user_serializer.data["lastname"],
-                }
-            except Users.DoesNotExist:
-                sale_data["user"] = {"error": "User not found"}
-
-        return Response(sales_serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-
-@api_view(["PUT"])
-@permission_classes([IsAuthenticated])
-def paySale(request, pk):
-    try:
-        # Retrieve the sale record by primary key
-        sale = Sales.objects.get(id=pk)
-        if sale.is_paid:
-            return Response(
-                {"error": "Sale already paid"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Update the sale status to "paid"
-        sale.is_paid = True
-        sale.save()
-
-        # Serialize the updated sale record
-        serializer = SalesSerializer(sale)
-
-        return Response(serializer.data)
-    except Sales.DoesNotExist:
-        return Response({"error": "Sale not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    # Optimized: Use select_related to load user data in ONE query
+    sales = Sales.objects.select_related('user').all()
+    
+    # Build response directly from prefetched data (no additional queries)
+    results = []
+    for sale in sales:
+        sale_data = {
+            "id": sale.id,
+            "prod": sale.prod_id,
+            "quantity": float(sale.quantity),
+            "prod_price": float(sale.prod_price),
+            "sale_date": sale.sale_date.isoformat() if sale.sale_date else None,
+            "transaction": sale.transaction_id,
+        }
+        
+        # User info (already loaded via select_related)
+        if sale.user:
+            sale_data["user"] = {
+                "firstname": sale.user.firstname,
+                "lastname": sale.user.lastname,
+            }
+        else:
+            sale_data["user"] = {"error": "User not found"}
+        
+        results.append(sale_data)
+    
+    return Response(results)
 
 
 @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
-def createSale(request):
-    quantity = request.data.get("quantity")
-    print("Quantity from request:", quantity)
-    if quantity <= 0:
-        return Response(
-            {"error": "Quantity must be greater than zero"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+@permission_classes([IsAuthenticated])
+@api_error_handler
+def paySale(request, pk):
+    """Add a payment to a sale's transaction"""
+    from selita.services.payment_service import PaymentService, PaymentError
+
     try:
-        # Create a new sale record and reduce the product quantity in inventory
-        # Check if the product exists and enough quantity is available
-        product_id = request.data.get("prod")
-        try:
-            product = Product.objects.get(id=product_id)
-            # get inventory from prod id
-            inventory = Inventory.objects.get(prod=product)
-            if inventory.quantity < quantity:
-                return Response(
-                    {"error": "Not enough product in inventory"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        except ObjectDoesNotExist:
-            return Response(
-                {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-        # Create the sale record
-        serializer = SalesSerializer(data=request.data)
-        if serializer.is_valid():
-            sale = serializer.save()
+        sale = Sales.objects.select_related("transaction").get(id=pk)
+    except Sales.DoesNotExist:
+        return not_found_response("Sale")
+    
+    transaction = sale.transaction
 
-            # Reduce the product quantity in inventory
-            inventory.quantity -= quantity
-            print("Product quantity before sale:", inventory.quantity)
+    # Get payment details from request
+    amount = Decimal(str(request.data.get("amount", 0)))
+    payment_currency = request.data.get("currency", "EUR")
+    payment_method = request.data.get("payment_method", "CASH")
+    notes = request.data.get("notes", "")
+    pay_remaining = request.data.get("pay_remaining", False)
 
-            inventory.save()
-            return Response(
-                {"message": "Sale created successfully!", "sale_id": sale.id},
-                status=201,
-            )
-        return Response(serializer.errors, status=400)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    # Generate default note if not provided
+    if not notes or notes.strip() == "":
+        method_label = "Cash" if payment_method == "CASH" else "Kartë"
+        notes = f"Pagesë me {method_label}: {amount} {payment_currency}"
+
+    try:
+        # Use PaymentService for all payment logic
+        result = PaymentService.create_payment(
+            transaction=transaction,
+            amount=amount,
+            payment_currency=payment_currency,
+            payment_method=payment_method,
+            notes=notes,
+            pay_remaining=pay_remaining,
         )
+    except PaymentError as e:
+        return bad_request_response(str(e))
+
+    return Response({
+        "message": "Payment added successfully",
+        "payment_id": result["payment_id"],
+        "transaction_status": result["transaction_status"],
+        "total_paid": result["total_paid"],
+        "remaining": result["remaining"],
+        "payment_amount": float(amount),
+        "payment_currency": payment_currency,
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
+def createSale(request):
+    """Create a new sale with transaction and optional payment"""
+    from selita.services.inventory_service import InventoryService, InventoryError
+    from selita.services.payment_service import PaymentService, PaymentError
+    
+    # Extract data from request
+    client_id = request.data.get("client_id")
+    product_id = request.data.get("prod")
+    prod_price = Decimal(str(request.data.get("prod_price")))
+    quantity = Decimal(str(request.data.get("quantity")))
+    user_id = request.data.get("user")
+    currency = request.data.get("currency", "EUR")
+    payment_data = request.data.get("payment")  # Optional payment info
+
+    # Validate inputs
+    if not all([client_id, product_id, prod_price, quantity, user_id]):
+        return bad_request_response("Missing required fields: client_id, prod, prod_price, quantity, user")
+
+    if quantity <= 0:
+        return bad_request_response("Quantity must be greater than zero")
+
+    # Check if product exists
+    try:
+        product = Product.objects.get(id=product_id)
+    except ObjectDoesNotExist:
+        return not_found_response("Product")
+    
+    # Use InventoryService to check availability
+    if not InventoryService.check_availability(product, quantity):
+        return bad_request_response("Not enough product in inventory")
+
+    # Calculate total amount
+    total_amount = prod_price * quantity
+
+    # Create Transaction record
+    transaction = Transaction.objects.create(
+        transaction_type=TransactionType.SALE,
+        client_id=client_id,
+        total_amount=total_amount,
+        currency=currency,
+        status=TransactionStatus.PENDING,
+        notes=f"Sale of {quantity} units of {product.name}",
+    )
+
+    # Create Sale record linked to transaction
+    sale = Sales.objects.create(
+        transaction=transaction,
+        prod=product,
+        prod_price=prod_price,
+        user_id=user_id,
+        quantity=quantity,
+    )
+
+    # Use InventoryService to reduce inventory
+    InventoryService.reduce_inventory(product, quantity, allow_negative=True)
+
+    # If payment data provided, use PaymentService
+    if payment_data:
+        payment_amount = Decimal(str(payment_data.get("amount", 0)))
+        if payment_amount > 0:
+            try:
+                PaymentService.create_payment(
+                    transaction=transaction,
+                    amount=payment_amount,
+                    payment_currency=payment_data.get("currency", currency),
+                    payment_method=payment_data.get("payment_method", "CASH"),
+                    notes=payment_data.get("notes", ""),
+                )
+            except PaymentError as e:
+                # Payment failed but sale was created - log and continue
+                transaction.notes += f" (Payment failed: {str(e)})"
+                transaction.save()
+
+    return Response(
+        {
+            "message": "Sale created successfully!",
+            "sale_id": sale.id,
+            "transaction_id": transaction.id,
+            "transaction_status": transaction.status,
+            "total_amount": float(total_amount),
+        },
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
+def getLastSoldPrice(request):
+    client_id = request.query_params.get("client_id")
+    product_id = request.query_params.get("product_id")
+
+    if not client_id or not product_id:
+        return bad_request_response("client_id and product_id are required")
+
+    # Get the latest sale for this client and product through transaction
+    last_sale = (
+        Sales.objects.filter(transaction__client_id=client_id, prod_id=product_id)
+        .select_related('transaction')
+        .order_by("-sale_date")
+        .first()
+    )
+
+    if last_sale:
+        return Response({
+            "price": last_sale.prod_price,
+            "currency": last_sale.transaction.currency
+        })
+    else:
+        return Response({"price": None, "currency": None})  # No previous sale found
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
+def getSaleDetails(request, pk):
+    """Get detailed sale information including transaction and payment history"""
+    try:
+        # Retrieve sale with related transaction
+        sale = Sales.objects.select_related(
+            "transaction", "transaction__client", "prod"
+        ).get(id=pk)
+    except Sales.DoesNotExist:
+        return not_found_response("Sale")
+    
+    # Build response data
+    response_data = {
+        "id": sale.id,
+        "quantity": sale.quantity,
+        "sale_date": sale.sale_date,
+        "prod_price": float(sale.prod_price),
+    }
+    
+    # Add product info
+    if sale.prod:
+        product_serializer = ProductSerializer(sale.prod)
+        response_data["product"] = product_serializer.data
+    
+    # Add user info
+    try:
+        user = Users.objects.get(id=sale.user_id)
+        response_data["user"] = {
+            "id": user.id,
+            "firstname": user.firstname,
+            "lastname": user.lastname,
+        }
+    except Users.DoesNotExist:
+        response_data["user"] = None
+    
+    # Add transaction and client info
+    transaction = sale.transaction
+    if transaction:
+        transaction_serializer = TransactionSerializer(transaction)
+        response_data["transaction"] = transaction_serializer.data
+        
+        # Add client info from transaction
+        if transaction.client:
+            client_serializer = ClientSerializer(transaction.client)
+            response_data["client"] = {
+                "id": transaction.client.id,
+                "name": f"{client_serializer.data['firstname']} {client_serializer.data['lastname']}",
+                "firstname": client_serializer.data["firstname"],
+                "lastname": client_serializer.data["lastname"],
+                "phone": client_serializer.data["phone"],
+                "address": client_serializer.data["address"],
+                "city": client_serializer.data.get("city", ""),
+            }
+        
+        # Get all payments for this transaction
+        payments = Payment.objects.filter(transaction=transaction).order_by("payment_date")
+        payment_serializer = PaymentSerializer(payments, many=True)
+        response_data["payments"] = payment_serializer.data
+        
+        # Calculate payment summary
+        total_paid = sum(float(p.amount) for p in payments)
+        response_data["payment_summary"] = {
+            "total_amount": float(transaction.total_amount),
+            "total_paid": total_paid,
+            "remaining": float(transaction.total_amount) - total_paid,
+            "payment_count": len(payments),
+        }
+    
+    return Response(response_data)

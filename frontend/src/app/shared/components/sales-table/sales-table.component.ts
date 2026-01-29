@@ -8,30 +8,42 @@ import {
   CUSTOM_ELEMENTS_SCHEMA,
 } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
+import { Router } from "@angular/router";
+import { RouterModule } from "@angular/router";
 import { MatTableModule } from "@angular/material/table";
 import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatSortModule } from "@angular/material/sort";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
+import { MatTooltipModule } from "@angular/material/tooltip";
 import { DatePipe, NgClass, NgFor, NgIf } from "@angular/common";
 import { Sale, SaleResponse } from "../../../models/sale.model";
 import { SalesApiService } from "../../services/sales-api/sales-api.service";
+import { AlbanianCurrencyPipe, AlbanianDatePipe, PaymentStatusPipe } from "../../pipes";
 
 @Component({
   selector: "app-sales-table",
   templateUrl: "./sales-table.component.html",
   standalone: true,
-  imports: [MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, NgIf, DatePipe],
+  imports: [
+    MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, 
+    NgIf, DatePipe, RouterModule, MatTooltipModule,
+    AlbanianCurrencyPipe, AlbanianDatePipe, PaymentStatusPipe
+  ],
+  styleUrls: ["./sales-table.component.scss"],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SalesTableComponent implements AfterViewInit, OnChanges {
-  columns: string[] = ["product", "quantity", "product_price", "sale_date", "client", "address", "amount", "is_paid"];
+  columns: string[] = ["product", "quantity", "product_price", "sale_date", "client", "address", "amount", "payment_status"];
 
   @Input() data: SaleResponse[] = [];
   @Input() total: number = 0;
 
-  constructor(private saleService: SalesApiService) {}
+  constructor(
+    private saleService: SalesApiService,
+    private router: Router
+  ) {}
 
   dataSource = new MatTableDataSource<SaleResponse>();
 
@@ -72,17 +84,40 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
   }
 
   markAsPaid(sale: any): void {
-    // Replace with your actual API service
-    console.log("Marking as paid", sale.id);
-    this.saleService.paySale(sale.id).subscribe(
+    // ⚡ TODO: Implement payment dialog to collect payment details
+    // For now, this functionality is disabled until we add a payment form
+    console.log("Payment functionality requires payment details (amount, account, method)");
+    console.log("Sale ID:", sale.id, "Transaction status:", sale.payment_status);
+    
+    /* Example implementation:
+    const payment = {
+      account_id: 1,
+      amount: sale.prod_price * sale.quantity,
+      currency: "EUR",
+      payment_method: "CASH",
+      notes: "Payment via sales table"
+    };
+    
+    this.saleService.paySale(sale.id, payment).subscribe(
       (response) => {
-        console.log("Sale marked as paid", response);
-        // Optionally, refresh the data or update the UI
-        this.dataSource.data = this.dataSource.data.map((s) => (s.id === sale.id ? { ...s, is_paid: true } : s));
+        console.log("Payment added", response);
+        // Update the sale's payment status in the table
+        this.dataSource.data = this.dataSource.data.map((s) =>
+          s.id === sale.id ? { ...s, payment_status: response.transaction_status } : s
+        );
       },
       (error) => {
-        console.error("Error marking sale as paid", error);
+        console.error("Error adding payment", error);
       }
     );
+    */
+  }
+
+  /**
+   * Navigate to the sale details page
+   * @param sale - The sale to view details for
+   */
+  goToSaleDetails(sale: SaleResponse): void {
+    this.router.navigate(['/sale', sale.id]);
   }
 }

@@ -1,0 +1,49 @@
+<div class="flex flex-col items-stretch justify-start gap-6">
+  <!-- Page Header -->
+  <div class="py-2">
+    <h1 class="text-3xl font-bold">Top 5 Produktet</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-1">Produktet me te shitura sipas sasisë</p>
+  </div>
+
+  <!-- Stats Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4" *ngIf="products.length > 0 && !isLoading">
+    <mat-card *ngFor="let product of products; let i = index" class="metric-card">
+      <mat-card-header>
+        <mat-card-title class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          #{{ i + 1 }}
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="text-sm font-semibold truncate" [title]="product.name">{{ product.name }}</p>
+        <p class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+          {{ product.quantity | number:'1.0-0' }} kg
+        </p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Chart Card -->
+  <mat-card class="chart-card" [ngClass]="{'dark-card': isDarkMode}">
+    <mat-card-content>
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p class="text-gray-500 mt-4">Duke ngarkuar të dhënat...</p>
+      </div>
+
+      <!-- No Data Message -->
+      <div *ngIf="!isLoading && products.length === 0" class="loading-container">
+        <mat-icon class="text-gray-400 text-6xl" style="font-size: 64px; width: 64px; height: 64px;">inventory_2</mat-icon>
+        <p class="text-gray-500 mt-4">Nuk ka të dhëna për produktet</p>
+      </div>
+
+      <!-- Chart -->
+      <div
+        *ngIf="!isLoading && products.length > 0"
+        echarts
+        [options]="chartOptions"
+        class="chart-container"
+      ></div>
+    </mat-card-content>
+  </mat-card>
+</div>

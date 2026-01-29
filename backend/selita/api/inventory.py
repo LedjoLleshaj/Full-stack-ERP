@@ -1,53 +1,58 @@
 from rest_framework.response import Response
-from ..models import Inventory, Product, Product_Names
+from ..models import Inventory, Product, Product_Names, Transaction, Restock, Supplier, Payment, Account
 from rest_framework.decorators import api_view, permission_classes
-from ..serializers import InventorySerializer, ProductSerializer
+from ..serializers import InventorySerializer, ProductSerializer, RestockSerializer, AddInventorySerializer
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+import logging
 from rest_framework.permissions import IsAuthenticated
+from decimal import Decimal
+from selita.utils.responses import api_error_handler, not_found_response, bad_request_response
+
+logger = logging.getLogger(__name__)
 
 
-# ======== USERS ========
+# ======== INVENTORY ========
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def getInventory(request):
-    try:
-        inventory = Inventory.objects.all()
-        serializer = InventorySerializer(inventory, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    inventory = Inventory.objects.all()
+    serializer = InventorySerializer(inventory, many=True)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def getProductsFromInventory(request):
-    try:
-        inventory = Inventory.objects.all()
-        serializer = InventorySerializer(inventory, many=True)
-
-        for i in range(len(serializer.data)):
-            prod_id = serializer.data[i]["prod"]
-
-            product = Product.objects.get(id=prod_id)
-            p_serializer = ProductSerializer(product, many=False)
-            serializer.data[i]["product"] = p_serializer.data
-
-        return Response(serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    # Optimized: Use select_related to load products in ONE query
+    inventory = Inventory.objects.select_related('prod').all()
+    
+    # Build response with product info already loaded
+    results = []
+    for inv in inventory:
+        results.append({
+            "id": inv.id,
+            "prod": inv.prod_id,
+            "quantity": float(inv.quantity) if inv.quantity else 0,
+            "product": {
+                "id": inv.prod.id,
+                "name": inv.prod.name,
+                "category": inv.prod.category,
+                "price": float(inv.prod.price) if inv.prod.price else None,
+                "description": inv.prod.description,
+            } if inv.prod else None
+        })
+    
+    return Response(results)
 
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def updateInventory(request, pk):
     try:
         inventory = Inventory.objects.get(id=pk)
@@ -59,66 +64,116 @@ def updateInventory(request, pk):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist:
-        return Response(
-            {"error": "Inventory item not found"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return not_found_response("Inventory item")
 
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
+@api_error_handler
 def addProductToInventory(request):
+    from selita.services.inventory_service import InventoryService
+    from selita.services.payment_service import PaymentService, PaymentError
+    
+    # Validate and parse input using serializer
+    serializer = AddInventorySerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    data = serializer.validated_data
+    name = data['name']
+    quantity = data['quantity']  # int from serializer
+    price = data['price']  # Decimal from serializer
+    supplier_id = data['supplier_id']
+    description = data['description']
+    is_paid = data['is_paid']  # Properly parsed boolean
+    
+    logger.debug("addProductToInventory: %s, qty=%s, price=%s, supplier=%s, is_paid=%s (type=%s)", 
+                 name, quantity, price, supplier_id, is_paid, type(is_paid).__name__)
+    
+    # Get the supplier
     try:
-        name = request.data.get("name")
-        category = request.data.get("category")
-        description = request.data.get("description")
-        quantity = request.data.get("quantity")
-        price = request.data.get("price")
-        print("addProductToInventory", name, category, description, quantity, price)
-        if quantity <= 0:
-            return Response(
-                {"error": "Quantity must be greater than zero"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if price < 0:
-            return Response(
-                {"error": "Price must be greater than zero"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # Check if the product already exists
+        supplier = Supplier.objects.get(id=supplier_id)
+    except ObjectDoesNotExist:
+        return not_found_response("Supplier")
+    
+    # Check if the product already exists
+    try:
+        product = Product.objects.get(name=name)
+        logger.debug("Product already exists: %s (id=%s)", product.name, product.id)
+        # Update description if a new one is provided, or if current is empty, use name
+        if description:
+            product.description = description
+            product.save()
+        elif not product.description:
+            product.description = name
+            product.save()
+    except ObjectDoesNotExist:
+        # Create a new product if it doesn't exist
+        # Get category from Product_Names table
         try:
-            product = Product.objects.get(name=name)
-            print("Product already exists", product)
+            product_name_obj = Product_Names.objects.get(product_name=name)
+            category = product_name_obj.category.category_name
         except ObjectDoesNotExist:
-            # Create a new product if it doesn't exist
-            product = Product.objects.create(
-                name=name, category=category, description=description, price=price
-            )
-        # Check if the inventory item already exists
-        try:
-            inventory = Inventory.objects.get(prod=product)
-            # Update the existing inventory item's quantity
-            inventory.quantity += quantity
-            # update price if it is different
-            if inventory.prod.price != price:
-                inventory.prod.price = price
-                inventory.prod.save()
-            # Save the updated inventory item
-
-            inventory.save()
-        except ObjectDoesNotExist:
-            # Create a new inventory item if it doesn't exist
-            inventory = Inventory.objects.create(prod=product, quantity=quantity)
-        # Serialize the updated inventory item
-        serializer = InventorySerializer(inventory)
-        return Response(serializer.data)
-    except Exception as e:
-        return Response(
-            {"error": "An unexpected error occurred", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            category = "Uncategorized"
+        
+        # Note: For new products, we use the purchase price as initial selling price
+        # If no description provided, use the product name as default
+        product = Product.objects.create(
+            name=name, 
+            price=price, 
+            category=category,
+            description=description if description else name
         )
+    
+    # Create purchase transaction (start as PENDING, PaymentService will update to COMPLETED)
+    total_amount = price * quantity
+    transaction = Transaction.objects.create(
+        transaction_type="PURCHASE",
+        supplier=supplier,
+        total_amount=total_amount,
+        currency="EUR",
+        status="PENDING",  # Start as PENDING, payment will update to COMPLETED
+        notes=f"Restock: {quantity} x {product.name} @ {price}/unit"
+    )
+    
+    # Create restock record to track purchase cost per unit
+    restock = Restock.objects.create(
+        transaction=transaction,
+        prod=product,
+        quantity=quantity,
+        restock_price=price
+    )
+    
+    # If marked as paid, use PaymentService
+    if is_paid:
+        try:
+            PaymentService.create_payment(
+                transaction=transaction,
+                amount=total_amount,
+                payment_currency="EUR",
+                payment_method="CASH",
+                notes=f"Initial payment for restock #{restock.id}",
+            )
+        except PaymentError as e:
+            # If payment fails, update transaction status and log
+            transaction.status = "PENDING"
+            transaction.notes += f" (Payment failed: {str(e)})"
+            transaction.save()
+            logger.warning("Payment failed for restock #%s: %s", restock.id, str(e))
+    
+    # Use InventoryService to update inventory
+    new_quantity = InventoryService.add_inventory(product, quantity)
+    
+    # Get inventory record for response
+    inventory = Inventory.objects.get(prod=product)
+    
+    # Serialize the response
+    inventory_serializer = InventorySerializer(inventory)
+    restock_serializer = RestockSerializer(restock)
+    
+    return Response({
+        "inventory": inventory_serializer.data,
+        "restock": restock_serializer.data,
+        "transaction_id": transaction.id,
+        "message": f"Added {quantity} units of {product.name} to inventory. Purchase cost recorded: {total_amount} EUR"
+    })

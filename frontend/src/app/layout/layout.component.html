@@ -54,14 +54,54 @@
       </div>
       <mat-divider></mat-divider>
       <button
+        class="flex flex-row"
         mat-list-item
         aria-label="Hap historikun e shitjeve"
         title="Hap historikun e shitjeve"
-        [activated]="this.router.url === '/sales'"
-        (click)="this.router.navigate(['/sales'])"
+        [activated]="this.router.url === '/sales' || this.router.url === '/add-sale'"
+        (click)="navigateToSales()"
       >
         <mat-icon matListItemIcon>history</mat-icon>
-        <div matListItemTitle>Shitjet</div>
+        <div matListItemTitle class="flex items-center">
+          Shitjet
+          <mat-icon *ngIf="!isSaleMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isSaleMenuOpen">expand_more</mat-icon>
+        </div>
+      </button>
+
+      <div *ngIf="isSaleMenuOpen" class="submenu">
+        <button
+          mat-list-item
+          aria-label="Shto nje shitje"
+          title="Shto nje shitje"
+          [activated]="this.router.url === '/add-sale'"
+          (click)="this.router.navigate(['/add-sale'])"
+        >
+          <mat-icon matListItemIcon>add</mat-icon>
+          <div matListItemTitle>Shto nje shitje</div>
+        </button>
+      </div>
+      <mat-divider></mat-divider>
+      <button
+        mat-list-item
+        aria-label="Hap historikun e furnizimeve"
+        title="Hap historikun e furnizimeve"
+        [activated]="this.router.url === '/restocks'"
+        (click)="this.router.navigate(['/restocks'])"
+      >
+        <mat-icon matListItemIcon>inventory_2</mat-icon>
+        <div matListItemTitle>Furnizimet</div>
+      </button>
+      <mat-divider></mat-divider>
+      <button
+        mat-list-item
+        aria-label="Hap raportet"
+        title="Hap raportet"
+        [activated]="this.router.url === '/reports'"
+        (click)="this.router.navigate(['/reports'])"
+      >
+        <mat-icon matListItemIcon>assessment</mat-icon>
+        <div matListItemTitle>Raportet</div>
       </button>
       <mat-divider></mat-divider>
 
@@ -94,6 +134,36 @@
         </button>
       </div>
       <mat-divider></mat-divider>
+
+      <button
+        class="flex flex-row"
+        mat-list-item
+        aria-label="Hap listen e furnitoreve"
+        title="Hap listen e furnitoreve"
+        [activated]="this.router.url === '/suppliers' || this.router.url === '/add-supplier'"
+        (click)="navigateToSuppliers()"
+      >
+        <mat-icon matListItemIcon>local_shipping</mat-icon>
+        <div matListItemTitle class="flex items-center">
+          Furnitoret
+          <mat-icon *ngIf="!isSupplierMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isSupplierMenuOpen">expand_more</mat-icon>
+        </div>
+      </button>
+
+      <div *ngIf="isSupplierMenuOpen" class="submenu">
+        <button
+          mat-list-item
+          aria-label="Shto nje furnitor"
+          title="Shto nje furnitor"
+          [activated]="this.router.url === '/add-supplier'"
+          (click)="this.router.navigate(['/add-supplier'])"
+        >
+          <mat-icon matListItemIcon>add</mat-icon>
+          <div matListItemTitle>Shto nje furnitor</div>
+        </button>
+      </div>
+      <mat-divider></mat-divider>
     </mat-nav-list>
   </mat-sidenav>
 
@@ -116,10 +186,10 @@
         <button
           (click)="this.darkModeService.toggleDarkMode()"
           mat-stroked-button
-          [attr.aria-label]="this.darkModeService.darkMode ? 'Active dark mode' : 'Active light mode'"
-          [title]="this.darkModeService.darkMode ? 'Active dark mode' : 'Active light mode'"
+          [attr.aria-label]="(this.darkModeService.darkMode$ | async) ? 'Switch to light mode' : 'Switch to dark mode'"
+          [title]="(this.darkModeService.darkMode$ | async) ? 'Switch to light mode' : 'Switch to dark mode'"
         >
-          <mat-icon style="margin: 0">{{ this.darkModeService.darkMode ? "light_mode" : "dark_mode" }}</mat-icon>
+          <mat-icon style="margin: 0">{{ (this.darkModeService.darkMode$ | async) ? "light_mode" : "dark_mode" }}</mat-icon>
         </button>
         <!-- Shopping Menu button -->
         <!-- <button mat-stroked-button (click)="toggleRightNav()" title="Shopping Menu">
@@ -139,31 +209,3 @@
   </mat-sidenav-content>
 </mat-sidenav-container>
 
-<mat-sidenav-container>
-  <mat-sidenav
-    class="right-sidenav"
-    #rightNav
-    [opened]="isRightNavOpen"
-    position="end"
-    [style.width]="'300px'"
-    [style.height]="'50%'"
-    role="region"
-    fixedInViewport="true"
-  >
-    <div class="header">
-      <h2>Shopping Menu</h2>
-      <button mat-icon-button (click)="toggleRightNav()" aria-label="Close right nav">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-
-    <div class="right-nav-content">
-      <div *ngFor="let item of cartItems" class="cart-item-card">
-        <h3>{{ item.name }}</h3>
-        <p>Kategoria: {{ item.category }}</p>
-        <p>Cmimi: {{ item.price | currency }}</p>
-        <p>Sasia: {{ item.count }}x</p>
-      </div>
-    </div>
-  </mat-sidenav>
-</mat-sidenav-container>

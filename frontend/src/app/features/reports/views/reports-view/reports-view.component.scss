@@ -1,0 +1,22 @@
+::ng-deep .metric-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  .row {
+
+    &:last-child {
+      // Content row - fills remaining space
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+  
+  mat-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+}

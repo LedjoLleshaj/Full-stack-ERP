@@ -2,55 +2,96 @@ import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 import { LayoutComponent } from "./layout/layout.component";
 import { LoginComponent } from "./views/login-view/login.component";
-import { ProductsViewComponent } from "./views/products-view/products-view.component";
-import { AddProductViewComponent } from "./views/add-product-view/add-product-view.component";
-import { AuthGuard } from "./shared/auth.guard";
-import { PublicGuard } from "./shared/public.guard";
-import { SalesViewComponent } from "./views/sales-view/sales-view.component";
-import { ClientViewComponent } from "./views/clients-view/client-view.component";
-import { ClientDetailsViewComponent } from "./views/client-details-view/client-details-view.component";
-import { AddClientViewComponent } from "./views/add-client-view/add-client-view.component";
+import { AuthGuard, PublicGuard } from "./core";
 
 const routes: Routes = [
-  {
-    path: "",
-    component: LayoutComponent,
-    children: [
-      {
-        path: "",
-        component: LoginComponent,
-        title: "- Selita -",
-      },
-      {
-        path: "sales",
-        component: SalesViewComponent,
-        title: "Sale History - Selita",
-      },
-      {
-        path: "clients",
-        component: ClientViewComponent,
-        title: "Client List - Selita",
-      },
-      {
-        path: "products",
-        component: ProductsViewComponent,
-        title: "Products - Selita",
-      },
-      {
-        path: "client/:id",
-        component: ClientDetailsViewComponent,
-        title: "Client Details - Selita",
-      },
-      { path: "add-product", component: AddProductViewComponent },
-      { path: "add-client", component: AddClientViewComponent },
-    ],
-    canActivate: [AuthGuard],
-  },
   {
     path: "login",
     component: LoginComponent,
     canActivate: [PublicGuard],
     title: "Login - Selita",
+  },
+  {
+    path: "",
+    component: LayoutComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: "",
+        redirectTo: "sales",
+        pathMatch: "full",
+      },
+      // Lazy-loaded feature modules
+      {
+        path: "sales",
+        loadChildren: () => import("./features/sales/sales.module").then(m => m.SalesModule),
+      },
+      {
+        path: "sale",
+        loadChildren: () => import("./features/sales/sales.module").then(m => m.SalesModule),
+      },
+      {
+        path: "restocks",
+        loadChildren: () => import("./features/sales/restocks.module").then(m => m.RestocksModule),
+      },
+      {
+        path: "restock",
+        loadChildren: () => import("./features/sales/restocks.module").then(m => m.RestocksModule),
+      },
+      {
+        path: "clients",
+        loadChildren: () => import("./features/clients/clients.module").then(m => m.ClientsModule),
+      },
+      {
+        path: "client",
+        loadChildren: () => import("./features/clients/clients.module").then(m => m.ClientsModule),
+      },
+      {
+        path: "products",
+        loadChildren: () => import("./features/products/products.module").then(m => m.ProductsModule),
+      },
+      {
+        path: "product",
+        loadChildren: () => import("./features/products/products.module").then(m => m.ProductsModule),
+      },
+      {
+        path: "add-product",
+        redirectTo: "products/add",
+        pathMatch: "full",
+      },
+      {
+        path: "reports",
+        loadChildren: () => import("./features/reports/reports.module").then(m => m.ReportsModule),
+      },
+      {
+        path: "alerts",
+        redirectTo: "reports/alerts",
+        pathMatch: "full",
+      },
+      {
+        path: "suppliers",
+        loadChildren: () => import("./features/suppliers/suppliers.module").then(m => m.SuppliersModule),
+      },
+      {
+        path: "supplier",
+        loadChildren: () => import("./features/suppliers/suppliers.module").then(m => m.SuppliersModule),
+      },
+      {
+        path: "add-supplier",
+        redirectTo: "suppliers/add",
+        pathMatch: "full",
+      },
+      {
+        path: "add-client",
+        redirectTo: "clients/add",
+        pathMatch: "full",
+      },
+      {
+        path: "add-sale",
+        redirectTo: "sales/add",
+        pathMatch: "full",
+      },
+    ],
   },
 ];
 

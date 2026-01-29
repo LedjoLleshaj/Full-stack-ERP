@@ -23,6 +23,14 @@
   color: red;
 }
 
+// Source - https://stackoverflow.com/a
+// Posted by Mr.Sharp, modified by community. See post 'Timeline' for change history
+// Retrieved 2025-12-10, License - CC BY-SA 4.0
+
+.mdc-notched-outline__notch {
+  border-right: none;
+}
+
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
 $se-default-theme: mat.define-light-theme(
@@ -61,9 +69,42 @@ $se-dark-theme: mat.define-dark-theme(
 
 @include mat.all-component-themes($se-default-theme);
 
-.se-dark-theme {
+// Global CSS Variables for consistent theming
+:root {
+  // Light mode colors
+  --surface-bg: #ffffff;
+  --card-bg: #f8f9fa;
+  --stat-card-bg: #f0f4f8;
+  --total-bg: #e3f2fd;
+  --border-color: #e0e0e0;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --primary-color: #1976d2;
+  
+  // Status colors
+  --success-color: #22c55e;
+  --warning-color: #f97316;
+  --danger-color: #ef4444;
+  
+  // Status gradients for badges
+  --gradient-paid: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+  --gradient-partial: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+  --gradient-pending: linear-gradient(135deg, #f44336 0%, #ff5252 100%);
+}
+
+.dark-mode {
   @include mat.typography-hierarchy($se-dark-theme);
   @include mat.all-component-colors($se-dark-theme);
+
+  // Dark mode colors
+  --surface-bg: #1e1e1e;
+  --card-bg: #2a2a2a;
+  --stat-card-bg: #252525;
+  --total-bg: #1a3a52;
+  --border-color: #3a3a3a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --primary-color: #42a5f5;
 
   .se-title {
     color: #00bcd4 !important;
@@ -72,6 +113,14 @@ $se-dark-theme: mat.define-dark-theme(
 
   .se-toolbar {
     border-color: #535353 !important;
+  }
+
+  // Make autocomplete dropdown secondary text more visible
+  .mat-mdc-autocomplete-panel {
+    .client-info,
+    .product-info {
+      color: #ccc !important;
+    }
   }
 }
 

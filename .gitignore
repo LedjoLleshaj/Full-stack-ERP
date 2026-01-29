@@ -10,3 +10,12 @@ venv/
 # Optional: Ignore compiled bytecode files
 *.pyo
 *.pyd
+db/tempo.sql
+
+# macOS
+.DS_Store
+backend/Auth.md
+backend/benchmark_baseline2.json
+backend/benchmark_baseline.json
+backend/benchmark_after.json
+backend/benchmark.py

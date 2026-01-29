@@ -1,0 +1,431 @@
+.client-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ========== Common Section Styling (mat-card) ========== */
+.client-details-card {
+  border-radius: 12px !important;
+  overflow: hidden;
+  margin-bottom: 24px;
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+
+  mat-card-header {
+    padding: 16px 24px;
+    
+    mat-icon[mat-card-avatar] {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      border-radius: 8px;
+      padding: 8px;
+      margin-right: 12px;
+    }
+    
+    mat-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary-color) !important;
+      margin: 0;
+    }
+  }
+  
+  mat-card-content {
+    padding: 24px;
+  }
+}
+
+
+
+/* ========== Dark Mode Compatibility ========== */
+:host-context(.dark-mode) {
+  .sales-table {
+    background-color: #2a2a2a !important;
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.info-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 100px;
+}
+
+.info-value {
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+mat-divider {
+  margin: 2px 0 !important;
+  opacity: 0.5;
+  border-top-color: var(--border-color) !important;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  padding: 20px;
+  background: var(--stat-card-bg);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card.debt-card {
+  border-left-color: #d32f2f;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stat-value.debt {
+  color: #d32f2f;
+}
+
+/* ========== Recent Sales Section ========== */
+.recent-sales-section {
+  mat-card-content {
+    padding: 0 !important;
+  }
+}
+
+.sales-table {
+  width: 100%;
+  background-color: transparent;
+  
+  th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  td {
+    font-size: 0.875rem;
+  }
+
+  .clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.08);
+    }
+  }
+}
+
+.product-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  
+  .product-name {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  
+  .product-category {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+}
+
+// Status badges
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-block;
+  
+  &.status-completed {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+  }
+  
+  &.status-partial {
+    background-color: rgba(249, 115, 22, 0.15);
+    color: #ea580c;
+  }
+  
+  &.status-pending {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+  }
+}
+
+// Loading sales
+.loading-sales {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--text-secondary);
+}
+
+// No data state
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: var(--text-secondary);
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+    margin-bottom: 12px;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+/* ========== Create Sale Section ========== */
+
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.search-filter {
+  width: 100%;
+}
+
+.half-width {
+  flex: 1;
+}
+
+/* ========== Selected Product Card ========== */
+.selected-product-card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 24px;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.product-details h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stock-info {
+  margin: 8px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.price-info {
+  margin: 8px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.sale-form {
+  margin-top: 24px;
+}
+
+.total-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--total-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.total-label {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.total-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.payment-radio-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.payment-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+::ng-deep .payment-radio-group .mat-radio-button {
+  margin-bottom: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.form-actions button {
+  flex: 1;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* ========== Empty State ========== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-state mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ========== Responsive Design ========== */
+@media (max-width: 768px) {
+  .client-details-container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .client-info-section,
+  .create-sale-section {
+    padding: 20px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* ========== Autocomplete Styling ========== */
+.autocomplete-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.product-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.product-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Global autocomplete panel styling */
+::ng-deep .mat-autocomplete-panel {
+  max-height: 400px !important;
+}
+
+::ng-deep .mat-option {
+  height: auto !important;
+  min-height: 48px !important;
+  line-height: 1.4 !important;
+  padding: 8px 16px !important;
+}
+
+/* Fix for outline notch cutting through text */
+::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline-thick {
+  color: var(--border-color);
+}
+
+::ng-deep .mat-form-field-appearance-outline.mat-focused .mat-form-field-outline-thick {
+  color: var(--primary-color);
+}
+
+/* Remove the notch gap that causes the blue line */
+::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline-gap {
+  border-top-color: transparent !important;
+}
+
+::ng-deep .no-outline-gap .mat-form-field-outline-gap {
+  border-top-width: 0 !important;
+}
