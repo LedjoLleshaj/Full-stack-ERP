@@ -9,6 +9,7 @@ import { AppComponent } from "./app.component";
 import { CoreModule } from "./core";
 import { LayoutComponent } from "./layout/layout.component";
 import { LoginComponent } from "./views/login-view/login.component";
+import { LandingPageComponent } from "./views/landing-page/landing-page.component";
 
 // Dialogs (used globally)
 
@@ -35,6 +36,7 @@ import { NgxEchartsModule } from "ngx-echarts";
     AppComponent,
     LayoutComponent,
     LoginComponent,
+    LandingPageComponent,
   ],
   imports: [
     BrowserModule,
