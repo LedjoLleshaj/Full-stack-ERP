@@ -232,17 +232,17 @@ WHERE status IN ('PENDING', 'PARTIAL');
 
 -- Inserting data
 INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('adminselita', 'pbkdf2_sha256$870000$tympSs6asDt7DTV4Wyq2kt$/8MfeLLr5m6C+keQIonZhKzJmtsV2doXFl641T9pS1U=', 'admin@selita_fish.com', 'Admin', 'Selita', 'admin');
-INSERT INTO Client (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '0123456789', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
+-- INSERT INTO Client (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '0123456789', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
 INSERT INTO Product_Categories (category_name) VALUES ('Peshk'), ('Fruta Deti'), ('Gafforre'), ('Kallamar'), ('Midhje'),('Karkaleca'),('Peshk i eger');
 INSERT INTO Product_Names (product_name, category_id) VALUES 
 ('Salmon',1),('Karkaleca',5),('Koce',1),('Midhje',
 5),('Peshk i eger',1),('Peshk',1),('Fruta Deti',2),('Gafforre',3),('Kallamar',4),('Karkaleca te vegjel',6),('Peshkaqen',7);
 
 -- Insert Suppliers
-INSERT INTO Supplier (firstname, lastname, phone, email, address) VALUES 
-('Arben', 'Hoxha', '+355 69 123 4567', 'arben.hoxha@supplier.al', 'Rruga e Kavajes, Durres'),
-('Endrit', 'Kola', '+355 69 234 5678', 'endrit.kola@seafood.al', 'Rruga Pavarsia, Vlore'),
-('Sokol', 'Muca', '+355 69 345 6789', 'sokol.muca@fishmarket.al', 'Rruga e Portit, Sarande');
+-- INSERT INTO Supplier (firstname, lastname, phone, email, address) VALUES 
+-- ('Arben', 'Hoxha', '+355 69 123 4567', 'arben.hoxha@supplier.al', 'Rruga e Kavajes, Durres'),
+-- ('Endrit', 'Kola', '+355 69 234 5678', 'endrit.kola@seafood.al', 'Rruga Pavarsia, Vlore'),
+-- ('Sokol', 'Muca', '+355 69 345 6789', 'sokol.muca@fishmarket.al', 'Rruga e Portit, Sarande');
 
 -- =====================================================================================
 -- CRITICAL: REQUIRED ACCOUNT RECORDS - DO NOT DELETE!
