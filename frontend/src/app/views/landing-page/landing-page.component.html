@@ -1,9 +1,33 @@
 <div class="landing-page">
+  <!-- Structured Data for Local Business (SEO) TODO phone number and image -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Selita Fish",
+    "description": "Peshk i freskët me shumicë në Durrës",
+    "url": "https://selitafish.com",
+    "telephone": "+355 69 XX XX XXX", 
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Rruga Vincens Prenushi",
+      "addressLocality": "Kënetë, Durrës",
+      "addressCountry": "AL"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "41.322444",
+      "longitude": "19.466319"
+    },
+    "priceRange": "€€",
+    "image": "https://selitafish.com/assets/og-image.jpg"
+  }
+  </script>
   <!-- Hero Section -->
   <header class="hero-section">
     <!-- Background -->
     <div class="hero-bg">
-      <img src="assets/flying-fish.gif" alt="Fish Market" class="hero-bg-img" />
+      <img src="assets/flying-fish.gif" alt="Selita Fish - Peshk i freskët me shumicë në Durrës, Shqipëri" class="hero-bg-img" />
       <div class="hero-overlay"></div>
     </div>
 
@@ -19,6 +43,7 @@
     <!-- Scroll Indicator -->
     <div class="scroll-indicator">
       <svg
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="none"
@@ -33,10 +58,11 @@
   </header>
 
   <!-- Features Section -->
-  <section class="features-section">
+  <main>
+  <section class="features-section" aria-labelledby="features-heading">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title gradient-text-blue py-2">Pse të na zgjidhni ne?</h2>
+        <h2 id="features-heading" class="section-title gradient-text-blue py-2">Pse të na zgjidhni ne?</h2>
         <div class="section-divider"></div>
       </div>
 
@@ -102,6 +128,7 @@
       </div>
     </div>
   </section>
+  </main>
 
   <!-- Footer Section -->
   <footer class="main-footer">
@@ -113,18 +140,18 @@
     <div class="container footer-content">
       <div class="footer-grid">
         <div class="footer-info">
-          <h2>Na Kontaktoni</h2>
+          <h2 id="contact-heading">Na Kontaktoni</h2>
           <p>Jemi këtu për t'ju shërbyer. Na telefononi për çdo pyetje apo porosi.</p>
           
-          <div class="address-display">
+          <address class="address-display">
             <div class="icon-box-small icon-indigo">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
             <span>Rruga Vincens Prenushi, Kënetë, Durrës</span>
-          </div>
+          </address>
         </div>
 
         <div class="contact-list">
