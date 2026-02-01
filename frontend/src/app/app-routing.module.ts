@@ -4,7 +4,15 @@ import { LayoutComponent } from "./layout/layout.component";
 import { LoginComponent } from "./views/login-view/login.component";
 import { AuthGuard, PublicGuard } from "./core";
 
+import { LandingPageComponent } from "./views/landing-page/landing-page.component";
+
 const routes: Routes = [
+  {
+    path: "home",
+    component: LandingPageComponent,
+    canActivate: [PublicGuard],
+    title: "Selita Peshk",
+  },
   {
     path: "login",
     component: LoginComponent,

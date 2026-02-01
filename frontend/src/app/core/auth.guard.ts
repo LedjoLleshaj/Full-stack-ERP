@@ -10,7 +10,7 @@ export class AuthGuard {
 
   canActivate(): boolean {
     if (!this.authService.isAuthenticated()) {
-      this.router.navigate(["/login"]);
+      this.router.navigate(["/home"]);
       return false;
     }
     return true;
