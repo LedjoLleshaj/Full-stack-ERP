@@ -115,16 +115,33 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Cross-Origin Resource Sharing
-CORS_ALLOWED_ORIGINS = [
+_cors_dev = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
 ]
+_cors_prod = [f"https://{host.strip()}" for host in os.getenv("ALLOWED_DOMAINS", "").split(",") if host.strip()]
+CORS_ALLOWED_ORIGINS = _cors_dev + _cors_prod
 CORS_ALLOW_CREDENTIALS = True
+
+# Security settings (enabled in production when DEBUG=False)
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    CSRF_TRUSTED_ORIGINS = [f"https://{host.strip()}" for host in os.getenv("ALLOWED_DOMAINS", "").split(",") if host.strip()]
 
 # Django REST framework settings
 REST_FRAMEWORK = {
@@ -148,8 +165,8 @@ SIMPLE_JWT = {
     # Cookie settings
     "AUTH_COOKIE": "access_token",
     "REFRESH_COOKIE": "refresh_token",
-    "AUTH_COOKIE_SECURE": False,  # Set to True in production with HTTPS
+    "AUTH_COOKIE_SECURE": not DEBUG,  # True in production with HTTPS
     "AUTH_COOKIE_HTTP_ONLY": True,
     "AUTH_COOKIE_PATH": "/",
-    "AUTH_COOKIE_SAMESITE": "Lax",
+    "AUTH_COOKIE_SAMESITE": "Strict" if not DEBUG else "Lax",
 }

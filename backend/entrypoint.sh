@@ -11,10 +11,20 @@ echo "PostgreSQL started"
 # Run migrations
 python manage.py migrate
 
-echo "from django.contrib.auth import get_user_model; \
-User = get_user_model(); \
-User.objects.filter(username='adminselita').exists() or \
-User.objects.create_superuser('adminselita', 'admin@selita.com', 'adminpass')" | python manage.py shell
-
+# Create superuser from environment variables (only if doesn't exist)
+python manage.py shell << EOF
+import os
+from django.contrib.auth import get_user_model
+User = get_user_model()
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@localhost')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'changeme')
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username, email, password)
+    print(f"Created superuser: {username}")
+else:
+    print(f"Superuser {username} already exists")
+EOF
 
 exec "$@"
+

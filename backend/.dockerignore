@@ -38,3 +38,7 @@ htmlcov/
 
 # Compiled files
 *.so
+
+# Environment files (don't copy local env to Docker image)
+.env
+.env.*

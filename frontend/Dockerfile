@@ -15,8 +15,8 @@ FROM nginx:alpine
 COPY --from=builder /frontend/dist/frontend /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-# Expose port 4200
-EXPOSE 4200
+# Expose port 80 for production
+EXPOSE 80
 # Start nginx server
 CMD ["nginx", "-g", "daemon off;"]
 

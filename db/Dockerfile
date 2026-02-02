@@ -1,11 +1,10 @@
-# Use the official PostgreSQL image from Docker Hub
-FROM REDACTED:latest
+# Use PostgreSQL 16 Alpine for smaller image size
+FROM REDACTED:16-alpine
 
 # Copy the SQL script to initialize the database
 COPY schema.sql /docker-entrypoint-initdb.d/
 
-ENV POSTGRES_USER=REDACTED
-ENV POSTGRES_PASSWORD=REDACTED
-ENV POSTGRES_DB=selita_fish
+# Credentials are passed via docker-compose environment variables
+# Do NOT hardcode credentials here
 
 EXPOSE 5432

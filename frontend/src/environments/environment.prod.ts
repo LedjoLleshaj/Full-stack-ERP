@@ -4,7 +4,7 @@
  */
 export const environment = {
   production: true,
-  apiUrl: 'https://api.selita-fish.com/selita', // TODO: Update with actual production URL
+  apiUrl: '/api/selita',  // Relative URL through nginx proxy
 
   // ========= GROUPED ENDPOINTS (for future use) =========
   auth: {

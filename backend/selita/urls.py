@@ -16,6 +16,7 @@ from .api import (
     account_transactions,
     restocks,
     exchange_rates,
+    health,
 )
 
 
@@ -127,4 +128,7 @@ urlpatterns = [
     path("exchange-rates", exchange_rates.get_exchange_rates),
     path("exchange-rate/<str:from_currency>/<str:to_currency>", exchange_rates.get_exchange_rate),
     path("convert-currency", exchange_rates.convert_currency),
+    
+    # ======== HEALTH CHECK ========
+    path("health/", health.health_check),
 ]

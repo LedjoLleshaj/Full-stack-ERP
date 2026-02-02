@@ -19,3 +19,19 @@ backend/benchmark_baseline2.json
 backend/benchmark_baseline.json
 backend/benchmark_after.json
 backend/benchmark.py
+
+# Production secrets (NEVER commit these!)
+.env.prod
+backend/.env
+
+# SSL certificates
+ssl/
+*.pem
+*.key
+*.crt
+
+# Logs
+logs/
+
+# Backups
+backups/

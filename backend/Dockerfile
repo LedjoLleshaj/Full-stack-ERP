@@ -28,5 +28,5 @@ RUN chmod +x ./entrypoint.sh
 
 ENTRYPOINT [ "./entrypoint.sh" ]
 
-# ✅ Default command using wait_for_db
-CMD [ "python", "manage.py", "runserver", "0.0.0.0:8080"]
+# Use Gunicorn for production (4 workers, 2 threads per worker)
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--threads", "2", "backend.wsgi:application"]
