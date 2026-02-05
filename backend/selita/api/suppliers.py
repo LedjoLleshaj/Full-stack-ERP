@@ -14,7 +14,7 @@ from selita.utils.responses import api_error_handler, not_found_response
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def getSuppliers(request):
-    suppliers = Supplier.objects.all()
+    suppliers = Supplier.objects.filter(is_active=True)
     serializer = SupplierSerializer(suppliers, many=True)
     return Response(serializer.data)
 
@@ -71,9 +71,15 @@ def updateSupplier(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def deleteSupplier(request, pk):
+    from ..models import Transaction, Restock
+    
     try:
         supplier = Supplier.objects.get(id=pk)
-        supplier.delete()
-        return Response("Supplier deleted successfully")
     except ObjectDoesNotExist:
         return not_found_response("Supplier")
+    
+    # Soft delete
+    supplier.is_active = False
+    supplier.save()
+    
+    return Response({"message": "Supplier deactivated successfully"})
