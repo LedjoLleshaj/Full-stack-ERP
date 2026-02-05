@@ -21,6 +21,12 @@ export class SupplierDetailsViewComponent implements OnInit {
   // Table columns
   restockColumns = ['date', 'product_name', 'quantity', 'price', 'status'];
 
+  // Edit/Delete state
+  isEditing = false;
+  isSaving = false;
+  isDeleting = false;
+  editForm: Partial<Supplier> = {};
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -181,6 +187,71 @@ export class SupplierDetailsViewComponent implements OnInit {
         ...data.map(row => String(row[header] || '').length)
       );
       return { wch: Math.min(maxLength + 2, 50) };
+    });
+  }
+
+  // ========= EDIT/DELETE METHODS =========
+  toggleEdit(): void {
+    this.isEditing = !this.isEditing;
+    if (this.isEditing && this.supplier) {
+      this.editForm = {
+        firstname: this.supplier.firstname,
+        lastname: this.supplier.lastname,
+        email: this.supplier.email,
+        phone: this.supplier.phone,
+        address: this.supplier.address
+      };
+    }
+  }
+
+  saveEdit(): void {
+    if (!this.supplier?.id) return;
+
+    this.isSaving = true;
+    const updatedSupplier: Supplier = {
+      ...this.supplier,
+      ...this.editForm
+    } as Supplier;
+
+    this.supplierService.updateSupplier(this.supplier.id, updatedSupplier).subscribe({
+      next: (result) => {
+        this.supplier = result;
+        this.isEditing = false;
+        this.isSaving = false;
+        this.snackBar.open('Furnitori u përditësua me sukses', 'Mbyll', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Failed to update supplier:', err);
+        this.isSaving = false;
+        this.snackBar.open('Gabim në përditësimin e furnitorit', 'Mbyll', { duration: 3000 });
+      }
+    });
+  }
+
+  confirmDelete(): void {
+    const confirmed = window.confirm(
+      `Jeni të sigurt që dëshironi të fshini furnitorin "${this.supplier?.firstname} ${this.supplier?.lastname}"?\n\nKy veprim është i pakthyeshëm. Të dhënat e furnitorit do të ruhen në shënime të transaksioneve.`
+    );
+
+    if (confirmed) {
+      this.deleteSupplier();
+    }
+  }
+
+  private deleteSupplier(): void {
+    if (!this.supplier?.id) return;
+
+    this.isDeleting = true;
+    this.supplierService.deleteSupplier(this.supplier.id).subscribe({
+      next: (result) => {
+        this.snackBar.open(`Furnitori u fshi. ${result.preserved_records || 0} transaksione u përditësuan.`, 'Mbyll', { duration: 4000 });
+        this.router.navigate(['/suppliers']);
+      },
+      error: (err) => {
+        console.error('Failed to delete supplier:', err);
+        this.isDeleting = false;
+        this.snackBar.open('Gabim në fshirjen e furnitorit', 'Mbyll', { duration: 3000 });
+      }
     });
   }
 }

@@ -31,6 +31,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Dialogs
 import { EditPriceDialogComponent } from '../../dialogs/edit-price-dialog/edit-price-dialog.component';
@@ -79,6 +80,7 @@ const routes: Routes = [
     MatDialogModule,
     MatButtonToggleModule,
     MatDividerModule,
+    MatTooltipModule,
     // Standalone
     ProductTableComponent,
     ChipsComponent,

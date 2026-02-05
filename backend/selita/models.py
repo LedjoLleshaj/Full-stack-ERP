@@ -78,6 +78,7 @@ class Supplier(models.Model):
     phone = models.CharField(max_length=25, null=True, blank=True)
     email = models.CharField(max_length=100, null=True, blank=True)
     address = models.CharField(max_length=150)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = "supplier"
@@ -87,6 +88,7 @@ class Supplier(models.Model):
         indexes = [
             models.Index(fields=["lastname", "firstname"], name="supplier_name_idx"),
             models.Index(fields=["phone"], name="supplier_phone_idx"),
+            models.Index(fields=["is_active"], name="supplier_active_idx"),
         ]
 
     def __str__(self):
@@ -100,6 +102,7 @@ class Client(models.Model):
     phone = models.CharField(max_length=25, unique=True)
     address = models.CharField(max_length=150)
     city = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = "client"
@@ -110,6 +113,7 @@ class Client(models.Model):
             models.Index(fields=["lastname", "firstname"], name="client_name_idx"),
             models.Index(fields=["phone"], name="client_phone_idx"),
             models.Index(fields=["city"], name="client_city_idx"),
+            models.Index(fields=["is_active"], name="client_active_idx"),
         ]
 
     def __str__(self):
@@ -259,6 +263,7 @@ class Product(models.Model):
     category = models.CharField(max_length=50)
     price = models.DecimalField(max_digits=8, decimal_places=2)
     description = models.TextField()
+    is_active = models.BooleanField(default=True)  # Soft delete flag
 
     class Meta:
         db_table = "product"
@@ -271,6 +276,7 @@ class Product(models.Model):
         indexes = [
             models.Index(fields=["category"], name="product_category_idx"),
             models.Index(fields=["name"], name="product_name_idx"),
+            models.Index(fields=["is_active"], name="product_active_idx"),
         ]
 
     def __str__(self):
@@ -333,6 +339,7 @@ class Sales(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="sales")
     quantity = models.IntegerField()
     sale_date = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         db_table = "sales"
@@ -355,6 +362,7 @@ class Restock(models.Model):
     quantity = models.IntegerField()
     restock_price = models.DecimalField(max_digits=8, decimal_places=2)
     restock_date = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         db_table = "restock"
