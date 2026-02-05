@@ -305,7 +305,7 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
 
   confirmDelete(): void {
     const confirmed = window.confirm(
-      `Jeni të sigurt që dëshironi të fshini klientin "${this.client?.firstname} ${this.client?.lastname}"?\n\nKjo veprim është i pakthyeshëm. Të dhënat e klientit do të ruhen në shënime të transaksioneve.`
+      `Jeni të sigurt që dëshironi të fshini klientin "${this.client?.firstname} ${this.client?.lastname}"?\n\Ky veprim është i pakthyeshëm. Të dhënat e klientit do të ruhen në shënime të transaksioneve.`
     );
 
     if (confirmed) {
