@@ -29,4 +29,12 @@ export class ClientService extends BaseApiService {
   getClientSales(clientId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/client-sales/${clientId}`);
   }
+
+  updateClient(id: number, client: Client): Observable<Client> {
+    return this.http.post<Client>(`${this.apiUrl}/update-client/${id}`, client);
+  }
+
+  deleteClient(id: number): Observable<{ message: string; preserved_records: number }> {
+    return this.http.delete<{ message: string; preserved_records: number }>(`${this.apiUrl}/delete-client/${id}`);
+  }
 }
