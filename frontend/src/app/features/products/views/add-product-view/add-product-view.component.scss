@@ -36,3 +36,15 @@ h2 {
   align-items: center;
   margin-top: 8px;
 }
+
+.category-hint {
+  color: var(--mat-option-label-text-color, rgba(0, 0, 0, 0.6));
+  font-size: 0.85em;
+  margin-left: 4px;
+}
+
+// Highlight for new product name field when creating new
+.new-product-indicator {
+  color: var(--mat-primary-color, #3f51b5);
+  font-weight: 500;
+}
