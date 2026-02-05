@@ -40,8 +40,8 @@ def getClients(request):
         remaining_eur = convert_to_eur_with_rates(remaining, transaction.currency, rates)
         client_balances[transaction.client_id] += remaining_eur
     
-    # Step 3: Get all clients (1 query)
-    clients = Client.objects.all()
+    # Step 3: Get all active clients (1 query)
+    clients = Client.objects.filter(is_active=True)
     
     # Build response
     results = []
@@ -144,12 +144,18 @@ def updateClient(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def deleteClient(request, pk):
+    from ..models import Transaction
+    
     try:
         client = Client.objects.get(id=pk)
-        client.delete()
-        return Response("Client deleted successfully")
     except ObjectDoesNotExist:
         return not_found_response("Client")
+    
+    # Soft delete
+    client.is_active = False
+    client.save()
+    
+    return Response({"message": "Client deactivated successfully"})
 
 
 @api_view(["GET"])
