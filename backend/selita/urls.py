@@ -81,14 +81,23 @@ urlpatterns = [
     path("products", products.getProducts),
     path("product/<str:pk>", products.getProduct),
     path("add-product", products.addProduct),
+    path("update-product/<str:pk>", products.updateProduct),
+    path("delete-product/<str:pk>", products.deleteProduct),
     path("update-price/<str:pk>", products.updatePrice),
     path("product-categories", products.getProductCategories),
     path("product-names", products.getProductNames),
+    path("add-product-category", products.addProductCategory),
+    path("update-product-category/<str:pk>", products.updateProductCategory),
+    path("delete-product-category/<str:pk>", products.deleteProductCategory),
+    path("add-product-name", products.addProductName),
+    path("update-product-name/<str:pk>", products.updateProductName),
+    path("delete-product-name/<str:pk>", products.deleteProductName),
     path("productbycategory/<str:category>", products.getProductsByCategory),
     path("productbyname/<str:name>", products.getProductByName),
     path("filterbycategories", products.filterByCategories),
     path("checkdisponibility/<str:pk>", products.checkDisponibility),
     path("product-history/<str:pk>", products.getProductHistory),
+
     
     # ======== INVENTORY ========
     path("inventory", inventory.getInventory),
