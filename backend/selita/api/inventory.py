@@ -29,7 +29,8 @@ def getInventory(request):
 @api_error_handler
 def getProductsFromInventory(request):
     # Optimized: Use select_related to load products in ONE query
-    inventory = Inventory.objects.select_related('prod').all()
+    # Only return inventory for ACTIVE products
+    inventory = Inventory.objects.select_related('prod').filter(prod__is_active=True).all()
     
     # Build response with product info already loaded
     results = []
@@ -100,13 +101,18 @@ def addProductToInventory(request):
     try:
         product = Product.objects.get(name=name)
         logger.debug("Product already exists: %s (id=%s)", product.name, product.id)
+        
+        # REACTIVATE product if it was soft-deleted
+        if not product.is_active:
+            product.is_active = True
+        
         # Update description if a new one is provided, or if current is empty, use name
         if description:
             product.description = description
-            product.save()
         elif not product.description:
             product.description = name
-            product.save()
+        
+        product.save()
     except ObjectDoesNotExist:
         # Create a new product if it doesn't exist
         # Get category from Product_Names table
