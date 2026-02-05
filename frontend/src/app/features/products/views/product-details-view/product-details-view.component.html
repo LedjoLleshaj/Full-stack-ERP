@@ -23,7 +23,52 @@
         <h1>{{ productHistory.product.name }}</h1>
         <span class="category-badge">{{ productHistory.product.category }}</span>
       </div>
+      <div class="header-actions">
+        <button mat-stroked-button color="primary" (click)="toggleEdit()" class="action-btn edit-btn">
+          <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
+          {{ isEditing ? 'Anulo' : 'Modifiko' }}
+        </button>
+        <button mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
+          <mat-icon>delete</mat-icon>
+          Fshi
+        </button>
+      </div>
     </div>
+
+    <!-- Edit Form (shown when editing) -->
+    <mat-card class="edit-card" *ngIf="isEditing">
+      <mat-card-content>
+        <div class="edit-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Emri</mat-label>
+              <input matInput [(ngModel)]="editForm.name" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Kategoria</mat-label>
+              <input matInput [(ngModel)]="editForm.category" />
+            </mat-form-field>
+          </div>
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Çmimi (€)</mat-label>
+              <input matInput type="number" step="0.01" [(ngModel)]="editForm.price" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Përshkrimi</mat-label>
+              <input matInput [(ngModel)]="editForm.description" />
+            </mat-form-field>
+          </div>
+          <div class="form-actions">
+            <button mat-raised-button color="primary" (click)="saveEdit()" [disabled]="isSaving">
+              <mat-icon>save</mat-icon>
+              {{ isSaving ? 'Duke ruajtur...' : 'Ruaj' }}
+            </button>
+            <button mat-stroked-button (click)="toggleEdit()">Anulo</button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Product Info Cards -->
     <div class="info-cards">
