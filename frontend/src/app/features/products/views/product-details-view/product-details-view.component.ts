@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, forkJoin } from 'rxjs';
 import { EChartsOption } from 'echarts';
 import { ProductService, ProductHistory, RecentSale, RecentRestock } from '../../../../shared/services/product-api/product.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { DarkModeService } from '../../../../shared/services/dark-mode/dark-mode.service';
 import { CurrencyExchangeService } from '../../../../shared/services/currency-exchange/currency-exchange.service';
 
@@ -36,7 +37,13 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
   // Tables
   salesColumns = ['date', 'client_name', 'quantity', 'price', 'status'];
   restocksColumns = ['date', 'supplier_name', 'quantity', 'price'];
-  
+
+  // Edit/Delete state
+  isEditing = false;
+  isSaving = false;
+  isDeleting = false;
+  editForm: { name?: string; category?: string; price?: number; description?: string } = {};
+
   private darkModeSubscription: Subscription | undefined;
 
   constructor(
@@ -44,7 +51,8 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
     private router: Router,
     private productService: ProductService,
     private darkModeService: DarkModeService,
-    private currencyExchangeService: CurrencyExchangeService
+    private currencyExchangeService: CurrencyExchangeService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -294,5 +302,71 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
     if (stock <= 0) return 'stock-out';
     if (stock <= 10) return 'stock-low';
     return 'stock-ok';
+  }
+
+  // ========= EDIT/DELETE METHODS =========
+  toggleEdit(): void {
+    this.isEditing = !this.isEditing;
+    if (this.isEditing && this.productHistory) {
+      this.editForm = {
+        name: this.productHistory.product.name,
+        category: this.productHistory.product.category,
+        price: this.productHistory.product.price,
+        description: this.productHistory.product.description
+      };
+    }
+  }
+
+  saveEdit(): void {
+    if (!this.productHistory?.product.id) return;
+
+    this.isSaving = true;
+    this.productService.updateProduct(this.productHistory.product.id, this.editForm).subscribe({
+      next: (result) => {
+        this.productHistory!.product = result;
+        this.isEditing = false;
+        this.isSaving = false;
+        this.snackBar.open('Produkti u përditësua me sukses', 'Mbyll', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Failed to update product:', err);
+        this.isSaving = false;
+        this.snackBar.open('Gabim në përditësimin e produktit', 'Mbyll', { duration: 3000 });
+      }
+    });
+  }
+
+  confirmDelete(): void {
+    // Check for inventory
+    const stock = this.productHistory?.product.disponibility || 0;
+    let message = `Jeni të sigurt që dëshironi të fshini produktin "${this.productHistory?.product.name}"?`;
+    
+    if (stock > 0) {
+      message += `\n\n⚠️ KUJDES: Produkti ka ${stock} kg në stok!`;
+    }
+    
+    message += '\n\nKy veprim është i pakthyeshëm.';
+
+    if (window.confirm(message)) {
+      this.deleteProduct();
+    }
+  }
+
+  private deleteProduct(): void {
+    if (!this.productHistory?.product.id) return;
+
+    this.isDeleting = true;
+    this.productService.deleteProduct(this.productHistory.product.id).subscribe({
+      next: () => {
+        this.snackBar.open('Produkti u fshi me sukses', 'Mbyll', { duration: 3000 });
+        this.router.navigate(['/products']);
+      },
+      error: (err) => {
+        console.error('Failed to delete product:', err);
+        this.isDeleting = false;
+        const errorMsg = err.error?.error || 'Gabim në fshirjen e produktit';
+        this.snackBar.open(errorMsg, 'Mbyll', { duration: 5000 });
+      }
+    });
   }
 }
