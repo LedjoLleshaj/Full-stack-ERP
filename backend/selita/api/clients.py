@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework import permissions, status
 from ..models import Client, Sales, Product
 from rest_framework.decorators import api_view, permission_classes
 from ..serializers import ClientSerializer, ProductSerializer, SalesSerializer
@@ -151,6 +151,16 @@ def deleteClient(request, pk):
     except ObjectDoesNotExist:
         return not_found_response("Client")
     
+    # Check for unpaid transactions
+    if Transaction.objects.filter(
+        client=client,
+        status__in=TransactionStatus.UNPAID_STATUSES
+    ).exists():
+        return Response(
+            {"error": "Cannot delete client with unpaid transactions"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     # Soft delete
     client.is_active = False
     client.save()
