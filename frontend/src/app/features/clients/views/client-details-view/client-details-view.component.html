@@ -5,9 +5,9 @@
       <mat-icon mat-card-avatar>person</mat-icon>
       <mat-card-title>Informacione mbi Klientin</mat-card-title>
       <div class="header-actions">
-        <button mat-stroked-button color="primary" (click)="toggleEdit()" class="action-btn edit-btn">
+        <button mat-stroked-button [color]="isEditing ? 'warn' : 'primary'" (click)="toggleEdit()" class="action-btn edit-btn">
           <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
-          {{ isEditing ? 'Anulo' : 'Modifiko' }}
+          {{ isEditing ? 'Anullo' : 'Modifiko' }}
         </button>
         <button mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
           <mat-icon>delete</mat-icon>
@@ -55,7 +55,10 @@
           <mat-icon>save</mat-icon>
           {{ isSaving ? 'Duke ruajtur...' : 'Ruaj' }}
         </button>
-        <button mat-stroked-button (click)="toggleEdit()">Anulo</button>
+        <button mat-raised-button color="warn" (click)="toggleEdit()">
+          <mat-icon>close</mat-icon>
+          Anullo
+        </button>
       </div>
     </div>
 
