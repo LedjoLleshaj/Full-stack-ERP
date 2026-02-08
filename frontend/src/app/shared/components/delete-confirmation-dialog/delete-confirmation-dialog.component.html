@@ -1,0 +1,27 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="warning-message">{{ data.message }}</p>
+  
+  <mat-card *ngIf="data.itemDetails" class="details-card">
+    <mat-card-content>
+      <div class="detail-row" *ngFor="let key of getDetailKeys()">
+        <span class="detail-label">{{ key }}:</span>
+        <span class="detail-value">{{ data.itemDetails![key] }}</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <div class="payment-warning" *ngIf="data.hasPayments">
+    <mat-icon color="warn">warning</mat-icon>
+    <span>Kjo do të kthejë të gjitha pagesat e lidhura!</span>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Anullo</button>
+  <button mat-raised-button color="warn" (click)="onConfirm()">
+    <mat-icon>delete</mat-icon>
+    Fshi
+  </button>
+</mat-dialog-actions>

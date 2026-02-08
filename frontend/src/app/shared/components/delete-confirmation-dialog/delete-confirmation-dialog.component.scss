@@ -1,0 +1,79 @@
+.dialog-content {
+  min-width: 400px;
+  padding: 20px;
+}
+
+.warning-message {
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+.details-card {
+  margin: 16px 0;
+  background-color: var(--surface-variant);
+  border-radius: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.detail-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.payment-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  margin-top: 16px;
+  background-color: var(--warn-light, #ffebee);
+  border-radius: 4px;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  span {
+    font-weight: 500;
+    color: var(--warn-dark, #c62828);
+  }
+}
+
+// Dark mode support
+:host-context(.dark-mode) {
+  .details-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  
+  .payment-warning {
+    background-color: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.4);
+    
+    mat-icon {
+      color: #f87171;
+    }
+    
+    span {
+      color: #f2eeee;
+    }
+  }
+}
