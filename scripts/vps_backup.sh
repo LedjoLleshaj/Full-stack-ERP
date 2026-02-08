@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Configuration
-APP_DIR="/home/deploy/apps/selita-fish"
-BACKUP_DIR="/home/deploy/backups"
+APP_DIR="$HOME/apps/selita-fish"
+BACKUP_DIR="$HOME/backups"
+
 DATE=$(date +%Y%m%d_%H%M%S)
 FILENAME="selita_db_$DATE.sql.gz"
 
