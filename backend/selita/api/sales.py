@@ -390,3 +390,140 @@ def getSaleDetails(request, pk):
         }
     
     return Response(response_data)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
+def updateSale(request, pk):
+    """Update an existing sale with validation to prevent overpayment"""
+    from selita.services.inventory_service import InventoryService
+    from selita.services.payment_service import PaymentService, PaymentError
+    
+    try:
+        sale = Sales.objects.select_related('transaction', 'prod', 'user').get(id=pk)
+    except Sales.DoesNotExist:
+        return not_found_response("Sale")
+    
+    transaction = sale.transaction
+    
+    # Store old values for inventory reversal
+    old_quantity = sale.quantity
+    old_prod_id = sale.prod_id
+    old_product = sale.prod
+    
+    # Get new values from request
+    new_prod_id = request.data.get("prod", old_prod_id)
+    new_quantity = Decimal(str(request.data.get("quantity", old_quantity)))
+    new_prod_price = Decimal(str(request.data.get("prod_price", sale.prod_price)))
+    new_user_id = request.data.get("user", sale.user_id)
+    currency = request.data.get("currency", transaction.currency)
+    
+    # Validate inputs
+    if new_quantity <= 0:
+        return bad_request_response("Quantity must be greater than zero")
+    
+    # Get new product if changed
+    if new_prod_id != old_prod_id:
+        try:
+            new_product = Product.objects.get(id=new_prod_id)
+        except ObjectDoesNotExist:
+            return not_found_response("Product")
+    else:
+        new_product = old_product
+    
+    # Calculate new total
+    new_total = new_prod_price * new_quantity
+    
+    # Handle inventory changes
+    if new_prod_id != old_prod_id:
+        # Product changed: reverse old, add new
+        InventoryService.add_inventory(old_product, old_quantity)
+        if not InventoryService.check_availability(new_product, new_quantity):
+            return bad_request_response(f"Not enough {new_product.name} in inventory")
+        InventoryService.reduce_inventory(new_product, new_quantity, allow_negative=True)
+    else:
+        # Same product, quantity changed
+        quantity_diff = new_quantity - old_quantity
+        if quantity_diff > 0:
+            # Need more inventory
+            if not InventoryService.check_availability(new_product, quantity_diff):
+                return bad_request_response(f"Not enough {new_product.name} in inventory")
+            InventoryService.reduce_inventory(new_product, quantity_diff, allow_negative=True)
+        elif quantity_diff < 0:
+            # Returning inventory
+            InventoryService.add_inventory(new_product, abs(quantity_diff))
+    
+    # Update sale record
+    sale.prod = new_product
+    sale.quantity = new_quantity
+    sale.prod_price = new_prod_price
+    sale.user_id = new_user_id
+    sale.save()
+    
+    # Update transaction details and status via PaymentService
+    try:
+        PaymentService.update_transaction_status(
+            transaction=transaction,
+            new_total_amount=new_total,
+            transaction_currency=currency
+        )
+        # Recalculate total_paid for response after update
+        total_paid = PaymentService.calculate_total_paid(transaction)
+    except PaymentError as e:
+        return bad_request_response(str(e))
+    
+    return Response({
+        "message": "Sale updated successfully",
+        "sale_id": sale.id,
+        "transaction_id": transaction.id,
+        "transaction_status": transaction.status,
+        "total_amount": float(new_total),
+        "total_paid": float(total_paid),
+        "remaining": float(new_total - total_paid),
+    })
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+@api_error_handler
+def deleteSale(request, pk):
+    """Delete a sale and reverse all its effects (payments, inventory)"""
+    from selita.services.inventory_service import InventoryService
+    from selita.services.payment_service import PaymentService
+    from django.db import transaction as db_transaction
+    
+    try:
+        sale = Sales.objects.select_related('transaction', 'prod').get(id=pk)
+    except Sales.DoesNotExist:
+        return not_found_response("Sale")
+    
+    transaction = sale.transaction
+    product = sale.prod
+    quantity = sale.quantity
+    
+    # Wrap entire delete operation in atomic transaction for consistency
+    with db_transaction.atomic():
+        # CRITICAL: Reverse all payments FIRST (before deleting)
+        reversal_result = PaymentService.reverse_all_payments(transaction)
+        
+        # Reverse inventory (add back the sold quantity)
+        InventoryService.add_inventory(product, quantity)
+        
+        # Store info for response
+        sale_id = sale.id
+        transaction_id = transaction.id
+        
+        # Delete the transaction (CASCADE will delete Sale and Payments)
+        transaction.delete()
+    
+    return Response({
+        "message": "Sale deleted successfully",
+        "sale_id": sale_id,
+        "transaction_id": transaction_id,
+        "inventory_restored": float(quantity),
+        "product_name": product.name,
+        "payments_reversed": reversal_result["payment_count"],
+        "total_reversed": reversal_result["total_reversed"],
+        "accounts_affected": reversal_result["accounts_affected"],
+    })
