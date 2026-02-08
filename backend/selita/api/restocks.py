@@ -146,11 +146,14 @@ def addRestock(request):
     )
 
     # Create Restock record linked to transaction
+    # Store unit price in Restock model, while Transaction has total_amount
+    unit_price = restock_price / Decimal(str(quantity))
+    
     restock = Restock.objects.create(
         transaction=transaction,
         prod=product,
         quantity=quantity,
-        restock_price=restock_price
+        restock_price=unit_price
     )
 
     # Update inventory using InventoryService
@@ -194,47 +197,140 @@ def addRestock(request):
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def updateRestock(request, pk):
+    """Update an existing restock with validation to prevent overpayment"""
     from selita.services.inventory_service import InventoryService
+    from selita.services.payment_service import PaymentService, PaymentError
     
     try:
-        restock = Restock.objects.get(id=pk)
+        restock = Restock.objects.select_related('transaction', 'prod').get(id=pk)
     except ObjectDoesNotExist:
         return not_found_response("Restock")
     
+    transaction = restock.transaction
+    
+    # Store old values
     old_quantity = restock.quantity
-
-    serializer = RestockSerializer(instance=restock, data=request.data)
-    if serializer.is_valid():
-        updated_restock = serializer.save()
-
-        # Update inventory: use InventoryService for the difference
-        quantity_difference = updated_restock.quantity - old_quantity
-        if quantity_difference != 0:
-            if quantity_difference > 0:
-                InventoryService.add_inventory(updated_restock.prod, Decimal(str(quantity_difference)))
-            else:
-                InventoryService.reduce_inventory(updated_restock.prod, Decimal(str(abs(quantity_difference))), allow_negative=True)
-
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    old_prod_id = restock.prod_id
+    old_product = restock.prod
+    old_restock_price = restock.restock_price
+    old_total_amount = transaction.total_amount
+    
+    # Get new values from request
+    # Use transaction.total_amount as default for price since input represents Total Price
+    new_prod_id = request.data.get("prod", old_prod_id)
+    new_quantity = Decimal(str(request.data.get("quantity", old_quantity)))
+    new_restock_price = Decimal(str(request.data.get("restock_price", old_total_amount)))
+    currency = request.data.get("currency", transaction.currency)
+    
+    # Validate inputs
+    if new_quantity <= 0:
+        return bad_request_response("Quantity must be greater than zero")
+    
+    # Get new product if changed
+    if new_prod_id != old_prod_id:
+        try:
+            new_product = Product.objects.get(id=new_prod_id)
+        except ObjectDoesNotExist:
+            return not_found_response("Product")
+    else:
+        new_product = old_product
+    
+    # Handle inventory changes
+    if new_prod_id != old_prod_id:
+        # Product changed: reverse old inventory, add new
+        InventoryService.reduce_inventory(old_product, old_quantity, allow_negative=True)
+        InventoryService.add_inventory(new_product, new_quantity)
+    else:
+        # Same product, quantity changed
+        quantity_diff = new_quantity - old_quantity
+        if quantity_diff > 0:
+            InventoryService.add_inventory(new_product, quantity_diff)
+        elif quantity_diff < 0:
+            InventoryService.reduce_inventory(new_product, abs(quantity_diff), allow_negative=True)
+    
+    # Calculate unit price for storage
+    unit_price = new_restock_price / new_quantity
+    
+    # Update restock record
+    restock.prod = new_product
+    restock.quantity = new_quantity
+    restock.restock_price = unit_price # Store unit price
+    restock.save()
+    
+    # Update transaction details and status via PaymentService
+    try:
+        PaymentService.update_transaction_status(
+            transaction=transaction,
+            new_total_amount=new_restock_price,
+            transaction_currency=currency
+        )
+        # Recalculate total_paid for response after update
+        total_paid = PaymentService.calculate_total_paid(transaction)
+    except PaymentError as e:
+        return bad_request_response(str(e))
+    
+    return Response({
+        "message": "Restock updated successfully",
+        "restock_id": restock.id,
+        "transaction_id": transaction.id,
+        "transaction_status": transaction.status,
+        "total_amount": float(new_restock_price),
+        "total_paid": float(total_paid),
+        "remaining": float(new_restock_price - total_paid),
+    })
 
 
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def deleteRestock(request, pk):
-    from selita.services.inventory_service import InventoryService
+    from selita.services.inventory_service import InventoryService, InventoryError
+    from selita.services.payment_service import PaymentService, PaymentError
+    from django.db import transaction as db_transaction
     
     try:
-        restock = Restock.objects.get(id=pk)
+        restock = Restock.objects.select_related('transaction', 'prod').get(id=pk)
     except ObjectDoesNotExist:
         return not_found_response("Restock")
-
-    # Remove the restocked quantity from inventory using InventoryService
-    InventoryService.reduce_inventory(restock.prod, Decimal(str(restock.quantity)), allow_negative=True)
-
-    restock.delete()
-    return Response("Restock deleted successfully")
+    
+    transaction = restock.transaction
+    product = restock.prod
+    quantity = restock.quantity
+    
+    # Wrap entire delete operation in atomic transaction
+    # If inventory reduction fails, payment reversal is also rolled back
+    try:
+        with db_transaction.atomic():
+            # CRITICAL: Reverse all payments FIRST (before deleting)
+            reversal_result = PaymentService.reverse_all_payments(transaction)
+            
+            # Reverse inventory (remove the restocked quantity)
+            # allow_negative=False prevents deleting if items have been sold
+            InventoryService.reduce_inventory(product, quantity, allow_negative=False)
+            
+            restock_id = restock.id
+            transaction_id = transaction.id
+            
+            # Delete the transaction (CASCADE will delete Restock and Payments)
+            transaction.delete()
+    except InventoryError as e:
+        # Atomic block ensures payment reversal is rolled back
+        return bad_request_response(
+            f"Furnizimi nuk mund të fshihet: {quantity} njësi u shtuan, por vetëm "
+            f"{InventoryService.get_inventory_quantity(product)} janë në gjendje. "
+            "Disa njësi mund të jenë shitur tashmë."
+        )
+    
+    return Response({
+        "message": "Restock deleted successfully",
+        "restock_id": restock_id,
+        "transaction_id": transaction_id,
+        "inventory_removed": float(quantity),
+        "product_name": product.name,
+        "payments_reversed": reversal_result["payment_count"],
+        "total_reversed": reversal_result["total_reversed"],
+        "accounts_affected": reversal_result["accounts_affected"],
+    })
 
 
 @api_view(["GET"])
@@ -295,7 +391,7 @@ def payRestock(request, pk):
     amount = Decimal(str(request.data.get('amount', 0)))
     payment_currency = request.data.get('currency', transaction.currency)
     payment_method = request.data.get('payment_method', 'CASH')
-    notes = request.data.get('notes', f'Payment for restock #{pk}')
+    notes = request.data.get('notes', f'Pagesa per furnizimin #{pk}')
     pay_remaining = request.data.get('pay_remaining', False)
     
     try:
