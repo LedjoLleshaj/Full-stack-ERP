@@ -110,6 +110,8 @@ urlpatterns = [
     path("salesinfo", sales.getProductsFromSales),
     path("usersfromsales", sales.getUsersFromSales),
     path("create-sale", sales.createSale),
+    path("update-sale/<str:pk>", sales.updateSale),
+    path("delete-sale/<str:pk>", sales.deleteSale),
     path("pay-sale/<str:pk>", sales.paySale),
     path("last-sold-price", sales.getLastSoldPrice),
     path("sale-details/<str:pk>", sales.getSaleDetails),
