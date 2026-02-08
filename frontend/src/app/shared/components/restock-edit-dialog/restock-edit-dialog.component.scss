@@ -1,0 +1,66 @@
+.dialog-content {
+  min-width: 600px;
+  padding: 24px;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.info-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  margin-top: 8px;
+  background-color: var(--accent-light, #fff3e0);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    flex-shrink: 0;
+    color: #f57c00;
+  }
+  
+  span {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-primary);
+  }
+}
+
+.button-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+  margin: 0;
+}
+
+// Dark mode support
+:host-context(.dark-mode) {
+  .info-message {
+    background-color: rgba(255, 152, 0, 0.15);
+    border-color: rgba(255, 152, 0, 0.4);
+    
+    mat-icon {
+      color: #ffb74d;
+    }
+    
+    span {
+      color: #ffffff;
+    }
+  }
+}

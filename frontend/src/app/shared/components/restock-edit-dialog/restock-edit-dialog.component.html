@@ -1,0 +1,107 @@
+<h2 mat-dialog-title>Modifiko Furnizimin</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="editForm" class="edit-form">
+    
+    <!-- Product Select -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Produkti</mat-label>
+      <mat-select formControlName="prod">
+        <mat-option *ngFor="let product of data.products" [value]="product.id">
+          {{ product.name }} - {{ product.category }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matSuffix>inventory_2</mat-icon>
+      <mat-error *ngIf="editForm.get('prod')?.hasError('required')">
+        Produkti është i detyrueshëm
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Quantity -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Sasia</mat-label>
+      <input matInput
+             type="number"
+             formControlName="quantity"
+             placeholder="Vendos sasinë"
+             min="1"
+             step="1">
+      <mat-icon matSuffix>scale</mat-icon>
+      <mat-error *ngIf="editForm.get('quantity')?.hasError('required')">
+        Sasia është e detyrueshme
+      </mat-error>
+      <mat-error *ngIf="editForm.get('quantity')?.hasError('min')">
+        Sasia duhet të jetë më e madhe se 0
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Unit Price -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Çmimi për njësi</mat-label>
+      <input matInput
+             type="number"
+             formControlName="unit_price"
+             placeholder="Çmimi për njësi"
+             min="0"
+             step="1">
+      <mat-icon matSuffix>payments</mat-icon>
+      <mat-error *ngIf="editForm.get('unit_price')?.hasError('required')">
+        Çmimi për njësi është i detyrueshëm
+      </mat-error>
+      <mat-error *ngIf="editForm.get('unit_price')?.hasError('min')">
+        Çmimi duhet të jetë më i madh se 0
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Restock Price (Total) -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Çmimi Total i Furnizimit</mat-label>
+      <input matInput
+             type="number"
+             formControlName="restock_price"
+             placeholder="Vendos çmimin total"
+             min="0"
+             step="1">
+      <mat-icon matSuffix>euro</mat-icon>
+      <mat-error *ngIf="editForm.get('restock_price')?.hasError('required')">
+        Çmimi është i detyrueshëm
+      </mat-error>
+      <mat-error *ngIf="editForm.get('restock_price')?.hasError('min')">
+        Çmimi total nuk mund të jetë më i vogël se shuma e paguar
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Currency -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Monedha</mat-label>
+      <mat-select formControlName="currency">
+        <mat-option *ngFor="let currency of currencies" [value]="currency">
+          {{ currency }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matSuffix *ngIf="!isLoadingRate">attach_money</mat-icon>
+      <mat-spinner matSuffix *ngIf="isLoadingRate" [diameter]="20"></mat-spinner>
+    </mat-form-field>
+
+    <!-- Payment Warning -->
+    <div class="info-message" *ngIf="hasPayments">
+      <mat-icon color="accent">info</mat-icon>
+      <span>Ky furnizim ka pagesa të regjistruara (Paguar: {{ totalPaid | number:'1.2-2' }}). Sigurohuni që çmimi i ri të mos jetë më i vogël se shuma e paguar.</span>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSaving">
+    Anullo
+  </button>
+  <button mat-raised-button 
+          color="primary" 
+          (click)="onSave()"
+          [disabled]="!editForm.valid || isSaving">
+    <mat-spinner *ngIf="isSaving" diameter="20" class="button-spinner"></mat-spinner>
+    <mat-icon *ngIf="!isSaving">save</mat-icon>
+    <span *ngIf="!isSaving">Ruaj</span>
+  </button>
+</mat-dialog-actions>
