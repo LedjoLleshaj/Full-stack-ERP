@@ -16,10 +16,10 @@ export class LayoutComponent {
   username: string = "";
   firstName: string = "";
   lastName: string = "";
-  isProductMenuOpen: boolean = false; // Track product menu state
   isClientMenuOpen: boolean = false; // Track client menu state
   isSupplierMenuOpen: boolean = false; // Track supplier menu state
   isSaleMenuOpen: boolean = false; // Track sale menu state
+  isRestockMenuOpen: boolean = false; // Track restock menu state
 
   constructor(
     public router: Router,
@@ -49,7 +49,6 @@ export class LayoutComponent {
   }
 
   navigateToProducts() {
-    this.isProductMenuOpen = !this.isProductMenuOpen;
     this.router.navigate(["/products"]);
   }
   navigateToClients() {
@@ -63,6 +62,12 @@ export class LayoutComponent {
   navigateToSales() {
     this.isSaleMenuOpen = !this.isSaleMenuOpen;
     this.router.navigate(["/sales"]);
+  }
+
+
+  navigateToRestocks() {
+    this.isRestockMenuOpen = !this.isRestockMenuOpen;
+    this.router.navigate(["/restocks"]);
   }
 
 }

@@ -11,7 +11,7 @@ const routes: Routes = [
     path: "home",
     component: LandingPageComponent,
     canActivate: [PublicGuard],
-    title: "Selita Peshk",
+    title: "Selita fish",
   },
   {
     path: "login",

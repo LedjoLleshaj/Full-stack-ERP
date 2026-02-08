@@ -50,75 +50,78 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
         
-        self.stdout.write(self.style.NOTICE("Fetching exchange rates..."))
-        self.stdout.write(self.style.NOTICE("Currency mapping: LEK (database) <-> ALL (API)"))
+        self.stdout.write(self.style.NOTICE("Fetching exchange rates with EUR as base..."))
         
-        rates_updated = 0
-        rates_created = 0
-        errors = []
+        # Primary base currency for our calculations
+        PRIMARY_BASE = "EUR"
+        api_base = self.to_api_code(PRIMARY_BASE)
+        
+        try:
+            # Fetch primary rates from API
+            response = requests.get(f"{self.API_URL}/{api_base}", timeout=10)
+            response.raise_for_status()
+            data = response.json()
 
-        for base_currency in self.CURRENCIES:
-            try:
-                # Convert to API code for the request
-                api_base = self.to_api_code(base_currency)
-                
-                # Fetch rates from API
-                response = requests.get(f"{self.API_URL}/{api_base}", timeout=10)
-                response.raise_for_status()
-                data = response.json()
+            if data.get("result") != "success":
+                self.stdout.write(self.style.ERROR(f"API error: {data.get('error-type', 'Unknown error')}"))
+                return
 
-                if data.get("result") != "success":
-                    errors.append(f"API error for {base_currency} ({api_base}): {data.get('error-type', 'Unknown error')}")
-                    continue
+            # These are rates from PRIMARY_BASE to other currencies
+            # e.g., base_rates["USD"] = 1.08 (1 EUR = 1.08 USD)
+            conversion_rates = data.get("conversion_rates", {})
+            base_rates = {}
+            for db_code in self.CURRENCIES:
+                api_code = self.to_api_code(db_code)
+                rate = conversion_rates.get(api_code)
+                if rate:
+                    base_rates[db_code] = Decimal(str(rate))
+            
+            if PRIMARY_BASE not in base_rates:
+                base_rates[PRIMARY_BASE] = Decimal("1.000000")
 
-                conversion_rates = data.get("conversion_rates", {})
+            rates_created = 0
+            rates_updated = 0
 
-                # Update rates for all target currencies
-                for target_currency in self.CURRENCIES:
-                    if target_currency == base_currency:
-                        # Set rate to 1 for same currency
+            # For every pair (A, B), calculate rate as (1/EUR->A) * (EUR->B)
+            # This ensures rate(A->B) * rate(B->A) = 1 exactly (triangular consistency)
+            for from_curr in self.CURRENCIES:
+                for to_curr in self.CURRENCIES:
+                    if from_curr == to_curr:
                         rate = Decimal("1.000000")
                     else:
-                        # Convert to API code to look up the rate
-                        api_target = self.to_api_code(target_currency)
-                        api_rate = conversion_rates.get(api_target)
+                        # rate(A -> B) = (1 / rate(EUR -> A)) * rate(EUR -> B)
+                        # Example: EUR->USD = 1.1, EUR->LEK = 100
+                        # USD->LEK = (1/1.1) * 100 = 90.9090...
+                        eur_to_from = base_rates.get(from_curr)
+                        eur_to_to = base_rates.get(to_curr)
                         
-                        if api_rate is None:
-                            errors.append(f"No rate found for {base_currency} -> {target_currency} (API: {api_base} -> {api_target})")
+                        if not eur_to_from or not eur_to_to:
+                            self.stdout.write(self.style.WARNING(f"  Skipping {from_curr} -> {to_curr} (missing base rate)"))
                             continue
-                        rate = Decimal(str(api_rate))
+                            
+                        rate = (Decimal("1.0") / eur_to_from) * eur_to_to
+                        # Quantize to 6 decimal places as per model
+                        rate = rate.quantize(Decimal("0.000001"))
 
                     if dry_run:
-                        self.stdout.write(f"  Would set {base_currency} -> {target_currency}: {rate}")
+                        self.stdout.write(f"  Would set {from_curr} -> {to_curr}: {rate}")
                     else:
-                        # Update or create the exchange rate using DB codes
                         obj, created = ExchangeRate.objects.update_or_create(
-                            from_currency=base_currency,
-                            to_currency=target_currency,
+                            from_currency=from_curr,
+                            to_currency=to_curr,
                             defaults={"rate": rate}
                         )
-                        if created:
-                            rates_created += 1
-                        else:
-                            rates_updated += 1
+                        if created: rates_created += 1
+                        else: rates_updated += 1
 
-                self.stdout.write(self.style.SUCCESS(f"  ✓ {base_currency} ({api_base}) rates fetched"))
+            if not dry_run:
+                self.stdout.write(self.style.SUCCESS(
+                    f"Exchange rates synchronized: {rates_created} created, {rates_updated} updated"
+                ))
+            else:
+                self.stdout.write(self.style.WARNING("DRY RUN - No changes made"))
 
-            except requests.RequestException as e:
-                errors.append(f"Network error for {base_currency}: {str(e)}")
-            except Exception as e:
-                errors.append(f"Error processing {base_currency}: {str(e)}")
-
-        # Summary
-        self.stdout.write("")
-        if dry_run:
-            self.stdout.write(self.style.WARNING("DRY RUN - No changes made"))
-        else:
-            self.stdout.write(self.style.SUCCESS(
-                f"Exchange rates synchronized: {rates_created} created, {rates_updated} updated"
-            ))
-
-        if errors:
-            self.stdout.write(self.style.ERROR("Errors encountered:"))
-            for error in errors:
-                self.stdout.write(self.style.ERROR(f"  - {error}"))
+        except requests.RequestException as e:
+            self.stdout.write(self.style.ERROR(f"Network error: {str(e)}"))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Error: {str(e)}"))

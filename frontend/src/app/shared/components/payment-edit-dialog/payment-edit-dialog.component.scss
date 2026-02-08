@@ -1,0 +1,30 @@
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  min-width: 400px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.amount-field {
+  flex: 2;
+}
+
+.currency-field {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-dialog-actions {
+  padding: 12px 20px;
+  margin: 0;
+}

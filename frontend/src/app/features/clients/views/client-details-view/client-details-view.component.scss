@@ -406,17 +406,19 @@ mat-divider {
   margin-bottom: 0;
 }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
+.sale-form {
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
 
-.form-actions button {
-  flex: 1;
-  height: 48px;
-  font-size: 16px;
-  font-weight: 500;
+    button {
+      flex: 1;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
 }
 
 /* ========== Empty State ========== */

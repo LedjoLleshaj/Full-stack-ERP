@@ -1,0 +1,105 @@
+<h2 mat-dialog-title>Modifiko Shitjen</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="editForm" class="edit-form">
+    
+    <!-- Product Autocomplete -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Produkti</mat-label>
+      <input type="text"
+             matInput
+             formControlName="product"
+             [matAutocomplete]="auto"
+             placeholder="Zgjidh produktin">
+      <mat-icon matSuffix>search</mat-icon>
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayProduct">
+        <mat-option *ngFor="let product of filteredProducts | async" [value]="product">
+          {{ product.name }} - {{ product.category }}
+        </mat-option>
+      </mat-autocomplete>
+      <mat-error *ngIf="editForm.get('product')?.hasError('required')">
+        Produkti është i detyrueshëm
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Quantity -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Sasia</mat-label>
+      <input matInput
+             type="number"
+             formControlName="quantity"
+             placeholder="Vendos sasinë"
+             min="0"
+             step="1">
+      <mat-icon matSuffix>inventory</mat-icon>
+      <mat-error *ngIf="editForm.get('quantity')?.hasError('required')">
+        Sasia është e detyrueshme
+      </mat-error>
+      <mat-error *ngIf="editForm.get('quantity')?.hasError('min')">
+        Sasia duhet të jetë më e madhe se 0
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Product Price -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Çmimi për njësi</mat-label>
+      <input matInput
+             type="number"
+             formControlName="prod_price"
+             placeholder="Vendos çmimin"
+             min="0"
+             step="1">
+      <mat-icon matSuffix>euro</mat-icon>
+      <mat-error *ngIf="editForm.get('prod_price')?.hasError('required')">
+        Çmimi është i detyrueshëm
+      </mat-error>
+      <mat-error *ngIf="editForm.get('prod_price')?.hasError('min')">
+        Çmimi duhet të jetë më i madh ose i barabartë me 0
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Currency -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Monedha</mat-label>
+      <mat-select formControlName="currency">
+        <mat-option *ngFor="let currency of currencies" [value]="currency">
+          {{ currency }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matSuffix *ngIf="!isLoadingRate">attach_money</mat-icon>
+      <mat-spinner matSuffix *ngIf="isLoadingRate" [diameter]="20"></mat-spinner>
+    </mat-form-field>
+
+    <!-- Total Display -->
+    <div class="total-display">
+      <span class="total-label">Totali:</span>
+      <span class="total-value">
+        {{ calculateTotal() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
+      </span>
+    </div>
+
+    <!-- Payment Warning -->
+    <div class="info-message" *ngIf="hasPayments">
+      <mat-icon color="accent">info</mat-icon>
+      <span *ngIf="!isTotalInvalid()">Kjo shitje ka pagesa të regjistruara (Paguar: {{ totalPaid | number:'1.2-2' }} {{ editForm.get('currency')?.value }}). Sigurohuni që totali i ri të mos jetë më i vogël se shuma e paguar.</span>
+      <span *ngIf="isTotalInvalid()" color="warn" class="error-text">
+        <strong>Vini re:</strong> Totali i ri ({{ calculateTotal() | number:'1.2-2' }}) është më i vogël se shuma e paguar tashmë ({{ totalPaid | number:'1.2-2' }}). Ju lutem rritni sasinë ose çmimin.
+      </span>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSaving">
+    Anullo
+  </button>
+  <button mat-raised-button 
+          color="primary" 
+          (click)="onSave()"
+          [disabled]="!editForm.valid || isSaving || isTotalInvalid()">
+    <mat-spinner *ngIf="isSaving" diameter="20" class="button-spinner"></mat-spinner>
+    <mat-icon *ngIf="!isSaving">save</mat-icon>
+    <span *ngIf="!isSaving">Ruaj</span>
+  </button>
+</mat-dialog-actions>

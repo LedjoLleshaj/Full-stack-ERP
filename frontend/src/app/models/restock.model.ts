@@ -44,3 +44,24 @@ export interface RestockReportRow {
   Data: string;
   Statusi: string;
 }
+
+export interface RestockUpdateResponse {
+  message: string;
+  restock_id: number;
+  transaction_id: number;
+  transaction_status: string;
+  total_amount: number;
+  total_paid: number;
+  remaining: number;
+}
+
+export interface RestockDeleteResponse {
+  message: string;
+  restock_id: number;
+  transaction_id: number;
+  inventory_removed: number;
+  product_name: string;
+  payments_reversed: number;
+  total_reversed: number;
+  accounts_affected: number[];
+}

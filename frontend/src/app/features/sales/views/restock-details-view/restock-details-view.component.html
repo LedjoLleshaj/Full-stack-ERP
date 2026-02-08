@@ -25,6 +25,16 @@
           {{ getStatusLabel(restockDetails.transaction_info.status || "PENDING") }}
         </span>
       </div>
+      <div class="header-actions">
+        <button mat-stroked-button color="primary" (click)="onEdit()" class="action-btn edit-btn">
+          <mat-icon>edit</mat-icon>
+          Modifiko
+        </button>
+        <button mat-stroked-button color="warn" (click)="onDelete()" class="action-btn delete-btn">
+          <mat-icon>delete</mat-icon>
+          Fshi
+        </button>
+      </div>
       <span class="restock-date">{{ formatDate(restockDetails.restock_date) }}</span>
     </div>
 
@@ -182,6 +192,19 @@
             <td mat-cell *matCellDef="let payment">{{ payment.notes || "-" }}</td>
           </ng-container>
 
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">Veprime</th>
+            <td mat-cell *matCellDef="let payment" class="actions-cell">
+              <button mat-icon-button color="primary" (click)="onEditPayment(payment)" matTooltip="Modifiko">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="onDeletePayment(payment)" matTooltip="Fshi">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
@@ -211,7 +234,7 @@
                 (ngModelChange)="onAmountChange()"
                 [max]="getMaxPaymentAmount()"
                 min="0.01"
-                step="0.01"
+                step="1"
               />
               <span matTextSuffix>{{ paymentCurrency }}</span>
               <mat-hint>
@@ -277,7 +300,7 @@
 
           <!-- Submit Button -->
           <div class="form-actions">
-            <button mat-button (click)="togglePaymentForm()">Anulo</button>
+            <button mat-button (click)="togglePaymentForm()">Anullo</button>
             <button
               mat-raised-button
               color="primary"

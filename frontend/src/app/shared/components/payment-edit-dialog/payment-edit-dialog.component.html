@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>Modifiko Pagesën</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="paymentForm" class="payment-form">
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="amount-field">
+        <mat-label>Shuma</mat-label>
+        <input matInput type="number" formControlName="amount" placeholder="Shuma">
+        <span matTextSuffix>{{ paymentForm.get('currency')?.value }}</span>
+        <mat-hint>Maksimumi i lejuar: {{ formatCurrency(maxAmount) }}</mat-hint>
+        <mat-error *ngIf="paymentForm.get('amount')?.hasError('required')">Shuma është e detyrueshme</mat-error>
+        <mat-error *ngIf="paymentForm.get('amount')?.hasError('min')">Shuma duhet të jetë më e madhe se 0</mat-error>
+        <mat-error *ngIf="paymentForm.get('amount')?.hasError('max')">Shuma tejkalon totalin e lejuar</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="currency-field">
+        <mat-label>Monedha</mat-label>
+        <mat-select formControlName="currency" (selectionChange)="onCurrencyChange()">
+          <mat-option *ngFor="let curr of currencies" [value]="curr">{{ curr }}</mat-option>
+        </mat-select>
+        <mat-spinner matSuffix *ngIf="isLoadingRate" [diameter]="20"></mat-spinner>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Metoda e Pagesës</mat-label>
+      <mat-select formControlName="payment_method">
+        <mat-option value="CASH">Cash</mat-option>
+        <mat-option value="CARD">Card</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Shënime</mat-label>
+      <textarea matInput formControlName="notes" placeholder="Shënime opsionale" rows="3"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Anulo</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="paymentForm.invalid">
+    Ruaj Ndryshimet
+  </button>
+</mat-dialog-actions>
