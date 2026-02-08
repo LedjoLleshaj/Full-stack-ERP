@@ -111,9 +111,9 @@ export class CurrencyExchangeService {
   private getFallbackRates(): ExchangeRatesResponse {
     return {
       rates: {
-        EUR: { EUR: 1, USD: 1.16, LEK: 95 },
-        USD: { EUR: 0.85, USD: 1, LEK: 82 },
-        LEK: { EUR: 0.013, USD: 0.012, LEK: 1 },
+        EUR: { EUR: 1, USD: 1.08, LEK: 103 },
+        USD: { EUR: 0.925926, USD: 1, LEK: 95.370370 },
+        LEK: { EUR: 0.009709, USD: 0.010485, LEK: 1 },
       },
       last_updated: null,
       currencies: ["EUR", "USD", "LEK"],
