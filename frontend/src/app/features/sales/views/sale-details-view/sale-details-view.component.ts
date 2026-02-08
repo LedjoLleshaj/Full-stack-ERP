@@ -2,9 +2,16 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { MatSnackBar } from "@angular/material/snack-bar";
 
+
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
 import { CurrencyExchangeService } from "src/app/shared/services/currency-exchange/currency-exchange.service";
+import { ProductService } from "src/app/shared/services/product-api/product.service";
+import { MatDialog } from "@angular/material/dialog";
+import { SaleEditDialogComponent } from "src/app/shared/components/sale-edit-dialog/sale-edit-dialog.component";
+import { DeleteConfirmationDialogComponent } from "src/app/shared/components/delete-confirmation-dialog/delete-confirmation-dialog.component";
 import { SaleDetails, PaymentRequest } from "../../../../models/sale.model";
+import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
+import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
 
 @Component({
   selector: "app-sale-details-view",
@@ -18,7 +25,7 @@ export class SaleDetailsViewComponent implements OnInit {
   errorMessage = "";
 
   // Table columns for payments
-  displayedColumns: string[] = ["payment_date", "amount", "payment_method", "currency", "notes"];
+  displayedColumns: string[] = ["payment_date", "amount", "payment_method", "currency", "notes", "actions"];
 
   // Payment form fields
   showPaymentForm = false;
@@ -42,6 +49,9 @@ export class SaleDetailsViewComponent implements OnInit {
     private router: Router,
     private salesService: SalesApiService,
     private currencyService: CurrencyExchangeService,
+    private productService: ProductService,
+    private paymentService: PaymentApiService,
+    private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
 
@@ -275,6 +285,169 @@ export class SaleDetailsViewComponent implements OnInit {
     if (this.saleDetails?.client?.id) {
       this.router.navigate(["/client", this.saleDetails.client.id]);
     }
+  }
+
+  onEdit(): void {
+    if (!this.saleDetails) return;
+
+    this.productService.getProducts().subscribe({
+      next: (products) => {
+        const dialogRef = this.dialog.open(SaleEditDialogComponent, {
+          width: '600px',
+          data: {
+            sale: {
+              ...this.saleDetails,
+              prod: this.saleDetails?.product?.id,
+              id: this.saleDetails?.id,
+              product: this.saleDetails?.product,
+              client: this.saleDetails?.client,
+              quantity: this.saleDetails?.quantity,
+              prod_price: this.saleDetails?.prod_price,
+              payment_status: this.saleDetails?.transaction?.status,
+              currency: this.saleDetails?.transaction?.currency,
+              user: this.saleDetails?.user?.id || 1,
+              sale_date: this.saleDetails?.sale_date
+            },
+            products: products,
+            totalPaid: this.saleDetails?.payment_summary?.total_paid || 0
+          }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.updateSale(result);
+          }
+        });
+      },
+      error: (err) => {
+        console.error("Error loading products", err);
+        this.snackBar.open("Gabim gjatë ngarkimit të produkteve", "OK", { duration: 3000 });
+      }
+    });
+  }
+
+  onDelete(): void {
+    if (!this.saleDetails) return;
+
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '500px',
+      data: {
+        title: 'Fshi Shitjen?',
+        message: `Je i sigurt që dëshiron të fshish shitjen për ${this.saleDetails.product.name}?`,
+        itemDetails: {
+          'Produkti': this.saleDetails.product.name,
+          'Sasia': `${this.saleDetails.quantity} kg`,
+          'Çmimi': this.formatCurrency(this.saleDetails.prod_price, this.saleDetails.transaction?.currency || 'EUR'),
+          'Klienti': this.saleDetails.client?.name || 'Unknown'
+        },
+        hasPayments: (this.saleDetails.payment_summary?.total_paid || 0) > 0
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.deleteSale();
+      }
+    });
+  }
+
+  private updateSale(data: any): void {
+    this.isLoading = true;
+    this.salesService.updateSale(this.saleId, data).subscribe({
+      next: (response) => {
+        this.snackBar.open('Shitja u përditësua me sukses!', 'OK', { duration: 3000 });
+        this.loadSaleDetails();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.snackBar.open(
+          error.error?.message || 'Gabim gjatë përditësimit të shitjes',
+          'OK',
+          { duration: 5000 }
+        );
+      }
+    });
+  }
+
+  private deleteSale(): void {
+    this.isLoading = true;
+    this.salesService.deleteSale(this.saleId).subscribe({
+      next: (response) => {
+        this.snackBar.open(
+          `Shitja u fshi! ${response.payments_reversed} pagesa u kthyen.`,
+          'OK',
+          { duration: 4000 }
+        );
+        this.goBack();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.snackBar.open(
+          error.error?.message || 'Gabim gjatë fshirjes së shitjes',
+          'OK',
+          { duration: 5000 }
+        );
+      }
+    });
+  }
+
+  onEditPayment(payment: any): void {
+    const dialogRef = this.dialog.open(PaymentEditDialogComponent, {
+      width: '450px',
+      data: {
+        payment: payment,
+        transactionTotal: parseFloat(this.saleDetails?.transaction?.total_amount || '0'),
+        otherPaymentsTotal: (this.saleDetails?.payments || [])
+          .filter((p: any) => p.id !== payment.id)
+          .reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0),
+        currency: this.saleDetails?.transaction?.currency || 'LEK'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.paymentService.updatePayment(payment.id, result).subscribe({
+          next: () => {
+            this.snackBar.open('Pagesa u përditësua me sukses', 'OK', { duration: 3000 });
+            this.loadSaleDetails();
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.error || 'Gabim gjatë përditësimit të pagesës';
+            this.snackBar.open(errorMsg, 'OK', { duration: 5000 });
+          }
+        });
+      }
+    });
+  }
+
+  onDeletePayment(payment: any): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Fshi Pagesën',
+        message: `Je i sigurt që dëshiron të fshish këtë pagesë prej ${this.formatCurrency(payment.amount, payment.currency)}?`,
+        itemDetails: {
+          'Data': this.formatDate(payment.payment_date),
+          'Shuma': this.formatCurrency(payment.amount, payment.currency),
+          'Mënyra': this.getPaymentMethodLabel(payment.payment_method)
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.paymentService.deletePayment(payment.id).subscribe({
+          next: () => {
+            this.snackBar.open('Pagesa u fshi me sukses', 'OK', { duration: 3000 });
+            this.loadSaleDetails();
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.error || 'Gabim gjatë fshirjes së pagesës';
+            this.snackBar.open(errorMsg, 'OK', { duration: 5000 });
+          }
+        });
+      }
+    });
   }
 }
 
