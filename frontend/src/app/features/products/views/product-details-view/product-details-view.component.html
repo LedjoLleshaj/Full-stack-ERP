@@ -26,7 +26,7 @@
       <div class="header-actions">
         <button mat-stroked-button color="primary" (click)="toggleEdit()" class="action-btn edit-btn">
           <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
-          {{ isEditing ? 'Anulo' : 'Modifiko' }}
+          {{ isEditing ? 'Anullo' : 'Modifiko' }}
         </button>
         <button mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
           <mat-icon>delete</mat-icon>
@@ -52,7 +52,7 @@
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Çmimi (€)</mat-label>
-              <input matInput type="number" step="0.01" [(ngModel)]="editForm.price" />
+              <input matInput type="number" step="1" [(ngModel)]="editForm.price" />
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>Përshkrimi</mat-label>
@@ -64,7 +64,7 @@
               <mat-icon>save</mat-icon>
               {{ isSaving ? 'Duke ruajtur...' : 'Ruaj' }}
             </button>
-            <button mat-stroked-button (click)="toggleEdit()">Anulo</button>
+            <button mat-stroked-button (click)="toggleEdit()">Anullo</button>
           </div>
         </div>
       </mat-card-content>

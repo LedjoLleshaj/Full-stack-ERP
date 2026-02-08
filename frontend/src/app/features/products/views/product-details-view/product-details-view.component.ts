@@ -322,8 +322,17 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
 
     this.isSaving = true;
     this.productService.updateProduct(this.productHistory.product.id, this.editForm).subscribe({
-      next: (result) => {
-        this.productHistory!.product = result;
+      next: (result: any) => {
+        // Backend returns { message: string, product: Product }
+        // We need to preserve disponibility as it's not in the update response
+        const currentDisponibility = this.productHistory!.product.disponibility;
+        const updatedProduct = result.product || result; // Handle both wrapper and direct product just in case
+        
+        this.productHistory!.product = {
+          ...updatedProduct,
+          disponibility: currentDisponibility
+        };
+        
         this.isEditing = false;
         this.isSaving = false;
         this.snackBar.open('Produkti u përditësua me sukses', 'Mbyll', { duration: 3000 });
