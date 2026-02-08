@@ -142,6 +142,8 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     CSRF_TRUSTED_ORIGINS = [f"https://{host.strip()}" for host in os.getenv("ALLOWED_DOMAINS", "").split(",") if host.strip()]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Django REST framework settings
 REST_FRAMEWORK = {
