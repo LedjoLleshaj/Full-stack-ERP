@@ -59,6 +59,104 @@
       font-weight: 500;
     }
   }
+
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .edit-btn {
+      border-color: var(--primary-color, #3b82f6);
+      color: var(--primary-color, #3b82f6);
+      
+      &:hover:not(:disabled) {
+        background-color: rgba(59, 130, 246, 0.08);
+      }
+    }
+
+    .delete-btn {
+      border-color: #dc2626;
+      color: #dc2626;
+      
+      &:hover:not(:disabled) {
+        background-color: rgba(220, 38, 38, 0.08);
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* ========== Dark Mode Support for Action Buttons ========== */
+:host-context(.dark-mode) {
+  .header-actions {
+    .edit-btn {
+      border-color: #60a5fa;
+      color: #60a5fa;
+      
+      &:hover:not(:disabled) {
+        background-color: rgba(96, 165, 250, 0.15);
+      }
+    }
+
+    .delete-btn {
+      border-color: #f87171;
+      color: #f87171;
+      
+      &:hover:not(:disabled) {
+        background-color: rgba(248, 113, 113, 0.15);
+      }
+    }
+  }
+}
+
+/* ========== Edit Card ========== */
+.edit-card {
+  margin-bottom: 24px;
+  border-radius: 12px !important;
+  
+  mat-card-content {
+    padding: 20px;
+  }
+}
+
+.edit-form {
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    
+    mat-form-field {
+      flex: 1;
+    }
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    
+    button mat-icon {
+      margin-right: 4px;
+    }
+  }
 }
 
 // Info Cards Grid

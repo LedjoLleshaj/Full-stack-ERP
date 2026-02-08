@@ -4,11 +4,66 @@
     <mat-card-header>
       <mat-icon mat-card-avatar>person</mat-icon>
       <mat-card-title>Informacione mbi Klientin</mat-card-title>
+      <div class="header-actions">
+        <button mat-stroked-button [color]="isEditing ? 'warn' : 'primary'" (click)="toggleEdit()" class="action-btn edit-btn">
+          <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
+          {{ isEditing ? 'Anullo' : 'Modifiko' }}
+        </button>
+        <button mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
+          <mat-icon>delete</mat-icon>
+          Fshi
+        </button>
+      </div>
     </mat-card-header>
     <mat-divider></mat-divider>
     <mat-card-content>
 
-    <div class="info-grid">
+    <!-- Edit Form (shown when editing) -->
+    <div *ngIf="isEditing" class="edit-form">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Emër</mat-label>
+          <input matInput [(ngModel)]="editForm.firstname" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Mbiemër</mat-label>
+          <input matInput [(ngModel)]="editForm.lastname" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput [(ngModel)]="editForm.email" type="email" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Nr. Cel</mat-label>
+          <input matInput [(ngModel)]="editForm.phone" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Adresa</mat-label>
+          <input matInput [(ngModel)]="editForm.address" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Qyteti</mat-label>
+          <input matInput [(ngModel)]="editForm.city" />
+        </mat-form-field>
+      </div>
+      <div class="form-actions">
+        <button mat-raised-button color="primary" (click)="saveEdit()" [disabled]="isSaving">
+          <mat-icon>save</mat-icon>
+          {{ isSaving ? 'Duke ruajtur...' : 'Ruaj' }}
+        </button>
+        <button mat-raised-button color="warn" (click)="toggleEdit()">
+          <mat-icon>close</mat-icon>
+          Anullo
+        </button>
+      </div>
+    </div>
+
+    <!-- View Mode (shown when not editing) -->
+    <div class="info-grid" *ngIf="!isEditing">
       <div class="info-row">
         <span class="info-label">Emer:</span>
         <span class="info-value">{{ client?.firstname }}</span>

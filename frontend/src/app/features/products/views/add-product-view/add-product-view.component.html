@@ -2,27 +2,36 @@
   <h2>Shto nje produkt</h2>
   <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
     <div class="form-grid">
-      <!-- Product Name -->
+      <!-- Product Name with Autocomplete -->
       <mat-form-field class="full-width">
-        <mat-label>Emri</mat-label>
-        <mat-select formControlName="name" required>
-          <mat-option *ngFor="let name of names" [value]="name.product_name">
-            {{ name.product_name }}
+        <mat-label>Emri i produktit</mat-label>
+        <input matInput 
+               formControlName="name" 
+               [matAutocomplete]="autoName"
+               placeholder="Shkruaj emrin e produktit...">
+        <mat-autocomplete #autoName="matAutocomplete">
+          <mat-option *ngFor="let name of filteredNames$ | async" [value]="name.product_name">
+            {{ name.product_name }} <span class="category-hint">({{ getCategoryName(name.category) }})</span>
           </mat-option>
-        </mat-select>
-        <mat-error *ngIf="productForm.controls['name'].hasError('required')"> Name is required </mat-error>
+        </mat-autocomplete>
+        <mat-hint>Zgjidh nga lista ose shkruaj emër të ri</mat-hint>
+        <mat-error *ngIf="productForm.controls['name'].hasError('required')">Emri është i detyrueshëm</mat-error>
       </mat-form-field>
 
-      <!-- Product Category
-      <mat-form-field class="full-width">
+      <!-- Category (shown only for new product names) -->
+      <mat-form-field class="full-width" *ngIf="isNewProductName">
         <mat-label>Kategoria</mat-label>
-        <mat-select formControlName="category" required>
-          <mat-option *ngFor="let category of categories" [value]="category.category_name">
-            {{ category.category_name }}
+        <input matInput 
+               [formControl]="categoryControl" 
+               [matAutocomplete]="autoCategory"
+               placeholder="Shkruaj kategorinë...">
+        <mat-autocomplete #autoCategory="matAutocomplete">
+          <mat-option *ngFor="let cat of filteredCategories$ | async" [value]="cat.category_name">
+            {{ cat.category_name }}
           </mat-option>
-        </mat-select>
-        <mat-error *ngIf="productForm.controls['category'].hasError('required')"> Category is required </mat-error>
-      </mat-form-field> -->
+        </mat-autocomplete>
+        <mat-hint>Zgjidh nga lista ose shkruaj kategori të re</mat-hint>
+      </mat-form-field>
 
       <!-- Supplier Selection -->
       <mat-form-field class="full-width">
@@ -32,7 +41,7 @@
             {{ supplier.firstname }} {{ supplier.lastname }}
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="productForm.controls['supplier_id'].hasError('required')"> Furnitori eshte i detyrueshem </mat-error>
+        <mat-error *ngIf="productForm.controls['supplier_id'].hasError('required')">Furnitori eshte i detyrueshem</mat-error>
       </mat-form-field>
 
       <!-- Product Price (per unit) -->
@@ -49,7 +58,7 @@
       <mat-form-field class="full-width">
         <mat-label>Sasia</mat-label>
         <input matInput type="number" formControlName="quantity" required />
-        <mat-error *ngIf="productForm.controls['quantity'].hasError('required')"> Quantity is required </mat-error>
+        <mat-error *ngIf="productForm.controls['quantity'].hasError('required')">Quantity is required</mat-error>
         <mat-error *ngIf="productForm.controls['quantity'].hasError('min')">
           Quantity must be greater than or equal to 1
         </mat-error>
@@ -70,7 +79,10 @@
 
       <!-- Submit Button -->
       <div class="button-container">
-        <button mat-raised-button color="primary" type="submit" [disabled]="!productForm.valid">Shto produktin</button>
+        <button mat-raised-button color="primary" type="submit" 
+                [disabled]="!productForm.valid || (isNewProductName && !categoryControl.value?.trim())">
+          Shto produktin
+        </button>
       </div>
     </div>
   </form>

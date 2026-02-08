@@ -3,7 +3,25 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { MatSnackBar } from "@angular/material/snack-bar";
 
 import { SupplierService } from "src/app/shared/services/suppliers-api/supplier.service";
+import { RestocksApiService } from "src/app/shared/services/restocks-api/restocks-api.service";
 import { CurrencyExchangeService } from "src/app/shared/services/currency-exchange/currency-exchange.service";
+import { ProductService } from "src/app/shared/services/product-api/product.service";
+import { MatDialog } from "@angular/material/dialog";
+import { RestockEditDialogComponent } from "src/app/shared/components/restock-edit-dialog/restock-edit-dialog.component";
+import { DeleteConfirmationDialogComponent } from "src/app/shared/components/delete-confirmation-dialog/delete-confirmation-dialog.component";
+import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
+import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
+
+interface Payment {
+  id: number;
+  payment_date: string;
+  amount: string;
+  currency: string;
+  payment_method: string;
+  notes: string;
+  original_amount?: string;
+  original_currency?: string;
+}
 
 interface RestockDetails {
   id: number;
@@ -24,17 +42,6 @@ interface RestockDetails {
     supplier?: number;
   };
   payments: Payment[];
-}
-
-interface Payment {
-  id: number;
-  payment_date: string;
-  amount: string;
-  currency: string;
-  payment_method: string;
-  notes: string;
-  original_amount?: string;
-  original_currency?: string;
 }
 
 interface Supplier {
@@ -59,7 +66,7 @@ export class RestockDetailsViewComponent implements OnInit {
   errorMessage = "";
 
   // Table columns for payments
-  displayedColumns: string[] = ["payment_date", "amount", "payment_method", "currency", "notes"];
+  displayedColumns: string[] = ["payment_date", "amount", "payment_method", "currency", "notes", "actions"];
 
   // Payment form fields
   showPaymentForm = false;
@@ -82,7 +89,11 @@ export class RestockDetailsViewComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private supplierService: SupplierService,
+    private restocksService: RestocksApiService,
+    private productService: ProductService,
     private currencyService: CurrencyExchangeService,
+    private paymentService: PaymentApiService,
+    private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
 
@@ -146,7 +157,7 @@ export class RestockDetailsViewComponent implements OnInit {
 
   getTotalPaid(): number {
     if (!this.restockDetails?.payments) return 0;
-    return this.restockDetails.payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    return this.restockDetails.payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0);
   }
 
   getRemainingBalance(): number {
@@ -334,5 +345,165 @@ export class RestockDetailsViewComponent implements OnInit {
     if (this.supplier?.id) {
       this.router.navigate(["/supplier", this.supplier.id]);
     }
+  }
+
+  onEdit(): void {
+    if (!this.restockDetails) return;
+
+    // Fetch products for dropdown
+    this.productService.getProducts().subscribe({
+      next: (products) => {
+        const dialogRef = this.dialog.open(RestockEditDialogComponent, {
+          width: '600px',
+          data: {
+            restock: {
+              id: this.restockDetails?.id,
+              quantity: this.restockDetails?.quantity,
+              restock_price: this.restockDetails?.restock_price,
+              prod: this.restockDetails?.product_info?.id,
+              currency: this.restockDetails?.transaction_info?.currency,
+              supplier: this.restockDetails?.transaction_info?.supplier,
+              transaction_info: this.restockDetails?.transaction_info,
+              payments: this.restockDetails?.payments
+            },
+            products: products
+          }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.updateRestock(result);
+          }
+        });
+      },
+      error: (err) => {
+        console.error("Error loading products", err);
+        this.snackBar.open("Gabim gjatë ngarkimit të produkteve", "OK", { duration: 3000 });
+      }
+    });
+  }
+
+  onDelete(): void {
+    if (!this.restockDetails) return;
+
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '500px',
+      data: {
+        title: 'Fshi Furnizimin?',
+        message: `Je i sigurt që dëshiron të fshish furnizimin për ${this.restockDetails.product_info.name}?`,
+        itemDetails: {
+          'Produkti': this.restockDetails.product_info.name,
+          'Sasia': `${this.restockDetails.quantity} kg`,
+          'Çmimi Total': this.formatCurrency(this.restockDetails.transaction_info.total_amount, this.restockDetails.transaction_info.currency || 'EUR'),
+          'Furnitori': this.supplier?.firstname + ' ' + this.supplier?.lastname
+        },
+        hasPayments: (this.getTotalPaid()) > 0
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.deleteRestock();
+      }
+    });
+  }
+
+  private updateRestock(data: any): void {
+    this.isLoading = true;
+    this.restocksService.updateRestock(this.restockId, data).subscribe({
+      next: (response) => {
+        this.snackBar.open('Furnizimi u përditësua me sukses!', 'OK', { duration: 3000 });
+        this.loadRestockDetails();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.snackBar.open(
+          error.error?.message || 'Gabim gjatë përditësimit të furnizimit',
+          'OK',
+          { duration: 5000 }
+        );
+      }
+    });
+  }
+
+  private deleteRestock(): void {
+    this.isLoading = true;
+    this.restocksService.deleteRestock(this.restockId).subscribe({
+      next: (response) => {
+        this.snackBar.open(
+          `Furnizimi u fshi! ${response.payments_reversed} pagesa u kthyen.`,
+          'OK',
+          { duration: 4000 }
+        );
+        this.goBack();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.snackBar.open(
+          error.error?.message || 'Gabim gjatë fshirjes së furnizimit',
+          'OK',
+          { duration: 5000 }
+        );
+      }
+    });
+  }
+
+  onEditPayment(payment: any): void {
+    const dialogRef = this.dialog.open(PaymentEditDialogComponent, {
+      width: '450px',
+      data: {
+        payment: payment,
+        transactionTotal: this.getTotalAmount(),
+        otherPaymentsTotal: (this.restockDetails?.payments || [])
+          .filter((p: any) => p.id !== payment.id)
+          .reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0),
+        currency: this.restockDetails?.transaction_info?.currency || 'LEK'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.paymentService.updatePayment(payment.id, result).subscribe({
+          next: () => {
+            this.snackBar.open('Pagesa u përditësua me sukses', 'OK', { duration: 3000 });
+            this.loadRestockDetails();
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.error || 'Gabim gjatë përditësimit të pagesës';
+            this.snackBar.open(errorMsg, 'OK', { duration: 5000 });
+          }
+        });
+      }
+    });
+  }
+
+  onDeletePayment(payment: any): void {
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Fshi Pagesën',
+        message: `Je i sigurt që dëshiron të fshish këtë pagesë prej ${this.formatCurrency(payment.amount, payment.currency)}?`,
+        itemDetails: {
+          'Data': this.formatDate(payment.payment_date),
+          'Shuma': this.formatCurrency(payment.amount, payment.currency),
+          'Mënyra': this.getPaymentMethodLabel(payment.payment_method)
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.paymentService.deletePayment(payment.id).subscribe({
+          next: () => {
+            this.snackBar.open('Pagesa u fshi me sukses', 'OK', { duration: 3000 });
+            this.loadRestockDetails();
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.error || 'Gabim gjatë fshirjes së pagesës';
+            this.snackBar.open(errorMsg, 'OK', { duration: 5000 });
+          }
+        });
+      }
+    });
   }
 }

@@ -22,8 +22,11 @@ CREATE TABLE Supplier (
     lastname VARCHAR(50) NOT NULL,
     phone VARCHAR(25),
     email VARCHAR(100),
-    address VARCHAR(150) NOT NULL
+    address VARCHAR(150) NOT NULL,
+    is_active BOOLEAN DEFAULT true NOT NULL
 );
+
+CREATE INDEX supplier_active_idx ON Supplier(is_active);
 
 -- Clients table (must be created before Transaction)
 CREATE TABLE Client (
@@ -33,8 +36,11 @@ CREATE TABLE Client (
     email VARCHAR(100) UNIQUE,
     phone VARCHAR(25) UNIQUE NOT NULL,
     address VARCHAR(150) NOT NULL,
-    city VARCHAR(50) NOT NULL
+    city VARCHAR(50) NOT NULL,
+    is_active BOOLEAN DEFAULT true NOT NULL
 );
+
+CREATE INDEX client_active_idx ON Client(is_active);
 
 -- Account types (where money is stored)
 CREATE TABLE Account (
@@ -120,7 +126,8 @@ CREATE TABLE Product (
     name VARCHAR(100) UNIQUE NOT NULL, --has table with possible names
     category VARCHAR(50) NOT NULL, --has table with possible categories
     price DECIMAL(8, 2) NOT NULL, -- price per kg
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true NOT NULL -- soft delete flag
 );
 
 CREATE TABLE Product_Categories (
@@ -151,6 +158,7 @@ CREATE TABLE Sales (
     user_id INT NOT NULL,
     quantity INT NOT NULL,
     sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
     FOREIGN KEY (prod_id) REFERENCES Product(id),
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
@@ -162,6 +170,7 @@ CREATE TABLE Restock (
     quantity INT NOT NULL,
     restock_price DECIMAL(8, 2) NOT NULL,
     restock_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
     FOREIGN KEY (prod_id) REFERENCES Product(id)
 );
 
@@ -204,6 +213,7 @@ CREATE INDEX acct_trans_date_idx ON AccountTransaction(transaction_date DESC);
 -- Product indexes
 CREATE INDEX product_category_idx ON Product(category);
 CREATE INDEX product_name_idx ON Product(name);
+CREATE INDEX product_active_idx ON Product(is_active);
 
 -- Inventory indexes
 CREATE INDEX inventory_date_idx ON Inventory(restock_date DESC);

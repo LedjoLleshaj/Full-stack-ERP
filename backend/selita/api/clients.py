@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework import permissions, status
 from ..models import Client, Sales, Product
 from rest_framework.decorators import api_view, permission_classes
 from ..serializers import ClientSerializer, ProductSerializer, SalesSerializer
@@ -40,8 +40,8 @@ def getClients(request):
         remaining_eur = convert_to_eur_with_rates(remaining, transaction.currency, rates)
         client_balances[transaction.client_id] += remaining_eur
     
-    # Step 3: Get all clients (1 query)
-    clients = Client.objects.all()
+    # Step 3: Get all active clients (1 query)
+    clients = Client.objects.filter(is_active=True)
     
     # Build response
     results = []
@@ -144,12 +144,28 @@ def updateClient(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def deleteClient(request, pk):
+    from ..models import Transaction
+    
     try:
         client = Client.objects.get(id=pk)
-        client.delete()
-        return Response("Client deleted successfully")
     except ObjectDoesNotExist:
         return not_found_response("Client")
+    
+    # Check for unpaid transactions
+    if Transaction.objects.filter(
+        client=client,
+        status__in=TransactionStatus.UNPAID_STATUSES
+    ).exists():
+        return Response(
+            {"error": "Cannot delete client with unpaid transactions"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Soft delete
+    client.is_active = False
+    client.save()
+    
+    return Response({"message": "Client deactivated successfully"})
 
 
 @api_view(["GET"])

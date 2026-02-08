@@ -32,6 +32,12 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
   isExporting = false;
   salesColumns = ['date', 'product_name', 'quantity', 'price', 'status'];
 
+  // Edit/Delete state
+  isEditing = false;
+  isSaving = false;
+  isDeleting = false;
+  editForm: Partial<Client> = {};
+
   private stateChangeSub?: Subscription;
 
   constructor(
@@ -254,6 +260,73 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
         ...data.map(row => String(row[header] || '').length)
       );
       return { wch: Math.min(maxLength + 2, 50) };
+    });
+  }
+
+  // ========= EDIT/DELETE METHODS =========
+  toggleEdit(): void {
+    this.isEditing = !this.isEditing;
+    if (this.isEditing && this.client) {
+      // Populate form with current values
+      this.editForm = {
+        firstname: this.client.firstname,
+        lastname: this.client.lastname,
+        email: this.client.email,
+        phone: this.client.phone,
+        address: this.client.address,
+        city: this.client.city
+      };
+    }
+  }
+
+  saveEdit(): void {
+    if (!this.client || !this.clientId) return;
+
+    this.isSaving = true;
+    const updatedClient: Client = {
+      ...this.client,
+      ...this.editForm
+    } as Client;
+
+    this.clientService.updateClient(this.clientId, updatedClient).subscribe({
+      next: (result) => {
+        this.client = result;
+        this.isEditing = false;
+        this.isSaving = false;
+        this.snackBar.open('Klienti u përditësua me sukses', 'Mbyll', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Failed to update client:', err);
+        this.isSaving = false;
+        this.snackBar.open('Gabim në përditësimin e klientit', 'Mbyll', { duration: 3000 });
+      }
+    });
+  }
+
+  confirmDelete(): void {
+    const confirmed = window.confirm(
+      `Jeni të sigurt që dëshironi të fshini klientin "${this.client?.firstname} ${this.client?.lastname}"?\n\Ky veprim është i pakthyeshëm. Të dhënat e klientit do të ruhen në shënime të transaksioneve.`
+    );
+
+    if (confirmed) {
+      this.deleteClient();
+    }
+  }
+
+  private deleteClient(): void {
+    if (!this.clientId) return;
+
+    this.isDeleting = true;
+    this.clientService.deleteClient(this.clientId).subscribe({
+      next: (result) => {
+        this.snackBar.open(`Klienti u fshi. ${result.preserved_records} transaksione u përditësuan.`, 'Mbyll', { duration: 4000 });
+        this.router.navigate(['/clients']);
+      },
+      error: (err) => {
+        console.error('Failed to delete client:', err);
+        this.isDeleting = false;
+        this.snackBar.open('Gabim në fshirjen e klientit', 'Mbyll', { duration: 3000 });
+      }
     });
   }
 }

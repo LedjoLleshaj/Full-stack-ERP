@@ -128,3 +128,24 @@ export interface SaleDetails {
   payments: PaymentInfo[];
   payment_summary?: PaymentSummary;
 }
+
+export interface SaleUpdateResponse {
+  message: string;
+  sale_id: number;
+  transaction_id: number;
+  transaction_status: string;
+  total_amount: number;
+  total_paid: number;
+  remaining: number;
+}
+
+export interface SaleDeleteResponse {
+  message: string;
+  sale_id: number;
+  transaction_id: number;
+  inventory_restored: number;
+  product_name: string;
+  payments_reversed: number;
+  total_reversed: number;
+  accounts_affected: number[];
+}

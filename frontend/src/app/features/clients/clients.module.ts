@@ -27,6 +27,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSelectModule } from '@angular/material/select';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Pipes
 import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from '../../shared/pipes';
@@ -63,6 +65,8 @@ const routes: Routes = [
     MatAutocompleteModule,
     MatSelectModule,
     MatRadioModule,
+    MatDialogModule,
+    MatTooltipModule,
     // Standalone
     ClientTableComponent,
     SalesTableComponent,

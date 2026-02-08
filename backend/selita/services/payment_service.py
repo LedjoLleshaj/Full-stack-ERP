@@ -51,7 +51,74 @@ class PaymentService:
             return Account.objects.get(account_type=account_type, currency=currency)
         except Account.DoesNotExist:
             raise PaymentError(f"No {account_type} account found for {currency}")
-    
+    @classmethod
+    @db_transaction.atomic
+    def reverse_all_payments(
+        cls,
+        transaction: Transaction
+    ) -> Dict[str, Any]:
+        """
+        Reverse all payments for a transaction.
+        
+        This is used when deleting a sale or restock to restore account balances
+        to their state before the payments were made.
+        
+        Args:
+            transaction: The Transaction whose payments should be reversed
+        
+        Returns:
+            Dict with reversal details:
+                - total_reversed: Total amount reversed (in transaction currency)
+                - accounts_affected: List of account IDs that were modified
+                - payment_count: Number of payments that were reversed
+        """
+        # Get all payments for this transaction
+        payments = Payment.objects.filter(transaction=transaction).select_related('account')
+        
+        if not payments.exists():
+            return {
+                "total_reversed": 0.0,
+                "accounts_affected": [],
+                "payment_count": 0,
+            }
+        
+        total_reversed = Decimal("0")
+        accounts_affected = []
+        
+        # Reverse each payment's effect on account balance
+        for payment in payments:
+            account = payment.account
+            
+            # Determine the original payment amount (considering currency conversion)
+            payment_amount = payment.original_amount if payment.original_amount else payment.amount
+            
+            # Reverse the account balance change
+            if transaction.transaction_type == "SALE":
+                # Sale: we received money, now remove it (reverse revenue)
+                account.current_balance -= payment_amount
+            else:  # PURCHASE
+                # Purchase: we paid money, now add it back (get refund)
+                account.current_balance += payment_amount
+            
+            account.save()
+            
+            if account.id not in accounts_affected:
+                accounts_affected.append(account.id)
+            
+            total_reversed += payment.amount
+        
+        payment_count = payments.count()
+        
+        # Delete all payments (or they'll be cascade deleted with transaction)
+        # We explicitly delete here to be clear about the operation
+        payments.delete()
+        
+        return {
+            "total_reversed": float(total_reversed),
+            "accounts_affected": accounts_affected,
+            "payment_count": payment_count,
+        }
+
     @classmethod
     @db_transaction.atomic
     def create_payment(
@@ -203,3 +270,263 @@ class PaymentService:
             payment_method=payment_data.get("payment_method", "CASH"),
             notes=payment_data.get("notes", ""),
         )
+    
+    @staticmethod
+    def calculate_total_paid(transaction: Transaction) -> Decimal:
+        """
+        Calculate total amount paid for a transaction.
+        
+        Args:
+            transaction: The Transaction to calculate payments for
+        
+        Returns:
+            Total amount paid as Decimal
+        """
+        total = Payment.objects.filter(
+            transaction=transaction
+        ).aggregate(total=Sum("amount"))["total"]
+        return total or Decimal("0")
+    
+        return {
+            "total_reversed": float(total_reversed),
+            "accounts_affected": accounts_affected,
+            "payment_count": payment_count,
+        }
+
+    @classmethod
+    @db_transaction.atomic
+    def update_payment(
+        cls,
+        payment: Payment,
+        amount: Decimal,  # New amount in payment currency
+        currency: str,    # New currency for the payment
+        payment_method: str = None,  # New payment method (CASH or CARD)
+        notes: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Update an existing payment's amount, currency, payment method and notes.
+        
+        Handles:
+        - Reversing old account balance from the original account
+        - Finding/Updating correct account based on new currency AND payment method
+        - Calculating new balance adjustment
+        - Recalculating transaction status
+        
+        Per schema: CASH payment -> CASH account, CARD payment -> BANK account
+        """
+        if amount <= 0:
+            raise PaymentError("Payment amount must be greater than zero")
+        
+        # Use provided payment_method or keep the existing one
+        new_payment_method = payment_method if payment_method else payment.payment_method
+            
+        transaction = payment.transaction
+        old_account = payment.account
+        
+        # 1. Reverse old account balance
+        # What was the ACTUAL amount added/removed from the account?
+        old_actual_amount = payment.original_amount if payment.original_amount else payment.amount
+        
+        if transaction.transaction_type == "SALE":
+            old_account.current_balance -= old_actual_amount # Reverse money in
+        else: # PURCHASE
+            old_account.current_balance += old_actual_amount # Reverse money out
+        old_account.save()
+            
+        # 2. Get new account (might be different if currency OR payment_method changed)
+        new_account = cls.get_account_for_payment(new_payment_method, currency)
+        
+        # 3. Calculate new amount in transaction currency
+        transaction_currency = transaction.currency
+        if currency != transaction_currency:
+            exchange_rate = get_exchange_rate(currency, transaction_currency)
+            amount_in_transaction_currency = (amount * exchange_rate).quantize(Decimal("0.01"))
+        else:
+            exchange_rate = Decimal("1.0")
+            amount_in_transaction_currency = amount
+            
+        # 4. Validate that new total doesn't exceed transaction total
+        # Recalculate total paid excluding THIS payment
+        other_payments_total = Payment.objects.filter(
+            transaction=transaction
+        ).exclude(id=payment.id).aggregate(
+            total=Sum("amount")
+        )["total"] or Decimal("0")
+        
+        new_total_paid = other_payments_total + amount_in_transaction_currency
+        
+        if new_total_paid > transaction.total_amount + Decimal("0.01"):
+            raise PaymentError(
+                f"New total paid ({new_total_paid:.2f}) exceeds transaction total ({transaction.total_amount:.2f})"
+            )
+            
+        # 5. Update new account balance
+        if transaction.transaction_type == "SALE":
+            new_account.current_balance += amount # Money in
+        else: # PURCHASE
+            new_account.current_balance -= amount # Money out
+        new_account.save()
+        
+        # 6. Update payment record
+        payment.account = new_account
+        payment.amount = amount_in_transaction_currency
+        payment.currency = transaction_currency
+        payment.original_amount = amount if currency != transaction_currency else None
+        payment.original_currency = currency if currency != transaction_currency else None
+        payment.exchange_rate = exchange_rate if currency != transaction_currency else None
+        payment.payment_method = new_payment_method
+        payment.notes = notes
+        payment.save()
+        
+        # 7. Update transaction status
+        if new_total_paid >= transaction.total_amount - Decimal("0.01"):
+            transaction.status = "COMPLETED"
+            if not transaction.completed_date:
+                transaction.completed_date = timezone.now()
+        elif new_total_paid > 0:
+            transaction.status = "PARTIAL"
+        else:
+            transaction.status = "PENDING"
+            transaction.completed_date = None
+        transaction.save()
+        
+        return {
+            "payment_id": payment.id,
+            "transaction_status": transaction.status,
+            "total_paid": float(new_total_paid),
+        }
+
+    @classmethod
+    @db_transaction.atomic
+    def delete_payment(cls, payment: Payment) -> Dict[str, Any]:
+        """
+        Delete a payment and reverse its effect on accounting.
+        """
+        transaction = payment.transaction
+        account = payment.account
+        amount = payment.amount
+        
+        # Reverse account balance
+        # If the payment has original_amount, it means it was a currency conversion payment.
+        # We must reverse the amount that was actually taken from the account.
+        reversal_amount = payment.original_amount if payment.original_amount else amount
+        
+        if transaction.transaction_type == "SALE":
+            account.current_balance -= reversal_amount
+        else: # PURCHASE
+            account.current_balance += reversal_amount
+        account.save()
+        
+        # Delete payment
+        payment.delete()
+        
+        # Recalculate transaction status
+        total_paid = cls.calculate_total_paid(transaction)
+        if total_paid <= Decimal("0.01"):
+            transaction.status = "PENDING"
+            transaction.completed_date = None
+        elif total_paid < transaction.total_amount - Decimal("0.01"):
+            transaction.status = "PARTIAL"
+            transaction.completed_date = None
+        else:
+            # Still completed? (rare if deleting a valid payment)
+            transaction.status = "COMPLETED"
+            
+        transaction.save()
+        
+        return {
+            "transaction_status": transaction.status,
+            "total_paid": float(total_paid),
+        }
+
+    @classmethod
+    @db_transaction.atomic
+    def update_transaction_status(
+        cls, 
+        transaction: Transaction, 
+        new_total_amount: Decimal, 
+        transaction_currency: str
+    ) -> Transaction:
+        """
+        Update transaction amount, currency, and recalculate status.
+        
+        This centralizes the logic used in both sales.updateSale and restocks.updateRestock.
+        
+        Args:
+            transaction: Transaction object to update
+            new_total_amount: New total amount (e.g. price * quantity)
+            transaction_currency: Currency for the transaction
+        
+        Returns:
+            Updated Transaction object (saved)
+            
+        Raises:
+            PaymentError: If validation fails (e.g. new amount < total paid)
+        """
+        # 1. Detect if it was fully paid before update
+        tolerance = Decimal("0.10")  # Increased tolerance for currency rounding
+        total_paid_before = cls.calculate_total_paid(transaction)
+        was_completed = (transaction.total_amount <= total_paid_before + Decimal("0.01"))
+        
+        # 2. Detect currency change
+        old_currency = transaction.currency
+        currency_changed = (old_currency != transaction_currency)
+        
+        # 3. If currency changed, convert all existing payments to the new currency
+        if currency_changed:
+            from selita.utils.currency import get_exchange_rate
+            rate = get_exchange_rate(old_currency, transaction_currency)
+            
+            payments = list(Payment.objects.filter(transaction=transaction).order_by('id'))
+            for payment in payments:
+                # If this is the first time we change currency, preserve the initial payment details
+                # so that deletions later can reverse the correct account balance.
+                if payment.original_amount is None:
+                    payment.original_amount = payment.amount
+                    payment.original_currency = old_currency
+                
+                payment.amount = (payment.amount * rate).quantize(Decimal("0.01"))
+                payment.currency = transaction_currency
+                payment.save()
+            
+            # Re-calculate total paid after simple conversion
+            total_paid = cls.calculate_total_paid(transaction)
+            
+            # If it was completed before, and we have a tiny rounding discrepancy,
+            # adjust the last payment to make it exactly match the new total.
+            # This prevents rounding drift from flipping status to PARTIAL.
+            if was_completed and payments:
+                # new_total_amount is the goal
+                discrepancy = new_total_amount - total_paid
+                if abs(discrepancy) <= tolerance:
+                    last_payment = payments[-1]
+                    last_payment.amount += discrepancy
+                    last_payment.save()
+                    total_paid = new_total_amount # Exactly matched now
+        else:
+            total_paid = total_paid_before
+
+        # Validation: Cannot reduce total below what's already paid (with tolerance)
+        if new_total_amount < total_paid - tolerance:
+             raise PaymentError(
+                f"Cannot reduce total to {float(new_total_amount):.2f} {transaction_currency}. "
+                f"Already paid {float(total_paid):.2f} {transaction_currency}."
+            )
+            
+        # Update details
+        transaction.total_amount = new_total_amount
+        transaction.currency = transaction_currency
+        
+        # Recalculate status
+        if new_total_amount <= total_paid + tolerance:
+            transaction.status = "COMPLETED"
+            if not transaction.completed_date:
+                transaction.completed_date = timezone.now()
+        elif total_paid > tolerance:
+            transaction.status = "PARTIAL"
+        else:
+            transaction.status = "PENDING"
+            transaction.completed_date = None
+            
+        transaction.save()
+        return transaction

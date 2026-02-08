@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
-import { RestockResponse, RestockReportRow } from "src/app/models/restock.model";
+import { RestockResponse, RestockReportRow, RestockUpdateResponse, RestockDeleteResponse } from "src/app/models/restock.model";
 import { map } from "rxjs/operators";
 
 import { BaseApiService } from "../base-api.service";
@@ -53,6 +53,28 @@ export class RestocksApiService extends BaseApiService {
                    r.transaction_info?.status === 'PARTIAL' ? 'Pjeserisht e paguar' : 'Nuk eshte paguar'
         }));
       })
+    );
+  }
+
+  /**
+   * Update an existing restock
+   * @param restockId - ID of the restock to update
+   * @param restockData - Updated restock data
+   */
+  updateRestock(restockId: number, restockData: any): Observable<RestockUpdateResponse> {
+    return this.http.put<RestockUpdateResponse>(
+      `${this.apiUrl}/update-restock/${restockId}`,
+      restockData
+    );
+  }
+
+  /**
+   * Delete a restock
+   * @param restockId - ID of the restock to delete
+   */
+  deleteRestock(restockId: number): Observable<RestockDeleteResponse> {
+    return this.http.delete<RestockDeleteResponse>(
+      `${this.apiUrl}/delete-restock/${restockId}`
     );
   }
 }
