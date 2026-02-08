@@ -1,0 +1,16 @@
+# Selita Fish - Robots.txt
+User-agent: *
+Allow: /
+Allow: /home
+Allow: /login
+
+# Disallow crawling of internal dashboard routes
+Disallow: /sales/
+Disallow: /client/
+Disallow: /product/
+Disallow: /reports/
+Disallow: /suppliers/
+Disallow: /assets/private/
+
+# Sitemap location
+Sitemap: https://selitafish.com/sitemap.xml
