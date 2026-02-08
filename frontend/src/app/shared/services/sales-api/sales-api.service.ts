@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
-import { Sale, SaleResponse, SaleCreateResponse, PaymentRequest, PaymentResponse, SaleDetails } from "src/app/models/sale.model";
+import { Sale, SaleResponse, SaleCreateResponse, PaymentRequest, PaymentResponse, SaleDetails, SaleUpdateResponse, SaleDeleteResponse } from "src/app/models/sale.model";
 import { BaseApiService } from "../base-api.service";
 
 @Injectable({
@@ -70,6 +70,28 @@ export class SalesApiService extends BaseApiService {
   getSaleDetails(saleId: number): Observable<SaleDetails> {
     return this.http.get<SaleDetails>(
       `${this.apiUrl}${environment.getSaleDetails}${saleId}`
+    );
+  }
+
+  /**
+   * Update an existing sale
+   * @param saleId - ID of the sale to update
+   * @param saleData - Updated sale data
+   */
+  updateSale(saleId: number, saleData: Partial<Sale>): Observable<SaleUpdateResponse> {
+    return this.http.put<SaleUpdateResponse>(
+      `${this.apiUrl}/update-sale/${saleId}`,
+      saleData
+    );
+  }
+
+  /**
+   * Delete a sale
+   * @param saleId - ID of the sale to delete
+   */
+  deleteSale(saleId: number): Observable<SaleDeleteResponse> {
+    return this.http.delete<SaleDeleteResponse>(
+      `${this.apiUrl}/delete-sale/${saleId}`
     );
   }
 }

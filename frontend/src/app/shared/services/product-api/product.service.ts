@@ -93,8 +93,8 @@ export class ProductService extends BaseApiService {
   /**
    * Update a product (name, category, price, description)
    */
-  updateProduct(productId: number, data: Partial<Product>): Observable<Product> {
-    return this.http.put<Product>(`${this.apiUrl}/update-product/${productId}`, data);
+  updateProduct(productId: number, data: Partial<Product>): Observable<{ message: string; product: Product }> {
+    return this.http.put<{ message: string; product: Product }>(`${this.apiUrl}/update-product/${productId}`, data);
   }
 
   /**

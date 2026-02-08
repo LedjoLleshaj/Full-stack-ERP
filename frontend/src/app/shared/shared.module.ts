@@ -29,6 +29,7 @@ import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from './pip
 import { ChipsComponent } from './components/chips/chips.component';
 import { SalesTableComponent } from './components/sales-table/sales-table.component';
 import { RestocksTableComponent } from './components/restocks-table/restocks-table.component';
+import { PaymentEditDialogComponent } from './components/payment-edit-dialog/payment-edit-dialog.component';
 
 const MATERIAL_MODULES = [
   MatTableModule,
@@ -51,6 +52,7 @@ const STANDALONE_COMPONENTS = [
   ChipsComponent,
   SalesTableComponent,
   RestocksTableComponent,
+  PaymentEditDialogComponent,
 ];
 
 const STANDALONE_PIPES = [
