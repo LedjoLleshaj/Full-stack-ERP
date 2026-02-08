@@ -5,6 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from ..serializers import PaymentSerializer, TransactionSerializer, AccountSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from selita.utils.responses import api_error_handler, not_found_response
+from ..services.payment_service import PaymentService, PaymentError
+from decimal import Decimal
 
 
 # ======== PAYMENTS ========
@@ -96,11 +98,15 @@ def addPayment(request):
 def updatePayment(request, pk):
     try:
         payment = Payment.objects.get(id=pk)
-        serializer = PaymentSerializer(instance=payment, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        amount = Decimal(str(request.data.get("amount", payment.original_amount if payment.original_amount else payment.amount)))
+        currency = request.data.get("currency", payment.original_currency if payment.original_currency else payment.currency)
+        payment_method = request.data.get("payment_method", payment.payment_method)
+        notes = request.data.get("notes", payment.notes)
+        
+        result = PaymentService.update_payment(payment, amount, currency, payment_method, notes)
+        return Response(result)
+    except PaymentError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist:
         return not_found_response("Payment")
 
@@ -111,7 +117,13 @@ def updatePayment(request, pk):
 def deletePayment(request, pk):
     try:
         payment = Payment.objects.get(id=pk)
-        payment.delete()
-        return Response("Payment deleted successfully")
+        result = PaymentService.delete_payment(payment)
+        return Response({
+            "message": "Payment deleted successfully",
+            "transaction_status": result["transaction_status"],
+            "total_paid": result["total_paid"]
+        })
+    except PaymentError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist:
         return not_found_response("Payment")
