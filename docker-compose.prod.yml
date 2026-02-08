@@ -59,8 +59,8 @@ services:
         condition: service_healthy
     volumes:
       - ./logs/nginx:/var/log/nginx
-      # SSL setup with Certbot
-      - /etc/letsencrypt/live/selitafish.com:/etc/nginx/ssl:ro
+      # SSL setup with Certbot - Mounting parent directory to handle symbolic links correctly
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - selita_network
 
