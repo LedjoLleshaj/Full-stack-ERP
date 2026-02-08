@@ -5,7 +5,7 @@ FROM node:22.15.0-alpine AS builder
 WORKDIR /frontend
 
 # Install dependencies
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm install --force
 # Copy source and build the Angular app
 COPY . .
