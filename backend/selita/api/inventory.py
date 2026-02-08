@@ -100,7 +100,7 @@ def addProductToInventory(request):
     # Check if the product already exists
     try:
         product = Product.objects.get(name=name)
-        logger.debug("Product already exists: %s (id=%s)", product.name, product.id)
+        logger.debug("Produkti ekziston: %s (id=%s)", product.name, product.id)
         
         # REACTIVATE product if it was soft-deleted
         if not product.is_active:
@@ -158,14 +158,14 @@ def addProductToInventory(request):
                 amount=total_amount,
                 payment_currency="EUR",
                 payment_method="CASH",
-                notes=f"Initial payment for restock #{restock.id}",
+                notes=f"Pagesa per furnizimin #{restock.id}",
             )
         except PaymentError as e:
             # If payment fails, update transaction status and log
             transaction.status = "PENDING"
             transaction.notes += f" (Payment failed: {str(e)})"
             transaction.save()
-            logger.warning("Payment failed for restock #%s: %s", restock.id, str(e))
+            logger.warning("Pagesa nuk u krye per furnizimin #%s: %s", restock.id, str(e))
     
     # Use InventoryService to update inventory
     new_quantity = InventoryService.add_inventory(product, quantity)
@@ -181,5 +181,5 @@ def addProductToInventory(request):
         "inventory": inventory_serializer.data,
         "restock": restock_serializer.data,
         "transaction_id": transaction.id,
-        "message": f"Added {quantity} units of {product.name} to inventory. Purchase cost recorded: {total_amount} EUR"
+        "message": f"U shtuan {quantity} njesi te produktit {product.name} ne magazine. Kosto e blerjes u regjistrua: {total_amount} EUR"
     })
