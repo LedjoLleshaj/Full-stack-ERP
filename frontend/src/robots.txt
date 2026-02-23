@@ -1,6 +1,5 @@
 # Selita Fish - Robots.txt
 User-agent: *
-Allow: /
 Allow: /home
 Allow: /login
 
