@@ -11,7 +11,7 @@ const routes: Routes = [
     path: "home",
     component: LandingPageComponent,
     canActivate: [PublicGuard],
-    title: "Selita fish",
+    title: "Selita Fish - Dyqan dhe Shitje Peshku me Shumicë në Durrës",
   },
   {
     path: "login",
