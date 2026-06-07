@@ -2,12 +2,14 @@
 API endpoints for exchange rates.
 """
 
+from decimal import Decimal
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from decimal import Decimal
-from erp.models import ExchangeRate, CURRENCY_CHOICES
-from erp.utils.responses import api_error_handler, not_found_response, bad_request_response
+
+from erp.models import CURRENCY_CHOICES, ExchangeRate
+from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
 
 @api_view(["GET"])

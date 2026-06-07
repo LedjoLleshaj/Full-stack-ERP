@@ -9,11 +9,13 @@ Tests verify:
 """
 
 from decimal import Decimal
+
 from django.test import TestCase
-from rest_framework.test import APIClient
 from rest_framework import status
-from erp.models import Sales, Product, Client, Transaction, Payment, Account, User, Inventory
+from rest_framework.test import APIClient
+
 from erp.constants import TransactionStatus, TransactionType
+from erp.models import Account, Client, Inventory, Payment, Product, Sales, Transaction, User
 
 
 class SaleUpdateDeleteTestCase(TestCase):

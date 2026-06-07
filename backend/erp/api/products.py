@@ -1,16 +1,17 @@
-from rest_framework.response import Response
-from ..models import Product, Product_Categories, Product_Names, Inventory
-from rest_framework.decorators import api_view, permission_classes
-from ..serializers import (
-    ProductSerializer,
-    ProductCategoriesSerializer,
-    ProductNamesSerializer,
-    InventorySerializer,
-)
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from erp.utils.responses import api_error_handler, not_found_response
 
+from ..models import Inventory, Product, Product_Categories, Product_Names
+from ..serializers import (
+    InventorySerializer,
+    ProductCategoriesSerializer,
+    ProductNamesSerializer,
+    ProductSerializer,
+)
 
 # ======== PRODUCTS ========
 
@@ -19,7 +20,7 @@ from erp.utils.responses import api_error_handler, not_found_response
 @permission_classes([IsAuthenticated])
 @api_error_handler
 def getProducts(request):
-    from django.db.models import Subquery, OuterRef
+    from django.db.models import OuterRef, Subquery
     
     # Optimized: Use Subquery to get inventory quantity in ONE query
     # Only return active products (soft delete filter)
@@ -135,7 +136,6 @@ def updateProduct(request, pk):
 @api_error_handler
 def deleteProduct(request, pk):
     """Soft delete product (deactivate) even if sales/history exists"""
-    from ..models import Sales, Restock
     
     try:
         product = Product.objects.get(id=pk)
@@ -212,7 +212,7 @@ def getProductsByCategory(request, category):
 def filterByCategories(request):
     # Get the 'categories' parameter from the query string
     categories = request.GET.get("categories", "")
-    from django.db.models import Subquery, OuterRef
+    from django.db.models import OuterRef, Subquery
 
     # If the 'categories' parameter is empty, return all active products
     if not categories:
@@ -481,8 +481,9 @@ def getProductHistory(request, pk):
     - Last 10 restocks
     - Price history for chart (adjustable time range: 1-12 months)
     """
-    from ..models import Sales, Restock
     from datetime import date, timedelta
+
+    from ..models import Restock, Sales
     
     try:
         product = Product.objects.get(id=pk)

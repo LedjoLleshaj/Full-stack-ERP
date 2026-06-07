@@ -9,14 +9,13 @@ Tests verify:
 """
 
 from decimal import Decimal
+
 from django.test import TestCase
-from rest_framework.test import APIClient
 from rest_framework import status
-from erp.models import Restock, Product, Supplier, Transaction, Payment, Account, Inventory
+from rest_framework.test import APIClient
+
 from erp.constants import TransactionStatus, TransactionType
-
-
-from erp.models import User
+from erp.models import Account, Inventory, Payment, Product, Restock, Supplier, Transaction, User
 
 
 class RestockUpdateDeleteTestCase(TestCase):
@@ -235,7 +234,7 @@ class RestockUpdateDeleteTestCase(TestCase):
         
         # Get initial inventories
         inv_a_before = Inventory.objects.filter(prod=self.product_a).first().quantity
-        inv_b_before = Inventory.objects.filter(prod=self.product_b).first().quantity
+        Inventory.objects.filter(prod=self.product_b).first().quantity
         
         # Change product from A to B
         response = self.client.put(

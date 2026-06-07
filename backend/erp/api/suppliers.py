@@ -1,11 +1,12 @@
-from rest_framework.response import Response
-from rest_framework import permissions
-from ..models import Supplier
-from rest_framework.decorators import api_view, permission_classes
-from ..serializers import SupplierSerializer
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework import permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
 from erp.utils.responses import api_error_handler, not_found_response
 
+from ..models import Supplier
+from ..serializers import SupplierSerializer
 
 # ======== SUPPLIERS ========
 
@@ -71,7 +72,6 @@ def updateSupplier(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def deleteSupplier(request, pk):
-    from ..models import Transaction, Restock
     
     try:
         supplier = Supplier.objects.get(id=pk)

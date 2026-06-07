@@ -1,13 +1,14 @@
-from rest_framework.response import Response
-from rest_framework import permissions, status
-from ..models import Client, Sales, Product
-from rest_framework.decorators import api_view, permission_classes
-from ..serializers import ClientSerializer, ProductSerializer, SalesSerializer
 from django.core.exceptions import ObjectDoesNotExist
-from erp.utils.responses import api_error_handler, not_found_response
-from erp.utils.currency import get_all_rates_dict, convert_to_eur_with_rates
-from erp.constants import TransactionStatus
+from rest_framework import permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 
+from erp.constants import TransactionStatus
+from erp.utils.currency import convert_to_eur_with_rates, get_all_rates_dict
+from erp.utils.responses import api_error_handler, not_found_response
+
+from ..models import Client, Sales
+from ..serializers import ClientSerializer
 
 # ======== CLIENTS ========
 
@@ -16,10 +17,10 @@ from erp.constants import TransactionStatus
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def getClients(request):
-    from ..models import Payment, Transaction
-    from django.db.models import Sum, Prefetch
-    from decimal import Decimal
     from collections import defaultdict
+    from decimal import Decimal
+
+    from ..models import Transaction
     
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
@@ -64,7 +65,6 @@ def getClients(request):
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def getClient(request, pk):
-    from ..models import Payment, Transaction
     from decimal import Decimal
     
     try:

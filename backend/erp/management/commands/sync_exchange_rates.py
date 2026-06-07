@@ -6,10 +6,12 @@ This command fetches current exchange rates and stores them in the database.
 Schedule this to run weekly (e.g., via cron) to keep rates updated.
 """
 
-import requests
 from decimal import Decimal
+
+import requests
 from django.core.management.base import BaseCommand
-from erp.models import ExchangeRate, CURRENCY_CHOICES
+
+from erp.models import CURRENCY_CHOICES, ExchangeRate
 
 
 class Command(BaseCommand):

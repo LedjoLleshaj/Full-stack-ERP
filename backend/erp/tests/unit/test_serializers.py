@@ -4,11 +4,7 @@ Unit tests for serializers.
 Tests serializer validation, data transformation, and custom fields.
 """
 
-from django.test import TestCase
-from erp.serializers import (
-    ClientSerializer, ProductSerializer, CategorySerializer,
-    SaleSerializer
-)
+from erp.serializers import ClientSerializer, ProductSerializer
 from erp.tests.base import ErpTestCase
 
 

@@ -5,8 +5,8 @@ Tests complete sales workflows including inventory management and payments.
 """
 
 from decimal import Decimal
-from django.test import TestCase
-from erp.models import Sale, Payment, Inventory, Transaction
+
+from erp.models import Payment
 from erp.tests.base import ErpTestCase
 
 

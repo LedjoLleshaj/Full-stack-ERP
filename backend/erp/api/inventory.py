@@ -1,13 +1,26 @@
-from rest_framework.response import Response
-from ..models import Inventory, Product, Product_Names, Transaction, Restock, Supplier, Payment, Account
-from rest_framework.decorators import api_view, permission_classes
-from ..serializers import InventorySerializer, ProductSerializer, RestockSerializer, AddInventorySerializer
+import logging
+
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
-import logging
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from decimal import Decimal
-from erp.utils.responses import api_error_handler, not_found_response, bad_request_response
+from rest_framework.response import Response
+
+from erp.utils.responses import api_error_handler, not_found_response
+
+from ..models import (
+    Inventory,
+    Product,
+    Product_Names,
+    Restock,
+    Supplier,
+    Transaction,
+)
+from ..serializers import (
+    AddInventorySerializer,
+    InventorySerializer,
+    RestockSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +86,7 @@ def updateInventory(request, pk):
 @api_error_handler
 def addProductToInventory(request):
     from erp.services.inventory_service import InventoryService
-    from erp.services.payment_service import PaymentService, PaymentError
+    from erp.services.payment_service import PaymentError, PaymentService
     
     # Validate and parse input using serializer
     serializer = AddInventorySerializer(data=request.data)
@@ -168,7 +181,7 @@ def addProductToInventory(request):
             logger.warning("Pagesa nuk u krye per furnizimin #%s: %s", restock.id, str(e))
     
     # Use InventoryService to update inventory
-    new_quantity = InventoryService.add_inventory(product, quantity)
+    InventoryService.add_inventory(product, quantity)
     
     # Get inventory record for response
     inventory = Inventory.objects.get(prod=product)

@@ -1,11 +1,22 @@
 
 from decimal import Decimal
+
 from django.test import TestCase
-from rest_framework.test import APIClient
 from rest_framework import status
-from erp.models import Restock, Product, Supplier, Transaction, Payment, Account, Inventory, ExchangeRate
+from rest_framework.test import APIClient
+
 from erp.constants import TransactionStatus, TransactionType
-from erp.models import User
+from erp.models import (
+    Account,
+    ExchangeRate,
+    Inventory,
+    Payment,
+    Product,
+    Restock,
+    Supplier,
+    Transaction,
+    User,
+)
 
 
 class RestockCurrencyBugTestCase(TestCase):
@@ -109,7 +120,7 @@ class RestockCurrencyBugTestCase(TestCase):
             currency="EUR",
             status=TransactionStatus.PENDING
         )
-        restock = Restock.objects.create(transaction=transaction, prod=self.product, quantity=1, restock_price=Decimal("10.00"))
+        Restock.objects.create(transaction=transaction, prod=self.product, quantity=1, restock_price=Decimal("10.00"))
         
         # 2. Pay 1000 LEK (which is 10 EUR) from LEK account
         # In reality, PaymentService.create_payment would be used.

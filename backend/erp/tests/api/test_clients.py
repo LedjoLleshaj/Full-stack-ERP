@@ -7,6 +7,7 @@ Tests CRUD operations on client resources.
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from erp.models import Client
 from erp.tests.base import ErpTestCase
 

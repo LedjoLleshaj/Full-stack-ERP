@@ -1,4 +1,5 @@
 import pytest
+
 from erp.models import User
 
 

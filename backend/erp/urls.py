@@ -1,24 +1,22 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .api import (
-    auth, 
-    users, 
-    clients, 
-    products, 
-    inventory, 
-    sales, 
-    reports,
-    suppliers,
-    accounts,
-    transactions,
-    payments,
     account_transactions,
-    restocks,
+    accounts,
+    auth,
+    clients,
     exchange_rates,
     health,
+    inventory,
+    payments,
+    products,
+    reports,
+    restocks,
+    sales,
+    suppliers,
+    transactions,
+    users,
 )
-
 
 urlpatterns = [
     # ======== AUTHENTICATION ========

@@ -1,18 +1,19 @@
 from django.contrib import admin
+
 from .models import (
-    Users,
-    Supplier,
-    Client,
     Account,
-    Transaction,
-    Payment,
     AccountTransaction,
+    Client,
+    Inventory,
+    Payment,
     Product,
     Product_Categories,
     Product_Names,
-    Inventory,
-    Sales,
     Restock,
+    Sales,
+    Supplier,
+    Transaction,
+    Users,
 )
 
 

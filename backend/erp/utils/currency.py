@@ -7,8 +7,8 @@ duplicated convert_to_eur functions that were spread across multiple files.
 
 from decimal import Decimal
 from functools import lru_cache
-from typing import Dict, Optional
-from django.db.models import Case, When, F, Value, DecimalField
+
+from django.db.models import Case, DecimalField, F, Value, When
 
 
 @lru_cache(maxsize=32)
@@ -85,7 +85,7 @@ def clear_rate_cache():
     get_exchange_rate.cache_clear()
 
 
-def get_all_rates_dict() -> Dict[str, Decimal]:
+def get_all_rates_dict() -> dict[str, Decimal]:
     """
     Get all exchange rates as a dictionary for bulk operations.
     
@@ -100,7 +100,7 @@ def get_all_rates_dict() -> Dict[str, Decimal]:
     return rates
 
 
-def convert_to_eur_with_rates(amount, currency: str, rates: Dict[str, Decimal]) -> Decimal:
+def convert_to_eur_with_rates(amount, currency: str, rates: dict[str, Decimal]) -> Decimal:
     """
     Convert amount to EUR using a pre-fetched rates dictionary.
     

@@ -5,10 +5,11 @@ This module centralizes all response patterns, replacing the duplicated
 error handling code that was spread across 50+ locations in API files.
 """
 
-from rest_framework.response import Response
-from rest_framework import status
-from functools import wraps
 import logging
+from functools import wraps
+
+from rest_framework import status
+from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
 

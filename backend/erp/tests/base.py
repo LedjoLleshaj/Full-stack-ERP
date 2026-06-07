@@ -4,11 +4,17 @@ Base test utilities and fixtures for the ERP test suite.
 Provides common test utilities, fixtures, and helper functions.
 """
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+
 from erp.models import (
-    Client, Product, Category, Supplier, Account,
-    Sale, Payment, Inventory, Restock
+    Account,
+    Category,
+    Client,
+    Inventory,
+    Product,
+    Sale,
+    Supplier,
 )
 
 User = get_user_model()

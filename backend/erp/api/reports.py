@@ -1,13 +1,16 @@
+from datetime import date
+
+from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from ..models import Sales, Transaction, Account, Payment
-from ..serializers import SalesReportSerializer
-from django.db.models import F, ExpressionWrapper, DecimalField, Sum
-from datetime import date
-from erp.utils.responses import api_error_handler
-from erp.utils.currency import get_all_rates_dict, convert_to_eur_with_rates
+
 from erp.constants import TransactionStatus, TransactionType
+from erp.utils.currency import convert_to_eur_with_rates, get_all_rates_dict
+from erp.utils.responses import api_error_handler
+
+from ..models import Account, Payment, Sales, Transaction
+from ..serializers import SalesReportSerializer
 
 
 @api_view(["GET"])
@@ -69,7 +72,7 @@ def sales_report(request):
             "Statusi i pageses": payment_status,
         })
 
-    serializer = SalesReportSerializer(report_data, many=True)
+    SalesReportSerializer(report_data, many=True)
     return Response(report_data)
 
 
@@ -172,8 +175,8 @@ def daily_profit(request):
     - days: Number of days to look back (default: 30, max: 365, use 0 for all time)
     Returns an array of {date, sales, purchases, profit} objects for chart visualization.
     """
-    from decimal import Decimal
     from datetime import timedelta
+    from decimal import Decimal
     
     today = date.today()
     
@@ -332,7 +335,6 @@ def top_products(request):
     Get the top 5 best-selling products by quantity sold.
     Returns product names and their total quantities sold.
     """
-    from django.db.models import Sum
     
     # Get all sales, group by product, sum quantities, order by total quantity
     top_products_data = (
@@ -362,9 +364,10 @@ def profit_by_category(request):
     Returns category names and their total profit (sales revenue - purchase cost).
     Optimized to use fewer database queries.
     """
-    from ..models import Product, Restock
-    from decimal import Decimal
     from collections import defaultdict
+    from decimal import Decimal
+
+    from ..models import Product, Restock
     
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()
@@ -436,9 +439,8 @@ def top_clients(request):
     Returns client names and their total purchase amounts.
     Optimized to use minimal database queries.
     """
-    from ..models import Client
-    from decimal import Decimal
     from collections import defaultdict
+    from decimal import Decimal
     
     # Cache exchange rates upfront (1 query)
     rates = get_all_rates_dict()

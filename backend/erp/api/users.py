@@ -1,12 +1,12 @@
-from rest_framework.response import Response
-from rest_framework import permissions, status
-from rest_framework.decorators import api_view, permission_classes
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
+from rest_framework import permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 
 from erp.models import User
 from erp.serializers import UserSerializer
-from erp.utils.responses import api_error_handler, not_found_response, bad_request_response
+from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
 
 @api_view(["GET"])

@@ -9,16 +9,26 @@ Tests verify:
 """
 
 from decimal import Decimal
+
 from django.test import TestCase
-from django.db import transaction as db_transaction
-from rest_framework.test import APIClient
 from rest_framework import status
-from erp.models import (
-    Sales, Restock, Product, Client, Supplier, Transaction,
-    Payment, Account, User, Inventory, ExchangeRate
-)
-from erp.services.payment_service import PaymentService, PaymentError
+from rest_framework.test import APIClient
+
 from erp.constants import TransactionStatus, TransactionType
+from erp.models import (
+    Account,
+    Client,
+    ExchangeRate,
+    Inventory,
+    Payment,
+    Product,
+    Restock,
+    Sales,
+    Supplier,
+    Transaction,
+    User,
+)
+from erp.services.payment_service import PaymentService
 
 
 class PaymentMethodChangeTests(TestCase):
@@ -408,7 +418,6 @@ class AtomicityTests(TestCase):
         self.cash_eur.save()
         
         initial_balance = self.cash_eur.current_balance  # 500
-        initial_inventory = 150
         
         # Simulate selling 60 items (inventory now 90)
         inv.quantity = 90
@@ -482,7 +491,7 @@ class FullWorkflowBalanceTests(TestCase):
             currency="EUR",
             status=TransactionStatus.PENDING
         )
-        restock = Restock.objects.create(
+        Restock.objects.create(
             transaction=restock_tx,
             prod=self.product,
             quantity=50,
@@ -568,7 +577,7 @@ class FullWorkflowBalanceTests(TestCase):
         # Verify sum of all remaining payments equals account balances
         remaining_payments = Payment.objects.all()
         cash_payments = remaining_payments.filter(account=self.cash_eur)
-        bank_payments = remaining_payments.filter(account=self.bank_eur)
+        remaining_payments.filter(account=self.bank_eur)
         
         # For PURCHASE, payment reduces balance
         expected_cash = sum(

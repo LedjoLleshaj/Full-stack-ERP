@@ -13,3 +13,6 @@ DATABASES = {
         "TEST": {},
     }
 }
+
+# Disable throttling in tests to avoid rate-limit flakiness
+REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []  # noqa: F405

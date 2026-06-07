@@ -1,19 +1,21 @@
-from rest_framework.response import Response
-from rest_framework import permissions, status
-from ..models import Restock, Product, Payment, Inventory, Transaction, Supplier
-from rest_framework.decorators import api_view, permission_classes
-from ..serializers import (
-    RestockSerializer,
-    ProductSerializer,
-    PaymentSerializer,
-    TransactionSerializer,
-)
+from decimal import Decimal
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
-from decimal import Decimal
-from erp.utils.responses import api_error_handler, not_found_response, bad_request_response
-from erp.constants import TransactionStatus, TransactionType
+from rest_framework import permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 
+from erp.constants import TransactionStatus, TransactionType
+from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
+
+from ..models import Payment, Product, Restock, Transaction
+from ..serializers import (
+    PaymentSerializer,
+    ProductSerializer,
+    RestockSerializer,
+    TransactionSerializer,
+)
 
 # ======== RESTOCKS ========
 
@@ -163,7 +165,7 @@ def addRestock(request):
     if payment_data:
         payment_amount = Decimal(str(payment_data.get('amount', 0)))
         if payment_amount > 0:
-            payment = Payment.objects.create(
+            Payment.objects.create(
                 transaction=transaction,
                 account_id=payment_data.get('account_id'),
                 amount=payment_amount,
@@ -199,7 +201,7 @@ def addRestock(request):
 def updateRestock(request, pk):
     """Update an existing restock with validation to prevent overpayment"""
     from erp.services.inventory_service import InventoryService
-    from erp.services.payment_service import PaymentService, PaymentError
+    from erp.services.payment_service import PaymentError, PaymentService
     
     try:
         restock = Restock.objects.select_related('transaction', 'prod').get(id=pk)
@@ -212,7 +214,6 @@ def updateRestock(request, pk):
     old_quantity = restock.quantity
     old_prod_id = restock.prod_id
     old_product = restock.prod
-    old_restock_price = restock.restock_price
     old_total_amount = transaction.total_amount
     
     # Get new values from request
@@ -284,9 +285,10 @@ def updateRestock(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 @api_error_handler
 def deleteRestock(request, pk):
-    from erp.services.inventory_service import InventoryService, InventoryError
-    from erp.services.payment_service import PaymentService, PaymentError
     from django.db import transaction as db_transaction
+
+    from erp.services.inventory_service import InventoryError, InventoryService
+    from erp.services.payment_service import PaymentService
     
     try:
         restock = Restock.objects.select_related('transaction', 'prod').get(id=pk)
@@ -313,7 +315,7 @@ def deleteRestock(request, pk):
             
             # Delete the transaction (CASCADE will delete Restock and Payments)
             transaction.delete()
-    except InventoryError as e:
+    except InventoryError:
         # Atomic block ensures payment reversal is rolled back
         return bad_request_response(
             f"Furnizimi nuk mund të fshihet: {quantity} njësi u shtuan, por vetëm "
@@ -375,7 +377,7 @@ def getRestocksBySupplier(request, supplier_id):
 @api_error_handler
 def payRestock(request, pk):
     """Add a payment to a restock's transaction"""
-    from erp.services.payment_service import PaymentService, PaymentError
+    from erp.services.payment_service import PaymentError, PaymentService
     
     try:
         restock = Restock.objects.select_related('transaction').get(id=pk)

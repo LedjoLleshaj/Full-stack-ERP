@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.hashers import identify_hasher
+
 from erp.models import User
 
 

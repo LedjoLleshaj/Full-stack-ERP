@@ -6,12 +6,13 @@ across sales.py, restocks.py, and inventory.py (~300 lines of repeated code).
 """
 
 from decimal import Decimal
-from typing import Dict, Any, Optional
-from django.db import transaction as db_transaction
-from django.utils import timezone
-from django.db.models import Sum
+from typing import Any
 
-from erp.models import Payment, Account, Transaction
+from django.db import transaction as db_transaction
+from django.db.models import Sum
+from django.utils import timezone
+
+from erp.models import Account, Payment, Transaction
 from erp.utils.currency import get_exchange_rate
 
 
@@ -56,7 +57,7 @@ class PaymentService:
     def reverse_all_payments(
         cls,
         transaction: Transaction
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Reverse all payments for a transaction.
         
@@ -130,7 +131,7 @@ class PaymentService:
         notes: str = "",
         pay_remaining: bool = False,
         tolerance: Decimal = Decimal("0.01")
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a payment for a transaction.
         
@@ -243,8 +244,8 @@ class PaymentService:
     def process_initial_payment(
         cls,
         transaction: Transaction,
-        payment_data: Optional[Dict[str, Any]]
-    ) -> Optional[Dict[str, Any]]:
+        payment_data: dict[str, Any] | None
+    ) -> dict[str, Any] | None:
         """
         Process initial payment when creating a sale or restock.
         
@@ -302,7 +303,7 @@ class PaymentService:
         currency: str,    # New currency for the payment
         payment_method: str = None,  # New payment method (CASH or CARD)
         notes: str = ""
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update an existing payment's amount, currency, payment method and notes.
         
@@ -398,7 +399,7 @@ class PaymentService:
 
     @classmethod
     @db_transaction.atomic
-    def delete_payment(cls, payment: Payment) -> Dict[str, Any]:
+    def delete_payment(cls, payment: Payment) -> dict[str, Any]:
         """
         Delete a payment and reverse its effect on accounting.
         """
