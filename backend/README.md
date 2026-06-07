@@ -1,6 +1,6 @@
-# Selita Fish - Backend
+# ERP System - Backend
 
-This is the backend API for the Selita Fish application, built with Django and Django REST Framework. It provides a comprehensive RESTful API for managing users, suppliers, clients, accounts, transactions, payments, inventory, sales, and reports.
+This is the backend API for the ERP System application, built with Django and Django REST Framework. It provides a comprehensive RESTful API for managing users, suppliers, clients, accounts, transactions, payments, inventory, sales, and reports.
 
 ## 📋 Table of Contents
 
@@ -38,7 +38,7 @@ This is the backend API for the Selita Fish application, built with Django and D
 
 ```bash
 git clone <repository-url>
-cd selita-fish/backend
+cd erp/backend
 ```
 
 ### 2. Create and activate a virtual environment
@@ -73,7 +73,7 @@ SECRET_KEY=your_secret_key_here
 DEBUG=True
 
 # Database Configuration
-DB_NAME=selita_fish
+DB_NAME=erp_db
 DB_USER=REDACTED
 DB_PASSWORD=REDACTED
 DB_HOST=0.0.0.0
@@ -280,7 +280,7 @@ The application automatically syncs exchange rates on startup if:
 - No rates exist in the database, OR
 - Rates are older than 7 days
 
-This is handled in `selita/apps.py` and runs in a background thread 5 seconds after Django starts, so it doesn't block the server startup.
+This is handled in `erp/apps.py` and runs in a background thread 5 seconds after Django starts, so it doesn't block the server startup.
 
 **Console output when rates are synced:**
 ```
