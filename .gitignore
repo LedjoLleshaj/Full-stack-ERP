@@ -1,19 +1,46 @@
-# Ignore virtual environments
-/env
-/env/
-venv/
+# ---- OS ----
+.DS_Store
+Thumbs.db
 
-# Ignore Python cache directories
+# ---- Python / Django ----
+__pycache__/
 **/__pycache__/
-**/*.pyc
-
-# Optional: Ignore compiled bytecode files
+*.py[cod]
 *.pyo
 *.pyd
-db/tempo.sql
+*.egg-info/
+.venv/
+venv/
+/env
+/env/
+*.sqlite3
+staticfiles/
+backend/staticfiles/
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
 
-# macOS
-.DS_Store
+# ---- Secrets / env ----
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+# ---- Node / Angular ----
+node_modules/
+dist/
+.angular/
+*.log
+npm-debug.log*
+
+# ---- Docker / runtime ----
+logs/
+backups/
+REDACTED_data/
+
+# ---- Project-specific (pre-existing) ----
+db/tempo.sql
 backend/Auth.md
 backend/benchmark_baseline2.json
 backend/benchmark_baseline.json
