@@ -1,12 +1,12 @@
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.utils import timezone
-from erp.constants import (
-    Currency, TransactionStatus, TransactionType,
-    AccountType, PaymentMethod
-)
-from erp.managers import UserManager
+from decimal import Decimal
 
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.validators import MinValueValidator
+from django.db import models
+from django.utils import timezone
+
+from erp.constants import AccountType, Currency, PaymentMethod, TransactionStatus, TransactionType
+from erp.managers import UserManager
 
 # Use centralized constants
 CURRENCY_CHOICES = Currency.CHOICES
@@ -127,7 +127,7 @@ class Account(models.Model):
     account_name = models.CharField(max_length=50)
     account_type = models.CharField(max_length=20, choices=AccountType.CHOICES)
     currency = models.CharField(max_length=3, choices=Currency.CHOICES)
-    current_balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    current_balance = models.DecimalField(max_digits=14, decimal_places=2, default=0.00)
     created_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 
@@ -167,7 +167,7 @@ class Transaction(models.Model):
         blank=True,
         related_name="transactions",
     )
-    total_amount = models.DecimalField(max_digits=8, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=14, decimal_places=2)
     currency = models.CharField(max_length=3, choices=Currency.CHOICES)
     status = models.CharField(max_length=20, choices=TransactionStatus.CHOICES, default=TransactionStatus.PENDING)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -198,10 +198,10 @@ class Payment(models.Model):
     account = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="payments"
     )
-    amount = models.DecimalField(max_digits=8, decimal_places=2)  # Amount in transaction currency
+    amount = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])  # Amount in transaction currency
     currency = models.CharField(max_length=3, choices=Currency.CHOICES)  # Transaction currency
     # Original payment details (before currency conversion)
-    original_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    original_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     original_currency = models.CharField(max_length=3, choices=Currency.CHOICES, null=True, blank=True)
     exchange_rate = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)  # Rate used for conversion
     payment_method = models.CharField(max_length=20, choices=PaymentMethod.CHOICES)
@@ -240,8 +240,8 @@ class AccountTransaction(models.Model):
         related_name="account_transactions",
     )
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES)
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
-    balance_after = models.DecimalField(max_digits=8, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    balance_after = models.DecimalField(max_digits=14, decimal_places=2)
     transaction_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 
@@ -263,8 +263,12 @@ class AccountTransaction(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    category = models.CharField(max_length=50)
-    price = models.DecimalField(max_digits=8, decimal_places=2)
+    category = models.CharField(max_length=50)  # Deprecated: use category_fk instead
+    category_fk = models.ForeignKey(
+        "Product_Categories", null=True, blank=True,
+        on_delete=models.PROTECT, related_name="products"
+    )
+    price = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     description = models.TextField()
     is_active = models.BooleanField(default=True)  # Soft delete flag
 
@@ -288,7 +292,7 @@ class Product(models.Model):
 
 class Inventory(models.Model):
     prod = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(validators=[MinValueValidator(0)])
     restock_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -338,9 +342,9 @@ class Sales(models.Model):
         Transaction, on_delete=models.CASCADE, related_name="sales"
     )
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sales")
-    prod_price = models.DecimalField(max_digits=8, decimal_places=2)
+    prod_price = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     user = models.ForeignKey("erp.User", on_delete=models.CASCADE, related_name="sales")
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
     sale_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 
@@ -362,8 +366,8 @@ class Restock(models.Model):
         Transaction, on_delete=models.CASCADE, related_name="restocks"
     )
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="restocks")
-    quantity = models.IntegerField()
-    restock_price = models.DecimalField(max_digits=8, decimal_places=2)
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
+    restock_price = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     restock_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
 

@@ -1,108 +1,127 @@
 """
-Unit tests for models.
+Unit tests for model validation and data-model integrity (Phase 4).
 
-Tests model creation, validation, methods, and properties.
+Tests money field widths, quantity validators, stock enforcement,
+and catalog FK backfill.
 """
 
 from decimal import Decimal
-from django.test import TestCase
+
+import pytest
 from django.core.exceptions import ValidationError
-from erp.models import Client, Product, Category, Sale, Inventory
-from erp.tests.base import ErpTestCase
+
+from erp.constants import TransactionStatus, TransactionType
+from erp.models import (
+    Account,
+    Inventory,
+    Product,
+    Product_Categories,
+    Restock,
+    Sales,
+    Transaction,
+    User,
+)
+from erp.services.inventory_service import InventoryError, InventoryService
 
 
-class ClientModelTests(ErpTestCase):
-    """Tests for the Client model."""
-    
-    def test_client_creation(self):
-        """Test creating a client."""
-        client = Client.objects.create(
-            name='New Client',
-            contact_info='newclient@example.com'
-        )
-        self.assertEqual(client.name, 'New Client')
-        self.assertEqual(client.contact_info, 'newclient@example.com')
-        self.assertIsNotNone(client.created_at)
-    
-    def test_client_str(self):
-        """Test client string representation."""
-        self.assertEqual(str(self.client), 'Test Client')
+@pytest.mark.django_db
+def test_account_holds_millions():
+    a = Account(account_name="Cash", account_type="CASH", currency="LEK",
+                current_balance=Decimal("12345678.90"))
+    a.full_clean()
+    a.save()
+    assert a.current_balance == Decimal("12345678.90")
 
 
-class ProductModelTests(ErpTestCase):
-    """Tests for the Product model."""
-    
-    def test_product_creation(self):
-        """Test creating a product."""
-        product = Product.objects.create(
-            name='New Product',
-            category=self.category,
-            buying_price=Decimal('20.00'),
-            selling_price=Decimal('30.00'),
-            unit='piece'
-        )
-        self.assertEqual(product.name, 'New Product')
-        self.assertEqual(product.buying_price, Decimal('20.00'))
-        self.assertEqual(product.selling_price, Decimal('30.00'))
-    
-    def test_product_str(self):
-        """Test product string representation."""
-        self.assertEqual(str(self.product), 'Test Product')
+@pytest.mark.django_db
+def test_negative_quantity_rejected():
+    user = User.objects.create_user(username="tester", password="pass", firstname="T", lastname="U")
+    prod = Product.objects.create(name="TestProd", category="Cat", price=Decimal("10.00"), description="d")
+    Inventory.objects.create(prod=prod, quantity=100)
+    txn = Transaction.objects.create(
+        transaction_type=TransactionType.SALE, total_amount=Decimal("10.00"),
+        currency="EUR", status=TransactionStatus.PENDING
+    )
+    sale = Sales(transaction=txn, prod=prod, prod_price=Decimal("10.00"), user=user, quantity=-5)
+    with pytest.raises(ValidationError):
+        sale.full_clean()
 
 
-class CategoryModelTests(ErpTestCase):
-    """Tests for the Category model."""
-    
-    def test_category_creation(self):
-        """Test creating a category."""
-        category = Category.objects.create(
-            name='New Category',
-            description='New category description'
-        )
-        self.assertEqual(category.name, 'New Category')
-        self.assertEqual(category.description, 'New category description')
-    
-    def test_category_str(self):
-        """Test category string representation."""
-        self.assertEqual(str(self.category), 'Test Category')
+@pytest.mark.django_db
+def test_zero_quantity_rejected():
+    user = User.objects.create_user(username="tester2", password="pass", firstname="T", lastname="U")
+    prod = Product.objects.create(name="TestProd2", category="Cat", price=Decimal("10.00"), description="d")
+    Inventory.objects.create(prod=prod, quantity=100)
+    txn = Transaction.objects.create(
+        transaction_type=TransactionType.SALE, total_amount=Decimal("10.00"),
+        currency="EUR", status=TransactionStatus.PENDING
+    )
+    sale = Sales(transaction=txn, prod=prod, prod_price=Decimal("10.00"), user=user, quantity=0)
+    with pytest.raises(ValidationError):
+        sale.full_clean()
 
 
-class SaleModelTests(ErpTestCase):
-    """Tests for the Sale model."""
-    
-    def test_sale_creation(self):
-        """Test creating a sale."""
-        sale = self.create_sale(quantity=5)
-        self.assertEqual(sale.quantity, 5)
-        self.assertEqual(sale.total_price, Decimal('75.00'))  # 5 * 15.00
-    
-    def test_sale_str(self):
-        """Test sale string representation."""
-        sale = self.create_sale()
-        expected = f'Sale #{sale.id} - Test Client - Test Product'
-        self.assertEqual(str(sale), expected)
+@pytest.mark.django_db
+def test_negative_price_rejected():
+    prod = Product(name="BadPrice", category="Cat", price=Decimal("-1.00"), description="d")
+    with pytest.raises(ValidationError):
+        prod.full_clean()
 
 
-class InventoryModelTests(ErpTestCase):
-    """Tests for the Inventory model."""
-    
-    def test_inventory_creation(self):
-        """Test creating inventory."""
-        inventory = self.create_inventory(quantity=50)
-        self.assertEqual(inventory.quantity, 50)
-        self.assertEqual(inventory.product, self.product)
-    
-    def test_inventory_str(self):
-        """Test inventory string representation."""
-        inventory = self.create_inventory()
-        expected = f'Test Product - 100 kg'
-        self.assertEqual(str(inventory), expected)
+@pytest.mark.django_db
+def test_zero_price_rejected():
+    prod = Product(name="ZeroPrice", category="Cat", price=Decimal("0.00"), description="d")
+    with pytest.raises(ValidationError):
+        prod.full_clean()
 
 
-# TODO: Add more model tests:
-# - Payment model tests
-# - Transaction model tests
-# - Restock model tests
-# - Account model tests
-# - Supplier model tests
-# - User model tests
+@pytest.mark.django_db
+def test_overselling_rejected():
+    prod = Product.objects.create(name="LimitedProd", category="Cat", price=Decimal("10.00"), description="d")
+    Inventory.objects.create(prod=prod, quantity=5)
+    with pytest.raises(InventoryError):
+        InventoryService.reduce_inventory(prod, 10)
+
+
+@pytest.mark.django_db
+def test_available_stock_returns_correct_quantity():
+    prod = Product.objects.create(name="StockProd", category="Cat", price=Decimal("10.00"), description="d")
+    Inventory.objects.create(prod=prod, quantity=42)
+    assert InventoryService.available_stock(prod) == 42
+
+
+@pytest.mark.django_db
+def test_available_stock_returns_zero_when_no_inventory():
+    prod = Product.objects.create(name="NoProd", category="Cat", price=Decimal("10.00"), description="d")
+    assert InventoryService.available_stock(prod) == 0
+
+
+@pytest.mark.django_db
+def test_category_fk_backfill():
+    cat = Product_Categories.objects.create(category_name="Electronics")
+    prod = Product.objects.create(name="Phone", category="Electronics", price=Decimal("500.00"), description="d", category_fk=cat)
+    assert prod.category_fk == cat
+
+
+@pytest.mark.django_db
+def test_restock_negative_quantity_rejected():
+    prod = Product.objects.create(name="RestockProd", category="Cat", price=Decimal("10.00"), description="d")
+    txn = Transaction.objects.create(
+        transaction_type=TransactionType.PURCHASE, total_amount=Decimal("100.00"),
+        currency="EUR", status=TransactionStatus.PENDING
+    )
+    restock = Restock(transaction=txn, prod=prod, quantity=-3, restock_price=Decimal("5.00"))
+    with pytest.raises(ValidationError):
+        restock.full_clean()
+
+
+@pytest.mark.django_db
+def test_restock_negative_price_rejected():
+    prod = Product.objects.create(name="RestockProd2", category="Cat", price=Decimal("10.00"), description="d")
+    txn = Transaction.objects.create(
+        transaction_type=TransactionType.PURCHASE, total_amount=Decimal("100.00"),
+        currency="EUR", status=TransactionStatus.PENDING
+    )
+    restock = Restock(transaction=txn, prod=prod, quantity=10, restock_price=Decimal("-1.00"))
+    with pytest.raises(ValidationError):
+        restock.full_clean()

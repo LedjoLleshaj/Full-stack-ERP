@@ -1,23 +1,22 @@
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from ..models import Sales, Product, User, Client, Inventory, Transaction, Payment
-from ..serializers import (
-    SalesSerializer,
-    ProductSerializer,
-    UserSerializer,
-    ClientSerializer,
-    InventorySerializer,
-    TransactionSerializer,
-    PaymentSerializer,
-)
+from decimal import Decimal
+
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
-from decimal import Decimal
-from erp.utils.responses import api_error_handler, not_found_response, bad_request_response
-from erp.constants import TransactionStatus, TransactionType
+from rest_framework.response import Response
 
+from erp.constants import TransactionStatus, TransactionType
+from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
+
+from ..models import Payment, Product, Sales, Transaction, User
+from ..serializers import (
+    ClientSerializer,
+    PaymentSerializer,
+    ProductSerializer,
+    SalesSerializer,
+    TransactionSerializer,
+)
 
 # ======== SALES ========
 
@@ -159,7 +158,7 @@ def getUsersFromSales(request):
 @api_error_handler
 def paySale(request, pk):
     """Add a payment to a sale's transaction"""
-    from erp.services.payment_service import PaymentService, PaymentError
+    from erp.services.payment_service import PaymentError, PaymentService
 
     try:
         sale = Sales.objects.select_related("transaction").get(id=pk)
@@ -209,8 +208,8 @@ def paySale(request, pk):
 @api_error_handler
 def createSale(request):
     """Create a new sale with transaction and optional payment"""
-    from erp.services.inventory_service import InventoryService, InventoryError
-    from erp.services.payment_service import PaymentService, PaymentError
+    from erp.services.inventory_service import InventoryError, InventoryService
+    from erp.services.payment_service import PaymentError, PaymentService
     
     # Extract data from request
     client_id = request.data.get("client_id")
@@ -260,8 +259,17 @@ def createSale(request):
         quantity=quantity,
     )
 
-    # Use InventoryService to reduce inventory
-    InventoryService.reduce_inventory(product, quantity, allow_negative=True)
+    # Use InventoryService to reduce inventory (disallow overselling)
+    try:
+        InventoryService.reduce_inventory(product, quantity, allow_negative=False)
+    except InventoryError:
+        # Rollback: delete the sale and transaction we just created
+        sale.delete()
+        transaction.delete()
+        return bad_request_response(
+            f"Insufficient inventory for {product.name}. "
+            f"Available: {InventoryService.available_stock(product)}, Requested: {quantity}"
+        )
 
     # If payment data provided, use PaymentService
     if payment_data:
@@ -398,7 +406,7 @@ def getSaleDetails(request, pk):
 def updateSale(request, pk):
     """Update an existing sale with validation to prevent overpayment"""
     from erp.services.inventory_service import InventoryService
-    from erp.services.payment_service import PaymentService, PaymentError
+    from erp.services.payment_service import PaymentError, PaymentService
     
     try:
         sale = Sales.objects.select_related('transaction', 'prod', 'user').get(id=pk)
@@ -489,9 +497,10 @@ def updateSale(request, pk):
 @api_error_handler
 def deleteSale(request, pk):
     """Delete a sale and reverse all its effects (payments, inventory)"""
+    from django.db import transaction as db_transaction
+
     from erp.services.inventory_service import InventoryService
     from erp.services.payment_service import PaymentService
-    from django.db import transaction as db_transaction
     
     try:
         sale = Sales.objects.select_related('transaction', 'prod').get(id=pk)

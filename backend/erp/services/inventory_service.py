@@ -6,7 +6,7 @@ across sales.py, restocks.py, and inventory.py.
 """
 
 from decimal import Decimal
-from typing import Optional
+
 from django.db import transaction as db_transaction
 
 from erp.models import Inventory, Product
@@ -33,7 +33,7 @@ class InventoryService:
         """
         inventory, created = Inventory.objects.get_or_create(
             prod=product,
-            defaults={"quantity": Decimal("0")}
+            defaults={"quantity": 0}
         )
         return inventory
     
@@ -133,6 +133,26 @@ class InventoryService:
         return inventory.quantity
     
     @classmethod
+    def available_stock(cls, product: Product) -> int:
+        """
+        Return the current on-hand quantity for a product.
+
+        The authoritative on-hand quantity is stored in Inventory.quantity
+        for that product. Updated by sales (reduce) and restocks (add).
+
+        Args:
+            product: The Product to check
+
+        Returns:
+            Current on-hand quantity (int), or 0 if no inventory record.
+        """
+        try:
+            inventory = Inventory.objects.get(prod=product)
+            return inventory.quantity
+        except Inventory.DoesNotExist:
+            return 0
+
+    @classmethod
     def check_availability(
         cls,
         product: Product,
@@ -140,11 +160,11 @@ class InventoryService:
     ) -> bool:
         """
         Check if sufficient inventory is available.
-        
+
         Args:
             product: The Product to check
             required_quantity: Amount needed
-            
+
         Returns:
             True if sufficient inventory is available
         """
