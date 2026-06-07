@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,13 +10,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env file
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-# Quick-start development settings - unsuitable for production
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-change-in-production')
-JWT_ALGORITHM = "HS256"
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
+
+_secret = os.getenv('SECRET_KEY')
+if not _secret and not DEBUG:
+    raise ImproperlyConfigured("SECRET_KEY must be set in production (DEBUG=False)")
+SECRET_KEY = _secret or 'django-insecure-default-key-change-in-production'
+JWT_ALGORITHM = "HS256"
 
 ALLOWED_HOSTS = [
     "0.0.0.0", 
@@ -37,8 +38,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     # "silk",  # Disabled - adds overhead to queries
 ]
+
+AUTH_USER_MODEL = "erp.User"
 
 MIDDLEWARE = [
     # "silk.middleware.SilkyMiddleware",  # Disabled - adds overhead to queries
