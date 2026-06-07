@@ -5,15 +5,19 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from erp.models import Restock, Product, Supplier, Transaction, Payment, Account, Inventory, ExchangeRate
 from erp.constants import TransactionStatus, TransactionType
-from django.contrib.auth.models import User
+from erp.models import User
+
 
 class RestockCurrencyBugTestCase(TestCase):
     """Test suite for reproducing restock currency inconsistency bugs"""
-    
+
     def setUp(self):
         """Set up test data"""
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.user = User.objects.create_user(
+            username='testuser', password='testpassword',
+            firstname='Test', lastname='User', role='STAFF',
+        )
         self.client.force_authenticate(user=self.user)
         
         self.supplier = Supplier.objects.create(firstname="S", lastname="T", address="A")

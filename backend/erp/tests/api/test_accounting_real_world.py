@@ -13,11 +13,9 @@ from django.test import TestCase
 from django.db import transaction as db_transaction
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.contrib.auth.models import User
-
 from erp.models import (
-    Sales, Restock, Product, Client, Supplier, Transaction, 
-    Payment, Account, Users, Inventory, ExchangeRate
+    Sales, Restock, Product, Client, Supplier, Transaction,
+    Payment, Account, User, Inventory, ExchangeRate
 )
 from erp.services.payment_service import PaymentService, PaymentError
 from erp.constants import TransactionStatus, TransactionType
@@ -25,10 +23,13 @@ from erp.constants import TransactionStatus, TransactionType
 
 class PaymentMethodChangeTests(TestCase):
     """Tests for payment method changes (CASH ↔ CARD)"""
-    
+
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.user = User.objects.create_user(
+            username='testuser', password='testpass',
+            firstname='Test', lastname='User', role='ADMIN',
+        )
         self.client.force_authenticate(user=self.user)
         
         # Create accounts for both CASH and BANK (CARD)
@@ -190,16 +191,15 @@ class PaymentMethodChangeTests(TestCase):
 
 class MultiPaymentAccountingTests(TestCase):
     """Tests for sales/restocks with multiple payments"""
-    
+
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client.force_authenticate(user=self.user)
-        
-        self.full_user = Users.objects.create(
-            username="testuser", password="pass", email="t@t.com",
-            firstname="Test", lastname="User", role="admin"
+        self.user = User.objects.create_user(
+            username='testuser', password='testpass',
+            firstname='Test', lastname='User', role='admin',
         )
+        self.full_user = self.user
+        self.client.force_authenticate(user=self.user)
         
         # Create all 6 accounts per schema
         self.cash_eur = Account.objects.create(
@@ -434,16 +434,15 @@ class AtomicityTests(TestCase):
 
 class FullWorkflowBalanceTests(TestCase):
     """End-to-end workflow testing final account balance correctness"""
-    
+
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client.force_authenticate(user=self.user)
-        
-        self.full_user = Users.objects.create(
-            username="testuser", password="pass", email="t@t.com",
-            firstname="Test", lastname="User", role="admin"
+        self.user = User.objects.create_user(
+            username='testuser', password='testpass',
+            firstname='Test', lastname='User', role='admin',
         )
+        self.full_user = self.user
+        self.client.force_authenticate(user=self.user)
         
         # All 6 accounts starting at 0
         self.cash_eur = Account.objects.create(

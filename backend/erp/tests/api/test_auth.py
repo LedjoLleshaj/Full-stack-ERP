@@ -1,65 +1,58 @@
-"""
-API tests for authentication endpoints.
-
-Tests login, logout, registration, and token management.
-"""
-
-from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+import pytest
+from erp.models import User
 
 
-class AuthenticationAPITests(APITestCase):
-    """Tests for authentication API endpoints."""
-    
-    def setUp(self):
-        """Set up test data."""
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
+@pytest.mark.django_db
+class TestLogin:
+    def test_login_success(self, api_client):
+        User.objects.create_user(
+            username="testuser", password="testpass123",
+            firstname="Test", lastname="User",
         )
-    
-    def test_login_success(self):
-        """Test successful login."""
-        url = reverse('login')  # Adjust URL name as needed
-        data = {
-            'username': 'testuser',
-            'password': 'testpass123'
-        }
-        response = self.client.post(url, data, format='json')
-        
-        # Adjust assertions based on your actual response format
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # self.assertIn('token', response.data)  # If using token auth
-    
-    def test_login_invalid_credentials(self):
-        """Test login with invalid credentials."""
-        url = reverse('login')
-        data = {
-            'username': 'testuser',
-            'password': 'wrongpassword'
-        }
-        response = self.client.post(url, data, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
-    def test_logout(self):
-        """Test logout endpoint."""
-        # First login
-        self.client.force_authenticate(user=self.user)
-        
-        url = reverse('logout')  # Adjust URL name as needed
-        response = self.client.post(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        resp = api_client.post("/erp/login", {
+            "username": "testuser",
+            "password": "testpass123",
+        }, format="json")
+        assert resp.status_code == 200
+        assert "access_token" in resp.cookies
+        assert "refresh_token" in resp.cookies
+        data = resp.json()
+        assert data["username"] == "testuser"
+        assert "password" not in data
+
+    def test_login_invalid_password(self, api_client):
+        User.objects.create_user(
+            username="testuser", password="testpass123",
+            firstname="Test", lastname="User",
+        )
+        resp = api_client.post("/erp/login", {
+            "username": "testuser",
+            "password": "wrongpassword",
+        }, format="json")
+        assert resp.status_code == 401
+
+    def test_login_missing_fields(self, api_client):
+        resp = api_client.post("/erp/login", {"username": "x"}, format="json")
+        assert resp.status_code == 400
+
+    def test_login_nonexistent_user(self, api_client):
+        resp = api_client.post("/erp/login", {
+            "username": "ghost",
+            "password": "pass",
+        }, format="json")
+        assert resp.status_code == 401
 
 
-# TODO: Add more auth tests:
-# - Registration tests
-# - Password reset tests
-# - Token refresh tests (if using JWT)
-# - Permission tests
+@pytest.mark.django_db
+class TestLogout:
+    def test_logout_clears_cookies(self, api_client):
+        User.objects.create_user(
+            username="testuser", password="testpass123",
+            firstname="Test", lastname="User",
+        )
+        api_client.post("/erp/login", {
+            "username": "testuser",
+            "password": "testpass123",
+        }, format="json")
+        resp = api_client.post("/erp/logout")
+        assert resp.status_code == 200

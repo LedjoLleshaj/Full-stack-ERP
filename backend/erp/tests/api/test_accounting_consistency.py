@@ -1,22 +1,20 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
-from erp.models import Users, Client, Product, Account, Transaction, Sales, Payment, Supplier, Inventory
+from erp.models import User, Client, Product, Account, Transaction, Sales, Payment, Supplier, Inventory
 from erp.constants import TransactionStatus, TransactionType
 from decimal import Decimal
-from django.contrib.auth.models import User
 from django.utils import timezone
+
 
 class AccountingConsistencyTest(APITestCase):
     def setUp(self):
-        # Create User
-        self.user = User.objects.create_user(username='testadmin', password='testpassword')
-        self.full_user = Users.objects.create(
+        self.user = User.objects.create_user(
             username="testadmin",
-            password="password",
+            password="testpassword",
             email="test@example.com",
             firstname="Test",
             lastname="User",
-            role="ADMIN"
+            role="ADMIN",
         )
         self.client.force_authenticate(user=self.user)
         
@@ -51,7 +49,7 @@ class AccountingConsistencyTest(APITestCase):
             prod=self.product,
             prod_price=Decimal("10.00"),
             quantity=Decimal("10.00"),
-            user=self.full_user
+            user=self.user
         )
         transaction = sale.transaction
         
@@ -110,7 +108,7 @@ class AccountingConsistencyTest(APITestCase):
             prod=self.product,
             prod_price=Decimal("10.00"),
             quantity=Decimal("10.00"),
-            user=self.full_user
+            user=self.user
         )
         # Pay 50 EUR
         payment = Payment.objects.create(

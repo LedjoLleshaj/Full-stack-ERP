@@ -12,25 +12,24 @@ from decimal import Decimal
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from erp.models import Sales, Product, Client, Transaction, Payment, Account, Users, Inventory
+from erp.models import Sales, Product, Client, Transaction, Payment, Account, User, Inventory
 from erp.constants import TransactionStatus, TransactionType
 
 
 class SaleUpdateDeleteTestCase(TestCase):
     """Test suite for sale update and delete operations"""
-    
+
     def setUp(self):
         """Set up test data"""
         self.client_api = APIClient()
-        
-        # Create user for authentication
-        self.user = Users.objects.create(
+
+        self.user = User.objects.create_user(
             username="testuser",
-            password="pbkdf2_sha256$870000$test$hash",
+            password="testpass123",
             email="test@test.com",
             firstname="Test",
             lastname="User",
-            role="admin"
+            role="admin",
         )
         self.client_api.force_authenticate(user=self.user)
         
