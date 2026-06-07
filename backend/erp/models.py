@@ -1,8 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils import timezone
 from erp.constants import (
-    Currency, TransactionStatus, TransactionType, 
+    Currency, TransactionStatus, TransactionType,
     AccountType, PaymentMethod
 )
+from erp.managers import UserManager
 
 
 # Use centralized constants
@@ -41,14 +44,19 @@ class ExchangeRate(models.Model):
         return f"{self.from_currency} → {self.to_currency}: {self.rate}"
 
 
-# Create your models here.
-class Users(models.Model):
-    username = models.CharField(max_length=50)
-    password = models.CharField(max_length=255)
-    email = models.CharField(max_length=255)
+class User(AbstractBaseUser, PermissionsMixin):
+    username = models.CharField(max_length=50, unique=True)
+    email = models.EmailField(max_length=255, blank=True, default="")
     firstname = models.CharField(max_length=50)
     lastname = models.CharField(max_length=50)
-    role = models.CharField(max_length=20)
+    role = models.CharField(max_length=20, default="STAFF")
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    objects = UserManager()
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["firstname", "lastname"]
 
     class Meta:
         db_table = "users"
@@ -63,13 +71,8 @@ class Users(models.Model):
     def __str__(self):
         return self.username
 
-    @property
-    def is_authenticated(self):
-        """
-        Always return True for authenticated users from the JWT token.
-        This is required for Django REST Framework's IsAuthenticated permission class.
-        """
-        return True
+
+Users = User
 
 
 class Supplier(models.Model):
@@ -336,7 +339,7 @@ class Sales(models.Model):
     )
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sales")
     prod_price = models.DecimalField(max_digits=8, decimal_places=2)
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="sales")
+    user = models.ForeignKey("erp.User", on_delete=models.CASCADE, related_name="sales")
     quantity = models.IntegerField()
     sale_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
