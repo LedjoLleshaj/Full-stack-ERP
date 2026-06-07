@@ -1,4 +1,4 @@
--- Database Cleanup Script for Selita Fish
+-- Database Cleanup Script for ERP System
 -- This script wipes transactional data and dynamic master data while preserving system configuration.
 
 -- 1. Wipe Transactional Data (Order matters for foreign keys)

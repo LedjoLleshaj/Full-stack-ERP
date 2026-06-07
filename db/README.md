@@ -1,6 +1,6 @@
-# Selita Fish Database
+# ERP System Database
 
-This directory contains the database schema and configuration for the Selita Fish application. The project uses **PostgreSQL** as the relational database management system.
+This directory contains the database schema and configuration for the ERP System application. The project uses **PostgreSQL** as the relational database management system.
 
 ## 🚀 How to Run
 
@@ -13,7 +13,7 @@ docker-compose up -d
 ### Access Credentials
 - **Host**: `localhost` (or `db` if accessing from another container)
 - **Port**: `5432`
-- **Database Name**: `selita_fish`
+- **Database Name**: `erp_db`
 - **Username**: `REDACTED`
 - **Password**: `REDACTED`
 

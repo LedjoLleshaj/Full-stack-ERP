@@ -1,9 +1,9 @@
--- DROP DATABASE IF EXISTS selita_fish;
+-- DROP DATABASE IF EXISTS erp_db;
 -- postresql
 
--- CREATE DATABASE selita_fish;
+-- CREATE DATABASE erp_db;
 
-\connect selita_fish;
+\connect erp_db;
 
 CREATE TABLE Users   (
     id SERIAL PRIMARY KEY,
@@ -241,8 +241,8 @@ WHERE status IN ('PENDING', 'PARTIAL');
 
 
 -- Inserting data
-INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('adminselita', 'pbkdf2_sha256$870000$tympSs6asDt7DTV4Wyq2kt$/8MfeLLr5m6C+keQIonZhKzJmtsV2doXFl641T9pS1U=', 'admin@selita_fish.com', 'Admin', 'Selita', 'admin');
--- INSERT INTO Client (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@selita_fish.com', '0123456789', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@selita_fish.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
+INSERT INTO Users (username, password, email, firstname, lastname, role) VALUES ('admin', 'pbkdf2_sha256$870000$tympSs6asDt7DTV4Wyq2kt$/8MfeLLr5m6C+keQIonZhKzJmtsV2doXFl641T9pS1U=', 'admin@example.com', 'Admin', 'User', 'admin');
+-- INSERT INTO Client (firstname, lastname, email, phone, address, city) VALUES ('Ledjo', 'Lleshaj', 'ledjo@erp_db.com', '0123456789', 'Rruga e Dajlani', 'Durres'), ('Kristjan', 'Gjinaj', 'Kristjan@erp_db.com', '1234567890', 'Rruga e Dajlani', 'Tirane');
 INSERT INTO Product_Categories (category_name) VALUES ('Peshk'), ('Fruta Deti'), ('Gafforre'), ('Kallamar'), ('Midhje'),('Karkaleca'),('Peshk i eger');
 INSERT INTO Product_Names (product_name, category_id) VALUES 
 ('Salmon',1),('Karkaleca',5),('Koce',1),('Midhje',

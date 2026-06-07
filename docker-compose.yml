@@ -1,12 +1,12 @@
 services:
   db:
     build: ./db
-    container_name: selita_fish_db
+    container_name: erp_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: REDACTED
       POSTGRES_PASSWORD: REDACTED
-      POSTGRES_DB: selita_fish
+      POSTGRES_DB: erp_db
     ports:
       - "5432:5432"
     # volumes:
@@ -14,11 +14,11 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: selita_fish_backend
+    container_name: erp_backend
     environment:
       DB_HOST: db # Database service name in docker-compose
       DB_PORT: 5432
-      DB_NAME: selita_fish
+      DB_NAME: erp_db
       DB_USER: REDACTED
       DB_PASSWORD: REDACTED
     depends_on:
@@ -29,7 +29,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: selita_fish_frontend
+    container_name: erp_frontend
     ports:
       - "4200:4200"
     volumes:

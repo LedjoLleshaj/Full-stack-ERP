@@ -6,6 +6,6 @@ COPY schema.sql /docker-entrypoint-initdb.d/
 
 ENV POSTGRES_USER=REDACTED
 ENV POSTGRES_PASSWORD=REDACTED
-ENV POSTGRES_DB=selita_fish
+ENV POSTGRES_DB=erp_db
 
 EXPOSE 5432
