@@ -12,20 +12,6 @@ A multi-currency ERP for small wholesale/retail businesses — inventory, sales,
 
 > Why it exists: built to run a real multi-currency (EUR / USD / LEK) trading business where invoices are paid in installments and in whichever currency the customer has on hand — the accounting has to stay correct anyway.
 
-## Screenshots
-
-| Dashboard | Sale detail — cross-currency payment |
-|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Sale detail](docs/screenshots/sale-detail-multicurrency.png) |
-
-<details><summary>More screenshots</summary>
-
-![Login](docs/screenshots/login.png)
-![Sales](docs/screenshots/sales.png)
-![Inventory](docs/screenshots/inventory.png)
-
-</details>
-
 ## Architecture
 
 ```mermaid
@@ -75,22 +61,33 @@ docker compose up --build
 | Service | URL |
 |---|---|
 | Frontend | http://localhost:4200 |
-| API | http://localhost:8080/erp |
+| API (v1) | http://localhost:8080/api/v1/ |
+| API docs (Swagger) | http://localhost:8080/api/docs |
 | API health | http://localhost:8080/erp/health/ |
 | Django admin | http://localhost:8080/admin |
 
 Migrations run automatically on backend startup; a demo admin (`admin` / `adminpass`) is seeded by [`backend/entrypoint.sh`](backend/entrypoint.sh) — change these before any non-local use.
 
+## API documentation
+
+Once running, interactive OpenAPI docs are available at **http://localhost:8080/api/docs**.
+
+The versioned REST API lives at `/api/v1/` (paginated, ViewSet-based). Legacy routes under `/erp/` remain for backward compatibility.
+
 ## Project structure
 
 ```
 .
-├── backend/          # Django + DRF API
-│   └── erp/          # domain app: models, api/, services/, tests/
-├── frontend/         # Angular SPA
-├── db/               # schema, ER diagram, seed data
-├── docs/             # screenshots
-├── scripts/          # deploy / backup / analytics helpers
+├── backend/            # Django 5.1 + DRF
+│   ├── erp/            # domain app
+│   │   ├── api/        # view functions (legacy routes)
+│   │   ├── services/   # business logic (inventory, payments)
+│   │   ├── viewsets.py # /api/v1/ ViewSets
+│   │   └── tests/      # pytest suite
+│   └── backend/        # Django project settings
+├── frontend/           # Angular 16 SPA
+├── db/                 # ER diagram, seed data, cleanup scripts
+├── docs/               # deployment guide, schema guide
 └── docker-compose.yml
 ```
 

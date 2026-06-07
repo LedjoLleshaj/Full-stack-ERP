@@ -39,10 +39,17 @@ logs/
 backups/
 postgres_data/
 
-# ---- Project-specific (pre-existing) ----
+# ---- IDE / tools ----
+.codegraph/
+.idea/
+.vscode/
+*.swp
+
+# ---- Project-specific ----
 db/tempo.sql
 backend/Auth.md
 backend/benchmark_baseline2.json
 backend/benchmark_baseline.json
 backend/benchmark_after.json
 backend/benchmark.py
+refactor.md
