@@ -1,39 +1,26 @@
-"""
-Pytest configuration for the ERP test suite.
-
-This file is optional and only needed if you choose to use pytest instead of Django's test runner.
-"""
-
 import pytest
-from django.conf import settings
-
-
-@pytest.fixture(scope='session')
-def django_db_setup():
-    """Custom database setup for pytest."""
-    settings.DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-    }
+from rest_framework.test import APIClient
+from erp.models import User
 
 
 @pytest.fixture
 def api_client():
-    """Fixture for Django REST framework API client."""
-    from rest_framework.test import APIClient
     return APIClient()
 
 
 @pytest.fixture
-def authenticated_api_client(api_client, django_user_model):
-    """Fixture for authenticated API client."""
-    user = django_user_model.objects.create_user(
-        username='testuser',
-        email='test@example.com',
-        password='testpass123'
+def existing_user():
+    return User.objects.create_user(
+        username="existinguser",
+        password="testpass123",
+        email="existing@example.com",
+        firstname="Existing",
+        lastname="User",
+        role="STAFF",
     )
-    api_client.force_authenticate(user=user)
+
+
+@pytest.fixture
+def authenticated_api_client(api_client, existing_user):
+    api_client.force_authenticate(user=existing_user)
     return api_client
-
-
-# Add more fixtures as needed
