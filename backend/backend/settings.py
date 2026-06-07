@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     # "silk",  # Disabled - adds overhead to queries
 ]
 
@@ -131,9 +132,19 @@ REST_FRAMEWORK = {
         "erp.authentication.CookieJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_THROTTLE_RATES": {
-        "anon": "5/minute",
-    },
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"anon": "5/minute", "user": "1000/hour"},
+    "EXCEPTION_HANDLER": "erp.utils.exception_handler.api_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "ERP API",
+    "DESCRIPTION": "Multi-currency ERP system API",
+    "VERSION": "1.0.0",
 }
 
 # Simple JWT configuration
