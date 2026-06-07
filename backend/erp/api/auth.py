@@ -1,12 +1,10 @@
-# login_view.py
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from django.contrib.auth.hashers import check_password
 from django.conf import settings
-from erp.models import Users
+from erp.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ObjectDoesNotExist
 from erp.utils.responses import api_error_handler, bad_request_response, unauthorized_response
@@ -23,14 +21,12 @@ def login(request):
     if "username" not in data or "password" not in data:
         return bad_request_response("Both username and password are required.")
 
-    # Attempt to retrieve user by username
     try:
-        user = Users.objects.get(username=data["username"])
+        user = User.objects.get(username=data["username"])
     except ObjectDoesNotExist:
         return unauthorized_response("Invalid username or password")
 
-    # Verify password
-    if check_password(data["password"], user.password):
+    if user.check_password(data["password"]):
         # Generate access and refresh tokens
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
