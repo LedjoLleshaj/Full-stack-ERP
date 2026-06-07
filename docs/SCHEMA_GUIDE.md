@@ -227,61 +227,11 @@ ORDER BY t.created_date;
 
 ---
 
-## Migration Strategy
+## Current Schema State
 
-To migrate from the current schema to the improved one:
+The Sales model references a Transaction via `transaction_id` FK. The earlier `is_paid` and `client_id` columns have been removed — payment status is now derived from the Transaction → Payment chain, and client association lives on the Transaction.
 
-### Option 1: Add transaction_id to existing Sales table
-
-```sql
--- Step 1: Add the column (nullable initially)
-ALTER TABLE Sales ADD COLUMN transaction_id INT REFERENCES Transaction(id);
-
--- Step 2: Create transactions for existing sales
-INSERT INTO Transaction (transaction_type, client_id, total_amount, currency, status, created_date)
-SELECT
-    'SALE',
-    s.client_id,
-    s.prod_price * s.quantity,
-    'EUR',
-    CASE WHEN s.is_paid THEN 'COMPLETED' ELSE 'PENDING' END,
-    s.sale_date
-FROM Sales s;
-
--- Step 3: Update Sales records with the new transaction_id
--- (This requires a more complex script to match sales to transactions)
-
--- Step 4: Make transaction_id NOT NULL
-ALTER TABLE Sales ALTER COLUMN transaction_id SET NOT NULL;
-
--- Step 5: Drop old columns
-ALTER TABLE Sales DROP COLUMN is_paid;
-ALTER TABLE Sales DROP COLUMN client_id;
-```
-
-### Option 2: Create new table and migrate data
-
-```sql
--- Create the new structure
-CREATE TABLE Sales_New (
-    id SERIAL PRIMARY KEY,
-    transaction_id INT NOT NULL REFERENCES Transaction(id) ON DELETE CASCADE,
-    prod_id INT NOT NULL,
-    prod_price DECIMAL(10, 2) NOT NULL,
-    user_id INT NOT NULL,
-    quantity INT NOT NULL,
-    sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (prod_id) REFERENCES Product(id),
-    FOREIGN KEY (user_id) REFERENCES Users(id)
-);
-
--- Migrate data
--- (Insert migration script here)
-
--- Rename tables
-ALTER TABLE Sales RENAME TO Sales_Old;
-ALTER TABLE Sales_New RENAME TO Sales;
-```
+This migration has already been applied. The SQL migration options previously documented here are no longer needed.
 
 ---
 
