@@ -1,13 +1,31 @@
 # ERP System Database
 
-This directory contains the database schema and configuration for the ERP System application. The project uses **PostgreSQL** as the relational database management system.
+This directory contains the database configuration and seed data for the ERP System application. The project uses **PostgreSQL** as the relational database management system.
 
-## 🚀 How to Run
+## How to Run
 
 The database is containerized using Docker. To start the database:
 
 ```bash
 docker-compose up -d
+```
+
+### Schema Setup
+
+The database schema is created and managed by **Django migrations**. After starting the database container, run:
+
+```bash
+python manage.py migrate
+```
+
+This creates all tables, indexes, and constraints. Do **not** use `schema.sql` to create tables -- it is kept as a reference only.
+
+### Seed Data
+
+`seed.sql` contains optional sample data for development (admin user, product categories, accounts, exchange rates). Load it with:
+
+```bash
+docker compose exec -T db psql -U postgres -d erp_db < db/seed.sql
 ```
 
 ### Access Credentials
@@ -22,9 +40,9 @@ docker-compose up -d
 > sudo fuser -k 5432/tcp
 > ```
 
-## 🗄️ Database Schema
+## Database Schema
 
-The database consists of the following tables designed to manage the fish market's operations, including inventory, sales, and financial tracking.
+The database consists of the following tables designed to manage operations including inventory, sales, and financial tracking.
 
 ### Core Entities
 - **`Users`**: System users (Admins, Staff) with role-based access.
@@ -47,7 +65,7 @@ The database consists of the following tables designed to manage the fish market
 - **`AccountTransaction`**: A ledger of all money movements (Deposits, Withdrawals, Transfers) affecting account balances.
 - **`Sales`**: Records of product sales to clients, linked to Users and Products.
 
-## 🔗 Relationships
+## Relationships
 
 - **Transactions** link to either a **Supplier** (for purchases) or a **Client** (for sales).
 - **Payments** belong to a **Transaction** and are made from/to a specific **Account**.
@@ -55,11 +73,10 @@ The database consists of the following tables designed to manage the fish market
 - **Sales** are linked to a **Product**, **Client**, and the **User** who processed the sale.
 - **Inventory** is updated based on **Restocks** (in) and **Sales** (out).
 
-## 📝 Initial Data
+## Seed Data Contents
 
-The schema includes initial seed data for:
+`seed.sql` includes:
 - Default Admin User
-- Sample Clients and Suppliers
 - Product Categories and Names
-- Initial Inventory and Sales history
-- Default Accounts (Cash/Bank in EUR, USD, ALL) with initial balances
+- Required Accounts (Cash/Bank in EUR, USD, LEK)
+- Exchange Rates (EUR, USD, LEK)

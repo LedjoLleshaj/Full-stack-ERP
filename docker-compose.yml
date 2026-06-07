@@ -9,8 +9,13 @@ services:
       POSTGRES_DB: erp_db
     ports:
       - "5432:5432"
-    # volumes:
-    #   - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   backend:
     build:
       context: ./backend
@@ -22,7 +27,8 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8080:8080"
   frontend:
@@ -36,4 +42,7 @@ services:
       - /frontend/node_modules
       - ./frontend:/frontend
     depends_on:
-      - backend #optional
+      - backend
+
+volumes:
+  pgdata:

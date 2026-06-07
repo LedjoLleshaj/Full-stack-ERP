@@ -16,6 +16,7 @@ from .api import (
     account_transactions,
     restocks,
     exchange_rates,
+    health,
 )
 
 
@@ -24,6 +25,7 @@ urlpatterns = [
     # path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"), # Disabled in favor of cookie auth
     path("api/token/refresh/", auth.refresh_token_view, name="token_refresh"),
     path("login", auth.login),
+    path("health/", health.health),
     path("logout", auth.logout_view),
     
     # ======== USERS ========
