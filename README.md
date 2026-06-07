@@ -7,7 +7,7 @@ A multi-currency ERP for small wholesale/retail businesses — inventory, sales,
   <img alt="Frontend" src="https://img.shields.io/badge/frontend-Angular%2016-DD0031">
   <img alt="Database" src="https://img.shields.io/badge/db-PostgreSQL-336791">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
-  <!-- After Phase 6, add: ![CI](https://github.com/LedjoLleshaj/Full-stack-ERP/actions/workflows/ci.yml/badge.svg) -->
+  <img alt="CI" src="https://github.com/ledjolleshaj/Full-stack-ERP/actions/workflows/ci.yml/badge.svg">
 </p>
 
 > Why it exists: built to run a real multi-currency (EUR / USD / LEK) trading business where invoices are paid in installments and in whichever currency the customer has on hand — the accounting has to stay correct anyway.
