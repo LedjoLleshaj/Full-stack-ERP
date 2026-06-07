@@ -4,7 +4,7 @@
  */
 export const environment = {
   production: true,
-  apiUrl: 'https://api.selita-fish.com/selita', // TODO: Update with actual production URL
+  apiUrl: 'https://api.example.com/erp', // TODO: Update with actual production URL
 
   // ========= GROUPED ENDPOINTS (for future use) =========
   auth: {

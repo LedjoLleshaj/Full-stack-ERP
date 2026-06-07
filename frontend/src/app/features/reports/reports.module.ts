@@ -31,13 +31,13 @@ import { NgxEchartsModule } from 'ngx-echarts';
 import { AlbanianCurrencyPipe } from '../../shared/pipes';
 
 const routes: Routes = [
-  { path: '', component: ReportsViewComponent, title: 'Reports - Selita' },
-  { path: 'revenue', component: RevenueViewComponent, title: 'Revenue Trend - Selita' },
-  { path: 'paid-vs-unpaid', component: PaidVsUnpaidViewComponent, title: 'Paid vs Unpaid - Selita' },
-  { path: 'top-products', component: TopProductsViewComponent, title: 'Top Products - Selita' },
-  { path: 'profit-by-category', component: ProfitByCategoryViewComponent, title: 'Profit By Category - Selita' },
-  { path: 'top-clients', component: TopClientsViewComponent, title: 'Top Clients - Selita' },
-  { path: 'alerts', component: AlertsViewComponent, title: 'Alerts - Selita' },
+  { path: '', component: ReportsViewComponent, title: 'Reports' },
+  { path: 'revenue', component: RevenueViewComponent, title: 'Revenue Trend' },
+  { path: 'paid-vs-unpaid', component: PaidVsUnpaidViewComponent, title: 'Paid vs Unpaid' },
+  { path: 'top-products', component: TopProductsViewComponent, title: 'Top Products' },
+  { path: 'profit-by-category', component: ProfitByCategoryViewComponent, title: 'Profit By Category' },
+  { path: 'top-clients', component: TopClientsViewComponent, title: 'Top Clients' },
+  { path: 'alerts', component: AlertsViewComponent, title: 'Alerts' },
 ];
 
 @NgModule({

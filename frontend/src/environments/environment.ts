@@ -4,7 +4,7 @@
  */
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/selita',
+  apiUrl: 'http://localhost:8080/erp',
 
   // ========= GROUPED ENDPOINTS (for future use) =========
   auth: {

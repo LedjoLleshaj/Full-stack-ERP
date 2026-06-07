@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: selita_fish_frontend
+    container_name: erp_frontend
     ports:
       - "4200:4200"
     volumes:

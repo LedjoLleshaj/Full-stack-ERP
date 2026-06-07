@@ -43,9 +43,9 @@ import { AlbanianCurrencyPipe, AlbanianDatePipe, PaymentStatusPipe } from '../..
 import { NgxEchartsModule } from 'ngx-echarts';
 
 const routes: Routes = [
-  { path: '', component: ProductsViewComponent, title: 'Products - Selita' },
-  { path: 'add', component: AddProductViewComponent, title: 'Add Product - Selita' },
-  { path: ':id', component: ProductDetailsViewComponent, title: 'Product Details - Selita' },
+  { path: '', component: ProductsViewComponent, title: 'Products' },
+  { path: 'add', component: AddProductViewComponent, title: 'Add Product' },
+  { path: ':id', component: ProductDetailsViewComponent, title: 'Product Details' },
 ];
 
 @NgModule({

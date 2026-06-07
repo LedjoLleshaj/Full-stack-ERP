@@ -1,8 +1,8 @@
-# Selita Fish
+# ERP System
 
 A web application that handles the authentication of customers that want to buy fish built with Express.js/Angular and Postgresql.
 
-# Selita Fish Frontend
+# ERP System Frontend
 
 ## Development server
 

@@ -36,9 +36,9 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from '../../shared/pipes';
 
 const routes: Routes = [
-  { path: '', component: SalesViewComponent, title: 'Sale History - Selita' },
-  { path: 'add', component: AddSaleViewComponent, title: 'Add Sale - Selita' },
-  { path: ':id', component: SaleDetailsViewComponent, title: 'Sale Details - Selita' },
+  { path: '', component: SalesViewComponent, title: 'Sale History' },
+  { path: 'add', component: AddSaleViewComponent, title: 'Add Sale' },
+  { path: ':id', component: SaleDetailsViewComponent, title: 'Sale Details' },
 ];
 
 @NgModule({

@@ -30,9 +30,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from '../../shared/pipes';
 
 const routes: Routes = [
-  { path: '', component: SupplierViewComponent, title: 'Supplier List - Selita' },
-  { path: 'add', component: AddSupplierViewComponent, title: 'Add Supplier - Selita' },
-  { path: ':id', component: SupplierDetailsViewComponent, title: 'Supplier Details - Selita' },
+  { path: '', component: SupplierViewComponent, title: 'Supplier List' },
+  { path: 'add', component: AddSupplierViewComponent, title: 'Add Supplier' },
+  { path: ':id', component: SupplierDetailsViewComponent, title: 'Supplier Details' },
 ];
 
 @NgModule({

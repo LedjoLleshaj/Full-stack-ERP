@@ -11,13 +11,13 @@ const routes: Routes = [
     path: "home",
     component: LandingPageComponent,
     canActivate: [PublicGuard],
-    title: "Selita fish",
+    title: "ERP System",
   },
   {
     path: "login",
     component: LoginComponent,
     canActivate: [PublicGuard],
-    title: "Login - Selita",
+    title: "Login",
   },
   {
     path: "",
