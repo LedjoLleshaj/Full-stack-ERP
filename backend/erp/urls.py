@@ -24,9 +24,9 @@ urlpatterns = [
     # ======== AUTHENTICATION ========
     # path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"), # Disabled in favor of cookie auth
     path("api/token/refresh/", auth.refresh_token_view, name="token_refresh"),
-    path("login", auth.login),
+    path("login", auth.login, name="login"),
     path("health/", health.health),
-    path("logout", auth.logout_view),
+    path("logout", auth.logout_view, name="logout"),
     
     # ======== USERS ========
     path("users", users.getUsers),
