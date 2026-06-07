@@ -13,8 +13,8 @@ python manage.py migrate
 
 echo "from django.contrib.auth import get_user_model; \
 User = get_user_model(); \
-User.objects.filter(username='adminselita').exists() or \
-User.objects.create_superuser('adminselita', 'admin@selita.com', 'adminpass')" | python manage.py shell
+User.objects.filter(username='admin').exists() or \
+User.objects.create_superuser('admin', 'admin@example.com', 'adminpass')" | python manage.py shell
 
 
 exec "$@"

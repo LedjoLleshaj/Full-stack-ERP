@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "selita",
+    "erp",
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
@@ -51,7 +51,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     # Uncomment or adjust the line below if needed
-    # "selita.middleware.jwt_auth_middleware.JWTAuthenticationMiddleware",
+    # "erp.middleware.jwt_auth_middleware.JWTAuthenticationMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -78,7 +78,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.REDACTEDql",
-        "NAME": os.getenv('DB_NAME', 'selita_fish'),
+        "NAME": os.getenv('DB_NAME', 'erp_db'),
         "USER": os.getenv('DB_USER', 'REDACTED'),
         "PASSWORD": os.getenv('DB_PASSWORD', 'REDACTED'),
         "HOST": os.getenv('DB_HOST', '0.0.0.0'),
@@ -124,7 +124,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Django REST framework settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "selita.authentication.CookieJWTAuthentication",
+        "erp.authentication.CookieJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_THROTTLE_RATES": {
