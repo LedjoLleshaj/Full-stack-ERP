@@ -4,7 +4,7 @@
 # Usage: ./cleanup.sh
 
 DB_NAME="erp_db"
-DB_USER="REDACTED"
+DB_USER="postgres"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 SQL_FILE="$SCRIPT_DIR/cleanup.sql"
 

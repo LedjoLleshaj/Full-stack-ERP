@@ -37,7 +37,7 @@ npm-debug.log*
 # ---- Docker / runtime ----
 logs/
 backups/
-REDACTED_data/
+postgres_data/
 
 # ---- Project-specific (pre-existing) ----
 db/tempo.sql

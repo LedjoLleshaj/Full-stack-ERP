@@ -14,8 +14,8 @@ docker-compose up -d
 - **Host**: `localhost` (or `db` if accessing from another container)
 - **Port**: `5432`
 - **Database Name**: `erp_db`
-- **Username**: `REDACTED`
-- **Password**: `REDACTED`
+- **Username**: `postgres`
+- **Password**: `postgres`
 
 > **Note:** If port `5432` is already in use on your host machine, you may need to stop the existing service:
 > ```bash

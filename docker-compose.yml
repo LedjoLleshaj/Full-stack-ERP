@@ -4,8 +4,8 @@ services:
     container_name: erp_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: REDACTED
-      POSTGRES_PASSWORD: REDACTED
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: erp_db
     ports:
       - "5432:5432"
@@ -19,8 +19,8 @@ services:
       DB_HOST: db # Database service name in docker-compose
       DB_PORT: 5432
       DB_NAME: erp_db
-      DB_USER: REDACTED
-      DB_PASSWORD: REDACTED
+      DB_USER: postgres
+      DB_PASSWORD: postgres
     depends_on:
       - db
     ports:

@@ -77,10 +77,10 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.REDACTEDql",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv('DB_NAME', 'erp_db'),
-        "USER": os.getenv('DB_USER', 'REDACTED'),
-        "PASSWORD": os.getenv('DB_PASSWORD', 'REDACTED'),
+        "USER": os.getenv('DB_USER', 'postgres'),
+        "PASSWORD": os.getenv('DB_PASSWORD', 'postgres'),
         "HOST": os.getenv('DB_HOST', '0.0.0.0'),
         "PORT": os.getenv('DB_PORT', '5432'),
     }
