@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Sales, Product, Users, Client, Inventory, Transaction, Payment
+from ..models import Sales, Product, User, Client, Inventory, Transaction, Payment
 from ..serializers import (
     SalesSerializer,
     ProductSerializer,
@@ -347,13 +347,13 @@ def getSaleDetails(request, pk):
     
     # Add user info
     try:
-        user = Users.objects.get(id=sale.user_id)
+        user = User.objects.get(id=sale.user_id)
         response_data["user"] = {
             "id": user.id,
             "firstname": user.firstname,
             "lastname": user.lastname,
         }
-    except Users.DoesNotExist:
+    except User.DoesNotExist:
         response_data["user"] = None
     
     # Add transaction and client info
