@@ -113,8 +113,10 @@ class Command(BaseCommand):
                             to_currency=to_curr,
                             defaults={"rate": rate}
                         )
-                        if created: rates_created += 1
-                        else: rates_updated += 1
+                        if created:
+                            rates_created += 1
+                        else:
+                            rates_updated += 1
 
             if not dry_run:
                 self.stdout.write(self.style.SUCCESS(

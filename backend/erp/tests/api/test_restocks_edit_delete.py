@@ -234,7 +234,7 @@ class RestockUpdateDeleteTestCase(TestCase):
         
         # Get initial inventories
         inv_a_before = Inventory.objects.filter(prod=self.product_a).first().quantity
-        Inventory.objects.filter(prod=self.product_b).first().quantity
+        _inv_b_before = Inventory.objects.filter(prod=self.product_b).first().quantity
         
         # Change product from A to B
         response = self.client.put(

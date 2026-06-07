@@ -97,7 +97,7 @@ def convert_currency(request):
     
     try:
         amount = Decimal(str(amount))
-    except:
+    except (ValueError, ArithmeticError):
         return bad_request_response("Invalid amount")
     
     # Same currency = no conversion needed

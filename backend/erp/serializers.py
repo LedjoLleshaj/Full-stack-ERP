@@ -2,7 +2,21 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from .models import *
+from .models import (
+    Account,
+    AccountTransaction,
+    Client,
+    Inventory,
+    Payment,
+    Product,
+    Product_Categories,
+    Product_Names,
+    Restock,
+    Sales,
+    Supplier,
+    Transaction,
+    Users,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):

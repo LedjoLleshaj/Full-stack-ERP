@@ -51,7 +51,7 @@ class PaymentService:
         try:
             return Account.objects.get(account_type=account_type, currency=currency)
         except Account.DoesNotExist:
-            raise PaymentError(f"No {account_type} account found for {currency}")
+            raise PaymentError(f"No {account_type} account found for {currency}") from None
     @classmethod
     @db_transaction.atomic
     def reverse_all_payments(
@@ -287,12 +287,6 @@ class PaymentService:
             transaction=transaction
         ).aggregate(total=Sum("amount"))["total"]
         return total or Decimal("0")
-    
-        return {
-            "total_reversed": float(total_reversed),
-            "accounts_affected": accounts_affected,
-            "payment_count": payment_count,
-        }
 
     @classmethod
     @db_transaction.atomic
