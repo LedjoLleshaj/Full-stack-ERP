@@ -1,5 +1,5 @@
 # Use slim Python 3.11 base image
-FROM python:3.11-slim
+FROM python:3.11.12-slim
 
 ENV PYTHONUNBUFFERED=1
 WORKDIR /backend
