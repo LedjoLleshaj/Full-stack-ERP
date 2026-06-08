@@ -2,6 +2,14 @@ import pytest
 from rest_framework.test import APIClient
 
 from erp.models import User
+from erp.utils.currency import clear_rate_cache
+
+
+@pytest.fixture(autouse=True)
+def _clear_exchange_rate_cache():
+    clear_rate_cache()
+    yield
+    clear_rate_cache()
 
 
 @pytest.fixture
