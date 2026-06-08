@@ -1,93 +1,90 @@
-"""
-Base test utilities and fixtures for the ERP test suite.
-
-Provides common test utilities, fixtures, and helper functions.
-"""
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from erp.constants import AccountType, Currency, TransactionStatus, TransactionType
 from erp.models import (
     Account,
-    Category,
     Client,
     Inventory,
     Product,
-    Sale,
+    Product_Categories,
+    Sales,
     Supplier,
+    Transaction,
 )
 
 User = get_user_model()
 
 
 class ErpTestCase(TestCase):
-    """Base test case with common setup and utilities."""
-    
+
     @classmethod
     def setUpTestData(cls):
-        """Set up test data for the entire test case."""
-        # Create a test user
         cls.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
+            username="testuser",
+            password="testpass123",
+            firstname="Test",
+            lastname="User",
         )
-        
-        # Create a test account
+
         cls.account = Account.objects.create(
-            name='Test Account',
-            balance=1000.00
+            account_name="Test Cash",
+            account_type=AccountType.CASH,
+            currency=Currency.EUR,
+            current_balance=Decimal("1000.00"),
         )
-        
-        # Create a test category
-        cls.category = Category.objects.create(
-            name='Test Category',
-            description='Test category description'
+
+        cls.category = Product_Categories.objects.create(
+            category_name="Test Category",
         )
-        
-        # Create a test supplier
+
         cls.supplier = Supplier.objects.create(
-            name='Test Supplier',
-            contact_info='test@supplier.com'
+            firstname="Test",
+            lastname="Supplier",
+            address="123 Test St",
         )
-        
-        # Create a test product
+
         cls.product = Product.objects.create(
-            name='Test Product',
-            category=cls.category,
-            buying_price=10.00,
-            selling_price=15.00,
-            unit='kg'
+            name="Test Product",
+            category="Test Category",
+            category_fk=cls.category,
+            price=Decimal("15.00"),
+            description="A test product",
         )
-        
-        # Create a test client
-        cls.client = Client.objects.create(
-            name='Test Client',
-            contact_info='test@client.com'
+
+        cls.client_obj = Client.objects.create(
+            firstname="Test",
+            lastname="Client",
+            phone="1234567890",
+            address="456 Client Ave",
+            city="Tirana",
         )
-    
+
     def create_inventory(self, product=None, quantity=100):
-        """Helper to create inventory."""
         if product is None:
             product = self.product
-        
-        return Inventory.objects.create(
-            product=product,
-            quantity=quantity,
-            last_restocked=None
-        )
-    
+        return Inventory.objects.create(prod=product, quantity=quantity)
+
     def create_sale(self, client=None, product=None, quantity=10):
-        """Helper to create a sale."""
         if client is None:
-            client = self.client
+            client = self.client_obj
         if product is None:
             product = self.product
-        
-        return Sale.objects.create(
+
+        transaction = Transaction.objects.create(
+            transaction_type=TransactionType.SALE,
             client=client,
-            product=product,
-            quantity=quantity,
-            unit_price=product.selling_price,
-            total_price=quantity * product.selling_price
+            total_amount=product.price * quantity,
+            currency=Currency.EUR,
+            status=TransactionStatus.PENDING,
         )
+        sale = Sales.objects.create(
+            transaction=transaction,
+            prod=product,
+            prod_price=product.price,
+            user=self.user,
+            quantity=quantity,
+        )
+        return sale
