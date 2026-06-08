@@ -1,7 +1,7 @@
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { HttpClientModule } from "@angular/common/http";
+import { provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 
 import { AppRoutingModule } from "./app-routing.module";
@@ -31,41 +31,34 @@ import { MatCardModule } from "@angular/material/card";
 // ECharts for lazy-loaded modules
 import { NgxEchartsModule } from "ngx-echarts";
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    LayoutComponent,
-    LoginComponent,
-    LandingPageComponent,
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
-    ReactiveFormsModule,
-    FormsModule,
-    CoreModule,
-    // Material for Layout/Login
-    MatSidenavModule,
-    MatListModule,
-    MatIconModule,
-    MatMenuModule,
-    MatSnackBarModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    MatDialogModule,
-    MatToolbarModule,
-    MatDividerModule,
-    MatCardModule,
-    // ECharts config (must be in root)
-    NgxEchartsModule.forRoot({
-      echarts: () => import('echarts')
-    }),
-  ],
-  providers: [],
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        LayoutComponent,
+        LoginComponent,
+        LandingPageComponent,
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        ReactiveFormsModule,
+        FormsModule,
+        CoreModule,
+        // Material for Layout/Login
+        MatSidenavModule,
+        MatListModule,
+        MatIconModule,
+        MatMenuModule,
+        MatSnackBarModule,
+        MatButtonModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatProgressSpinnerModule,
+        MatDialogModule,
+        MatToolbarModule,
+        MatDividerModule,
+        MatCardModule,
+        // ECharts config (must be in root)
+        NgxEchartsModule.forRoot({
+            echarts: () => import('echarts')
+        })], providers: [provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule {}
