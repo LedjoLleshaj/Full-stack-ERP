@@ -47,7 +47,7 @@ class PaymentEditDeleteTest(APITestCase):
         self.assertEqual(self.sale.status, TransactionStatus.PARTIAL)
         
         # Update payment: 100 -> 150
-        PaymentService.update_payment(payment, Decimal("150.00"), "Updated notes")
+        PaymentService.update_payment(payment, Decimal("150.00"), currency="EUR", notes="Updated notes")
         
         self.account.refresh_from_db()
         self.sale.refresh_from_db()
@@ -56,7 +56,7 @@ class PaymentEditDeleteTest(APITestCase):
         self.assertEqual(self.sale.status, TransactionStatus.PARTIAL)
         
         # Update payment: 150 -> 200 (Complete)
-        PaymentService.update_payment(payment, Decimal("200.00"), "Full payment")
+        PaymentService.update_payment(payment, Decimal("200.00"), currency="EUR", notes="Full payment")
         
         self.account.refresh_from_db()
         self.sale.refresh_from_db()
@@ -130,7 +130,7 @@ class PaymentEditDeleteTest(APITestCase):
         self.assertEqual(account.current_balance, initial_balance - Decimal("200.00"))
         
         # Update payment: 200 -> 300
-        PaymentService.update_payment(payment, Decimal("300.00"))
+        PaymentService.update_payment(payment, Decimal("300.00"), currency="EUR")
         
         account.refresh_from_db()
         transaction.refresh_from_db()
