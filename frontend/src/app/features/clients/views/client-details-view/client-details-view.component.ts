@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { Subscription } from "rxjs";
-import * as XLSX from 'xlsx';
+import { ExcelExportService } from "src/app/shared/services/excel-export/excel-export.service";
 
 import { Client } from "../../../../models/client.model";
 import { Product } from "../../../../models/product.model";
@@ -45,7 +45,8 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
     private clientService: ClientService,
     private saleFormService: SaleFormService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private excelExport: ExcelExportService
   ) {
     this.state = this.saleFormService.getInitialState();
   }
@@ -172,14 +173,12 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
   // ========= EXCEL EXPORT =========
   exportToExcel(): void {
     if (!this.client) return;
-    
+
     this.isExporting = true;
     const clientName = `${this.client.firstname}_${this.client.lastname}`.replace(/\s+/g, '_');
-    
-    // Fetch ALL sales for this client (not just unpaid)
+
     this.clientService.getClientSales(this.clientId).subscribe({
-      next: (allSales) => {
-        // Transform sales to export format with autoincrement
+      next: async (allSales) => {
         let num = 1;
         const exportData = allSales.map(s => ({
           'Num': num++,
@@ -200,45 +199,8 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Create workbook and worksheet
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        const workbook = XLSX.utils.book_new();
-        
-        // Auto-size columns
-        const columnWidths = this.getColumnWidths(exportData);
-        worksheet['!cols'] = columnWidths;
-        
-        // Apply red background to unpaid status cells
-        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-        const statusColIndex = 9; // 'Statusi' is the 10th column (0-indexed = 9)
-        
-        for (let row = 1; row <= range.e.r; row++) { // Skip header row (row 0)
-          const statusCellRef = XLSX.utils.encode_cell({ r: row, c: statusColIndex });
-          const statusCell = worksheet[statusCellRef];
-          
-          if (statusCell && (statusCell.v === 'Pa Paguar' || statusCell.v === 'Pjesërisht')) {
-            // Apply red background style
-            statusCell.s = {
-              fill: {
-                patternType: 'solid',
-                fgColor: { rgb: 'FFCCCC' } // Light red
-              },
-              font: {
-                color: { rgb: 'CC0000' } // Dark red text
-              }
-            };
-          }
-        }
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Shitjet');
-        
-        // Generate filename with client name and date
         const filename = `shitje_${clientName}_${new Date().toISOString().split('T')[0]}.xlsx`;
-        
-        // Write and download (use bookType with cellStyles for styling support)
-        XLSX.writeFile(workbook, filename, { cellStyles: true });
-        
+        await this.excelExport.downloadExcel(exportData, 'Shitjet', filename);
         this.isExporting = false;
         this.snackBar.open('Raporti u shkarkua me sukses', 'Mbyll', { duration: 3000 });
       },
@@ -247,19 +209,6 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
         this.snackBar.open('Gabim gjatë eksportimit', 'Mbyll', { duration: 3000 });
         this.isExporting = false;
       }
-    });
-  }
-
-  private getColumnWidths(data: any[]): { wch: number }[] {
-    if (!data || data.length === 0) return [];
-    
-    const headers = Object.keys(data[0]);
-    return headers.map(header => {
-      const maxLength = Math.max(
-        header.length,
-        ...data.map(row => String(row[header] || '').length)
-      );
-      return { wch: Math.min(maxLength + 2, 50) };
     });
   }
 

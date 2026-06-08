@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Supplier } from 'src/app/models/supplier.model';
 import { SupplierService, SupplierRestock } from 'src/app/shared/services/suppliers-api/supplier.service';
-import * as XLSX from 'xlsx';
+import { ExcelExportService } from 'src/app/shared/services/excel-export/excel-export.service';
 
 @Component({
   selector: 'app-supplier-details-view',
@@ -31,7 +31,8 @@ export class SupplierDetailsViewComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private supplierService: SupplierService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private excelExport: ExcelExportService
   ) {}
 
   ngOnInit(): void {
@@ -119,16 +120,13 @@ export class SupplierDetailsViewComponent implements OnInit {
 
   exportToExcel(): void {
     if (!this.supplier) return;
-    
+
     this.isExporting = true;
     const supplierId = this.supplier.id;
     const supplierName = `${this.supplier.firstname}_${this.supplier.lastname}`.replace(/\s+/g, '_');
-    
-    // Fetch ALL restocks for this supplier (not just the displayed 10)
+
     this.supplierService.getAllRestocksBySupplier(supplierId!).subscribe({
-      next: (allRestocks) => {
-        // Transform restocks to export format
-        //add autoincrement number
+      next: async (allRestocks) => {
         let num = 1;
         const exportData = allRestocks.map(r => ({
           'Num': num++,
@@ -149,23 +147,8 @@ export class SupplierDetailsViewComponent implements OnInit {
           return;
         }
 
-        // Create workbook and worksheet
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        const workbook = XLSX.utils.book_new();
-        
-        // Auto-size columns
-        const columnWidths = this.getColumnWidths(exportData);
-        worksheet['!cols'] = columnWidths;
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Furnizimet');
-        
-        // Generate filename with supplier name and date
         const filename = `furnizime_${supplierName}_${new Date().toISOString().split('T')[0]}.xlsx`;
-        
-        // Write and download
-        XLSX.writeFile(workbook, filename);
-        
+        await this.excelExport.downloadExcel(exportData, 'Furnizimet', filename);
         this.isExporting = false;
         this.snackBar.open('Raporti u shkarkua me sukses', 'Mbyll', { duration: 3000 });
       },
@@ -174,19 +157,6 @@ export class SupplierDetailsViewComponent implements OnInit {
         this.snackBar.open('Gabim gjatë eksportimit', 'Mbyll', { duration: 3000 });
         this.isExporting = false;
       }
-    });
-  }
-
-  private getColumnWidths(data: any[]): { wch: number }[] {
-    if (!data || data.length === 0) return [];
-    
-    const headers = Object.keys(data[0]);
-    return headers.map(header => {
-      const maxLength = Math.max(
-        header.length,
-        ...data.map(row => String(row[header] || '').length)
-      );
-      return { wch: Math.min(maxLength + 2, 50) };
     });
   }
 

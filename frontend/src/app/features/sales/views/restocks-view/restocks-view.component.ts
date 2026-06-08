@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { RestockResponse } from "../../../../models/restock.model";
 import { RestocksApiService } from "../../../../shared/services/restocks-api/restocks-api.service";
-import * as XLSX from 'xlsx';
+import { ExcelExportService } from "../../../../shared/services/excel-export/excel-export.service";
 
 @Component({
   selector: "app-restocks-view",
@@ -18,7 +18,10 @@ export class RestocksViewComponent implements OnInit, OnDestroy {
   endDateControl = new FormControl();
   isExporting = false;
 
-  constructor(private restocksApiService: RestocksApiService) {}
+  constructor(
+    private restocksApiService: RestocksApiService,
+    private excelExport: ExcelExportService
+  ) {}
 
   ngOnInit() {
     this.fetchRestocks();
@@ -34,42 +37,25 @@ export class RestocksViewComponent implements OnInit, OnDestroy {
     });
   }
 
-  exportToExcel() {
+  async exportToExcel() {
     this.isExporting = true;
-    
-    // Format dates to YYYY-MM-DD if they exist
-    const startDate = this.startDateControl.value 
-      ? this.formatDate(this.startDateControl.value) 
+
+    const startDate = this.startDateControl.value
+      ? this.formatDate(this.startDateControl.value)
       : undefined;
-    const endDate = this.endDateControl.value 
-      ? this.formatDate(this.endDateControl.value) 
+    const endDate = this.endDateControl.value
+      ? this.formatDate(this.endDateControl.value)
       : undefined;
 
     this.restocksApiService.getRestocksReport(startDate, endDate).subscribe({
-      next: (data) => {
+      next: async (data) => {
         if (data.length === 0) {
           alert('Nuk ka të dhëna për këtë periudhë');
           this.isExporting = false;
           return;
         }
-
-        // Create workbook and worksheet
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        
-        // Auto-size columns
-        const columnWidths = this.getColumnWidths(data);
-        worksheet['!cols'] = columnWidths;
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Raporti i Furnizimeve');
-        
-        // Generate filename with date
         const filename = `raporti_furnizimeve_${new Date().toISOString().split('T')[0]}.xlsx`;
-        
-        // Write and download
-        XLSX.writeFile(workbook, filename);
-        
+        await this.excelExport.downloadExcel(data as unknown as Record<string, unknown>[], 'Raporti i Furnizimeve', filename);
         this.isExporting = false;
       },
       error: (error) => {
@@ -85,21 +71,6 @@ export class RestocksViewComponent implements OnInit, OnDestroy {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  }
-
-  private getColumnWidths(data: any[]): { wch: number }[] {
-    if (!data || data.length === 0) return [];
-    
-    const headers = Object.keys(data[0]);
-    return headers.map(header => {
-      // Find max length of content in this column (including header)
-      const maxLength = Math.max(
-        header.length,
-        ...data.map(row => String(row[header] || '').length)
-      );
-      // Add some padding
-      return { wch: Math.min(maxLength + 2, 50) };
-    });
   }
 
   ngOnDestroy() {
