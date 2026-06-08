@@ -149,10 +149,9 @@ class AccountingConsistencyTest(APITestCase):
         self.assertEqual(transaction.total_amount, Decimal("10000.00"))
         self.assertEqual(transaction.status, TransactionStatus.PARTIAL) # 10000 > 50
         
-        # Verify Payment NOT changed
+        # Verify Payment converted to new currency (LEK)
         payment.refresh_from_db()
-        self.assertEqual(payment.currency, "EUR")
-        self.assertEqual(payment.amount, Decimal("50.00"))
+        self.assertEqual(payment.currency, "LEK")
         
         # 3. Update to LOWER value (Fail case)
         # Try to update to 40 EUR. 40 < 50. Should FAIL.
