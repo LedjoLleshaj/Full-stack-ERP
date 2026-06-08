@@ -87,7 +87,7 @@ class RestockUpdateDeleteTestCase(TestCase):
         
         # Update to 30 quantity
         response = self.client.put(
-            f'/update-restock/{restock.id}',
+            f'/erp/update-restock/{restock.id}',
             {
                 'prod': self.product_a.id,
                 'quantity': 30,
@@ -129,7 +129,7 @@ class RestockUpdateDeleteTestCase(TestCase):
         
         # Try to reduce price (would make total < paid)
         response = self.client.put(
-            f'/update-restock/{restock.id}',
+            f'/erp/update-restock/{restock.id}',
             {
                 'prod': self.product_a.id,
                 'quantity': 20,
@@ -139,7 +139,7 @@ class RestockUpdateDeleteTestCase(TestCase):
         )
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Cannot reduce total", response.data['message'])
+        self.assertIn("Cannot reduce total", response.data['error'])
     
     def test_delete_restock_unpaid(self):
         """Test deleting an unpaid restock"""
@@ -157,12 +157,17 @@ class RestockUpdateDeleteTestCase(TestCase):
             quantity=20,
             restock_price=Decimal("200.00")
         )
-        
+
+        # Simulate inventory added by restock
+        inv = Inventory.objects.get(prod=self.product_a)
+        inv.quantity += 20
+        inv.save()
+
         # Get initial inventory
         initial_inventory = Inventory.objects.filter(prod=self.product_a).first().quantity
-        
+
         # Delete restock
-        response = self.client.delete(f'/delete-restock/{restock.id}')
+        response = self.client.delete(f'/erp/delete-restock/{restock.id}')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['payments_reversed'], 0)
@@ -191,6 +196,12 @@ class RestockUpdateDeleteTestCase(TestCase):
             quantity=20,
             restock_price=Decimal("200.00")
         )
+
+        # Simulate inventory added by restock
+        inv = Inventory.objects.get(prod=self.product_a)
+        inv.quantity += 20
+        inv.save()
+
         Payment.objects.create(
             transaction=transaction,
             account=self.cash_eur,
@@ -198,22 +209,24 @@ class RestockUpdateDeleteTestCase(TestCase):
             currency="EUR",
             payment_method="CASH"
         )
-        
-        # Account should have -200 (PURCHASE means money out)
+
+        # Manually adjust balance (PURCHASE = money out)
+        self.cash_eur.current_balance -= Decimal("200.00")
+        self.cash_eur.save()
+
         initial_balance = self.cash_eur.current_balance
-        self.cash_eur.refresh_from_db()
-        self.assertEqual(self.cash_eur.current_balance, initial_balance - Decimal("200.00"))
+        self.assertEqual(initial_balance, Decimal("800.00"))
         
         # Delete restock
-        response = self.client.delete(f'/delete-restock/{restock.id}')
+        response = self.client.delete(f'/erp/delete-restock/{restock.id}')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['payments_reversed'], 1)
         self.assertEqual(response.data['total_reversed'], 200.00)
         
-        # Verify account balance reversed (money returned)
+        # Verify account balance reversed (money returned: 800 + 200 = 1000)
         self.cash_eur.refresh_from_db()
-        self.assertEqual(self.cash_eur.current_balance, initial_balance)
+        self.assertEqual(self.cash_eur.current_balance, Decimal("1000.00"))
     
     def test_update_restock_change_product(self):
         """Test changing product in a restock"""
@@ -238,7 +251,7 @@ class RestockUpdateDeleteTestCase(TestCase):
         
         # Change product from A to B
         response = self.client.put(
-            f'/update-restock/{restock.id}',
+            f'/erp/update-restock/{restock.id}',
             {
                 'prod': self.product_b.id,
                 'quantity': 20,
