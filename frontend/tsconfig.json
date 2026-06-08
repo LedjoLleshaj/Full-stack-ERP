@@ -23,6 +23,8 @@
       "dom",
       "esnext.asynciterable"
     ],
+    "types": ["node"],
+    "skipLibCheck": true,
     "strictPropertyInitialization": false,
     "allowSyntheticDefaultImports": true
   },
