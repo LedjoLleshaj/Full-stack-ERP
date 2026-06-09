@@ -10,16 +10,16 @@ build:
 	docker compose build
 
 test:
-	cd backend && source .venv/bin/activate && pytest -v
+	cd backend && .venv/bin/pytest -v
 
 lint:
-	cd backend && source .venv/bin/activate && ruff check erp/
+	cd backend && .venv/bin/ruff check erp/
 
 migrate:
-	cd backend && source .venv/bin/activate && python manage.py migrate
+	cd backend && .venv/bin/python manage.py migrate
 
 shell:
-	cd backend && source .venv/bin/activate && python manage.py shell
+	cd backend && .venv/bin/python manage.py shell
 
 seed:
 	docker compose exec -T db psql -U postgres -d erp_db < db/seed.sql
