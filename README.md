@@ -43,6 +43,57 @@ See the full entity-relationship diagram: [`db/ERdatabaseSchema.svg`](db/ERdatab
 | Infra | Docker Compose, nginx |
 | Quality | pytest, ruff, GitHub Actions, drf-spectacular (OpenAPI) |
 
+## Features & Screenshots
+
+### Real-time Dashboards
+Comprehensive analytics with live data visualization, multi-currency support, and at-a-glance KPIs.
+
+**Sales & Purchase Analytics**
+![Sales vs Purchases](docs/screenshots/01-dashboard-sales-vs-purchases.png)
+*Track sales and purchase trends over time with detailed revenue breakdown.*
+
+**Top Products & Customers**
+![Top Products](docs/screenshots/02-dashboard-top-products.png)
+*Identify your best-performing products by inventory moved.*
+
+![Top Customers](docs/screenshots/06-dashboard-top-customers.png)
+*Monitor top clients and suppliers with transaction volumes.*
+
+### Payment & Cash Flow Management
+Handle multi-currency payments, installments, and cross-currency settlements with auditable ledgers.
+
+**Payment Status Overview**
+![Payment Status](docs/screenshots/03-dashboard-payment-status.png)
+*Visualize pending, partial, and completed payments at a glance.*
+
+**Revenue Breakdown by Category**
+![Revenue Breakdown](docs/screenshots/05-dashboard-revenue-breakdown.png)
+*Track revenue, costs, and profit margins across product categories.*
+
+### Transaction Management
+Create, track, and manage sales and purchases with full audit trails.
+
+**Transaction Details**
+![Transaction Detail](docs/screenshots/09-transaction-detail.png)
+*View complete transaction history with line items, payment status, and client information.*
+
+### Client & Product Management
+Maintain detailed profiles with transaction history and inventory metrics.
+
+**Client Information**
+![Client Detail](docs/screenshots/10-client-detail-page.png)
+*Access client details, outstanding balances, transaction history, and purchase patterns.*
+
+**Product Analytics**
+![Product Detail](docs/screenshots/11-product-detail-analytics.png)
+*Monitor product pricing trends, inventory levels, sales velocity, and supplier activity.*
+
+### Inventory & Supplier Tracking
+Real-time stock monitoring with low-stock alerts and supplier management.
+
+![Inventory Overview](docs/screenshots/12-inventory-and-suppliers.png)
+*Track current stock levels, manage suppliers, and monitor active account balances.*
+
 ## Quickstart
 
 Requires Docker + Docker Compose.
