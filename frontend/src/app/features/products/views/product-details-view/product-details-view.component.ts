@@ -6,6 +6,7 @@ import { ProductService, ProductHistory, RecentSale, RecentRestock } from '../..
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DarkModeService } from '../../../../shared/services/dark-mode/dark-mode.service';
 import { CurrencyExchangeService } from '../../../../shared/services/currency-exchange/currency-exchange.service';
+import { AuthApiService } from 'src/app/shared/services/auth-api/auth-api.service';
 
 @Component({
   selector: 'app-product-details-view',
@@ -52,7 +53,8 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
     private productService: ProductService,
     private darkModeService: DarkModeService,
     private currencyExchangeService: CurrencyExchangeService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    public authService: AuthApiService
   ) {}
 
   ngOnInit(): void {

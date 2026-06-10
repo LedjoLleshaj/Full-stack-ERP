@@ -11,6 +11,7 @@ import { RestockEditDialogComponent } from "src/app/shared/components/restock-ed
 import { DeleteConfirmationDialogComponent } from "src/app/shared/components/delete-confirmation-dialog/delete-confirmation-dialog.component";
 import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
 import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
+import { AuthApiService } from "src/app/shared/services/auth-api/auth-api.service";
 
 interface Payment {
   id: number;
@@ -94,7 +95,8 @@ export class RestockDetailsViewComponent implements OnInit {
     private currencyService: CurrencyExchangeService,
     private paymentService: PaymentApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    public authService: AuthApiService
   ) {}
 
   ngOnInit(): void {

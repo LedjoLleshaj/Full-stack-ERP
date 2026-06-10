@@ -5,11 +5,11 @@
       <mat-icon mat-card-avatar>person</mat-icon>
       <mat-card-title>Informacione mbi Klientin</mat-card-title>
       <div class="header-actions">
-        <button mat-stroked-button [color]="isEditing ? 'warn' : 'primary'" (click)="toggleEdit()" class="action-btn edit-btn">
+        <button *ngIf="authService.canWrite()" mat-stroked-button [color]="isEditing ? 'warn' : 'primary'" (click)="toggleEdit()" class="action-btn edit-btn">
           <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
           {{ isEditing ? 'Anullo' : 'Modifiko' }}
         </button>
-        <button mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
+        <button *ngIf="authService.canDelete()" mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
           <mat-icon>delete</mat-icon>
           Fshi
         </button>

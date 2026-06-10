@@ -4,6 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Supplier } from 'src/app/models/supplier.model';
 import { SupplierService, SupplierRestock } from 'src/app/shared/services/suppliers-api/supplier.service';
 import { ExcelExportService } from 'src/app/shared/services/excel-export/excel-export.service';
+import { AuthApiService } from 'src/app/shared/services/auth-api/auth-api.service';
 
 @Component({
   selector: 'app-supplier-details-view',
@@ -32,7 +33,8 @@ export class SupplierDetailsViewComponent implements OnInit {
     private router: Router,
     private supplierService: SupplierService,
     private snackBar: MatSnackBar,
-    private excelExport: ExcelExportService
+    private excelExport: ExcelExportService,
+    public authService: AuthApiService
   ) {}
 
   ngOnInit(): void {
