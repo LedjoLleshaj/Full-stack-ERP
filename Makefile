@@ -14,6 +14,9 @@ test:
 
 lint:
 	cd backend && .venv/bin/ruff check erp/
+	
+lint-fix:
+	cd backend && .venv/bin/ruff check erp/ --fix
 
 migrate:
 	cd backend && .venv/bin/python manage.py migrate

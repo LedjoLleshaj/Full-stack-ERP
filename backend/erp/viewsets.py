@@ -1,8 +1,6 @@
 from rest_framework import permissions, viewsets
 from rest_framework import serializers as drf_serializers
 
-from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
-
 from erp.models import (
     Account,
     AccountTransaction,
@@ -19,6 +17,7 @@ from erp.models import (
     User,
 )
 from erp.pagination import StandardPagination
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.serializers import (
     AccountSerializer,
     AccountTransactionSerializer,

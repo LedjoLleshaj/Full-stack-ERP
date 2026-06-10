@@ -5,7 +5,14 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-from erp.constants import AccountType, Currency, PaymentMethod, TransactionStatus, TransactionType, UserRole
+from erp.constants import (
+    AccountType,
+    Currency,
+    PaymentMethod,
+    TransactionStatus,
+    TransactionType,
+    UserRole,
+)
 from erp.managers import UserManager
 
 # Use centralized constants

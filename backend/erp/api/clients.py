@@ -4,8 +4,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from erp.constants import TransactionStatus
-from erp.utils.currency import convert_to_eur_with_rates, get_all_rates_dict
 from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
+from erp.utils.currency import convert_to_eur_with_rates, get_all_rates_dict
 from erp.utils.responses import api_error_handler, not_found_response
 
 from ..models import Client, Sales
