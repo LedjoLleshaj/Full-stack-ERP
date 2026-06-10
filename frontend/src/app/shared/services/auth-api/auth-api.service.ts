@@ -7,11 +7,14 @@ import { environment } from "src/environments/environment";
 import { LOCAL_STORAGE_KEYS } from "../../../core";
 import { Router } from "@angular/router";
 
+export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF' | 'VIEWER';
+
 export interface User {
   id: number;
   username: string;
   firstName: string;
   lastName: string;
+  role: UserRole;
 }
 
 @Injectable({
@@ -32,19 +35,19 @@ export class AuthApiService {
   }
 
   private loadUserFromStorage(): void {
-    // We can no longer check for tokens, so we rely on the user info in localStorage
-    // or try to refresh the token to see if we are still logged in.
     const userIdStr = localStorage.getItem(LOCAL_STORAGE_KEYS.USER_ID);
     const username = localStorage.getItem(LOCAL_STORAGE_KEYS.USERNAME);
     const firstName = localStorage.getItem(LOCAL_STORAGE_KEYS.FIRST_NAME);
     const lastName = localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_NAME);
+    const role = (localStorage.getItem(LOCAL_STORAGE_KEYS.ROLE) || 'VIEWER') as UserRole;
 
     if (userIdStr && username && firstName && lastName) {
       this.currentUserSubject.next({
         id: parseInt(userIdStr, 10),
         username,
         firstName,
-        lastName
+        lastName,
+        role,
       });
     }
   }
@@ -106,17 +109,29 @@ export class AuthApiService {
     return this.currentUserSubject.value?.id ?? null;
   }
 
+  canWrite(): boolean {
+    const role = this.currentUserSubject.value?.role;
+    return role === 'ADMIN' || role === 'MANAGER' || role === 'STAFF';
+  }
+
+  canDelete(): boolean {
+    const role = this.currentUserSubject.value?.role;
+    return role === 'ADMIN' || role === 'MANAGER';
+  }
+
   private setUserInfo(response: LoginResponse): void {
     localStorage.setItem(LOCAL_STORAGE_KEYS.USER_ID, response.user_id.toString());
     localStorage.setItem(LOCAL_STORAGE_KEYS.USERNAME, response.username);
     localStorage.setItem(LOCAL_STORAGE_KEYS.FIRST_NAME, response.first_name);
     localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_NAME, response.last_name);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.ROLE, response.role || 'VIEWER');
 
     this.currentUserSubject.next({
       id: response.user_id,
       username: response.username,
       firstName: response.first_name,
       lastName: response.last_name,
+      role: (response.role || 'VIEWER') as UserRole,
     });
   }
 
