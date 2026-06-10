@@ -206,7 +206,7 @@ class MultiPaymentAccountingTests(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser', password='testpass',
-            firstname='Test', lastname='User', role='admin',
+            firstname='Test', lastname='User', role='ADMIN',
         )
         self.full_user = self.user
         self.client.force_authenticate(user=self.user)
@@ -365,7 +365,7 @@ class AtomicityTests(TestCase):
     
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.user = User.objects.create_user(username='testuser', password='testpass', role='ADMIN')
         self.client.force_authenticate(user=self.user)
         
         self.supplier = Supplier.objects.create(
@@ -448,7 +448,7 @@ class FullWorkflowBalanceTests(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser', password='testpass',
-            firstname='Test', lastname='User', role='admin',
+            firstname='Test', lastname='User', role='ADMIN',
         )
         self.full_user = self.user
         self.client.force_authenticate(user=self.user)

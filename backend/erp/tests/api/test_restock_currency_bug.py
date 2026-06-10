@@ -27,7 +27,7 @@ class RestockCurrencyBugTestCase(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser', password='testpassword',
-            firstname='Test', lastname='User', role='STAFF',
+            firstname='Test', lastname='User', role='ADMIN',
         )
         self.client.force_authenticate(user=self.user)
         

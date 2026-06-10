@@ -12,7 +12,7 @@ class ClientDeletionTests(APITestCase):
     """Tests for client deletion restrictions."""
     
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.user = User.objects.create_user(username='testuser', password='testpassword', role='ADMIN')
         self.client.force_authenticate(user=self.user)
         self.url = lambda pk: f'/erp/delete-client/{pk}'
 

@@ -31,7 +31,7 @@ class SaleUpdateDeleteTestCase(TestCase):
             email="test@test.com",
             firstname="Test",
             lastname="User",
-            role="admin",
+            role="ADMIN",
         )
         self.client_api.force_authenticate(user=self.user)
         
