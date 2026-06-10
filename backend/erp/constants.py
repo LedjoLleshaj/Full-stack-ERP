@@ -58,6 +58,24 @@ class PaymentMethod:
     ]
 
 
+class UserRole:
+    """Role hierarchy for access control. ADMIN > MANAGER > STAFF > VIEWER."""
+    ADMIN = "ADMIN"
+    MANAGER = "MANAGER"
+    STAFF = "STAFF"
+    VIEWER = "VIEWER"
+
+    CHOICES = [
+        (ADMIN, "Admin"),
+        (MANAGER, "Manager"),
+        (STAFF, "Staff"),
+        (VIEWER, "Viewer"),
+    ]
+
+    MANAGER_AND_ABOVE = {ADMIN, MANAGER}
+    STAFF_AND_ABOVE = {ADMIN, MANAGER, STAFF}
+
+
 class Currency:
     """Currency codes."""
     EUR = "EUR"

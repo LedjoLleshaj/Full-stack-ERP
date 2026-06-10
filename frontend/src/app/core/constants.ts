@@ -5,5 +5,6 @@ export enum LOCAL_STORAGE_KEYS {
   USERNAME = "se-username",
   FIRST_NAME = "se-first-name",
   LAST_NAME = "se-last-name",
+  ROLE = "se-role",
   DARK_MODE = "se-dark-mode",
 }

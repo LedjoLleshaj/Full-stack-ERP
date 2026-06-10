@@ -40,6 +40,7 @@ def login(request):
                 "first_name": user.firstname,
                 "last_name": user.lastname,
                 "username": user.username,
+                "role": user.role,
             },
             status=status.HTTP_200_OK,
         )
