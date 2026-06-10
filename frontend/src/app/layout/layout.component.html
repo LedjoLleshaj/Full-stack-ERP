@@ -57,6 +57,7 @@
 
       <div *ngIf="isSaleMenuOpen" class="submenu">
         <button
+          *ngIf="authApiService.canWrite()"
           mat-list-item
           aria-label="Shto nje shitje"
           title="Shto nje shitje"
@@ -86,6 +87,7 @@
 
       <div *ngIf="isRestockMenuOpen" class="submenu">
         <button
+          *ngIf="authApiService.canWrite()"
           mat-list-item
           aria-label="Shto nje produkt"
           title="Shto nje produkt"
@@ -127,6 +129,7 @@
 
       <div *ngIf="isClientMenuOpen" class="submenu">
         <button
+          *ngIf="authApiService.canWrite()"
           mat-list-item
           aria-label="Shto nje klient"
           title="Shto nje klient"
@@ -157,6 +160,7 @@
 
       <div *ngIf="isSupplierMenuOpen" class="submenu">
         <button
+          *ngIf="authApiService.canWrite()"
           mat-list-item
           aria-label="Shto nje furnitor"
           title="Shto nje furnitor"

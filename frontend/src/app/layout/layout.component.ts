@@ -25,7 +25,7 @@ export class LayoutComponent {
     public router: Router,
     changeDetectorRef: ChangeDetectorRef,
     media: MediaMatcher,
-    private authApiService: AuthApiService,
+    public authApiService: AuthApiService,
     public darkModeService: DarkModeService
   ) {
     this.mobileQuery = media.matchMedia("(max-width: 600px)");
