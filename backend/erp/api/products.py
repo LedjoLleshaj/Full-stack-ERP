@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, not_found_response
 
 from ..models import Inventory, Product, Product_Categories, Product_Names
@@ -46,7 +47,7 @@ def getProducts(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def addProduct(request):
     serializer = ProductSerializer(data=request.data)
@@ -60,7 +61,7 @@ def addProduct(request):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updatePrice(request, pk):
     try:
@@ -89,7 +90,7 @@ def getProduct(request, pk):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateProduct(request, pk):
     """Full product update (name, category, price, description)"""
@@ -132,7 +133,7 @@ def updateProduct(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteProduct(request, pk):
     """Soft delete product (deactivate) even if sales/history exists"""
@@ -269,7 +270,7 @@ def checkDisponibility(request, pk):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def addProductCategory(request):
     """Create a new product category or return existing one"""
@@ -302,7 +303,7 @@ def addProductCategory(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def addProductName(request):
     """Create a new product name linked to a category"""
@@ -360,7 +361,7 @@ def addProductName(request):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateProductCategory(request, pk):
     """Update a product category"""
@@ -392,7 +393,7 @@ def updateProductCategory(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteProductCategory(request, pk):
     """Delete a product category - reassign products to use their name as category"""
@@ -424,7 +425,7 @@ def deleteProductCategory(request, pk):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateProductName(request, pk):
     """Update a product name"""
@@ -458,7 +459,7 @@ def updateProductName(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteProductName(request, pk):
     """Delete a product name - can be deleted safely as it's only a suggestion list"""

@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from erp.constants import TransactionStatus
 from erp.utils.currency import convert_to_eur_with_rates, get_all_rates_dict
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, not_found_response
 
 from ..models import Client, Sales
@@ -103,7 +104,7 @@ def getClient(request, pk):
 
 
 @api_view(["POST"])
-# @permission_classes([permissions.AllowAny])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def addClient(request):
     data = request.data
@@ -121,7 +122,7 @@ def addClient(request):
 
 
 @api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateClient(request, pk):
     try:
@@ -141,7 +142,7 @@ def updateClient(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteClient(request, pk):
     from ..models import Transaction

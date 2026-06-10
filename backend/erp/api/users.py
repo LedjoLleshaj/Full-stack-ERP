@@ -4,6 +4,8 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
+
 from erp.models import User
 from erp.serializers import UserSerializer
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
@@ -31,7 +33,7 @@ def getUser(request, pk):
 
 
 @api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def createUser(request):
     d = request.data
@@ -53,7 +55,7 @@ def createUser(request):
 
 
 @api_view(["PUT"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def updateUser(request, pk):
     try:
@@ -73,7 +75,7 @@ def updateUser(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteUser(request, pk):
     try:

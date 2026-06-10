@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-from erp.constants import AccountType, Currency, PaymentMethod, TransactionStatus, TransactionType
+from erp.constants import AccountType, Currency, PaymentMethod, TransactionStatus, TransactionType, UserRole
 from erp.managers import UserManager
 
 # Use centralized constants
@@ -49,7 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, blank=True, default="")
     firstname = models.CharField(max_length=50)
     lastname = models.CharField(max_length=50)
-    role = models.CharField(max_length=20, default="STAFF")
+    role = models.CharField(max_length=20, choices=UserRole.CHOICES, default=UserRole.STAFF)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

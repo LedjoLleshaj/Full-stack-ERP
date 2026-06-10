@@ -3,6 +3,7 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, not_found_response
 
 from ..models import Account, AccountTransaction
@@ -99,7 +100,7 @@ def getTransactionsByAccount(request, account_id):
 
 
 @api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def addAccountTransaction(request):
     serializer = AccountTransactionSerializer(data=request.data)
@@ -116,7 +117,7 @@ def addAccountTransaction(request):
 
 
 @api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteAccountTransaction(request, pk):
     try:

@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from erp.constants import TransactionStatus, TransactionType
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
 from ..models import Payment, Product, Sales, Transaction, User
@@ -63,7 +64,7 @@ def getSale(request, pk):
 
 
 @api_view(["GET"])
-#@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsAuthenticated])
 @api_error_handler
 def getProductsFromSales(request):
     # Optimized query: load all related data in ONE query
@@ -154,7 +155,7 @@ def getUsersFromSales(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def paySale(request, pk):
     """Add a payment to a sale's transaction"""
@@ -204,7 +205,7 @@ def paySale(request, pk):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def createSale(request):
     """Create a new sale with transaction and optional payment"""
@@ -401,7 +402,7 @@ def getSaleDetails(request, pk):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateSale(request, pk):
     """Update an existing sale with validation to prevent overpayment"""
@@ -493,7 +494,7 @@ def updateSale(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteSale(request, pk):
     """Delete a sale and reverse all its effects (payments, inventory)"""

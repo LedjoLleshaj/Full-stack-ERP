@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from erp.constants import TransactionStatus, TransactionType
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
 from ..models import Payment, Product, Restock, Transaction
@@ -113,7 +114,7 @@ def getRestock(request, pk):
 
 
 @api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def addRestock(request):
     """Create a new restock with transaction and optional payment"""
@@ -196,7 +197,7 @@ def addRestock(request):
 
 
 @api_view(["PUT"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateRestock(request, pk):
     """Update an existing restock with validation to prevent overpayment"""
@@ -282,7 +283,7 @@ def updateRestock(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteRestock(request, pk):
     from django.db import transaction as db_transaction
@@ -373,7 +374,7 @@ def getRestocksBySupplier(request, supplier_id):
 
 
 @api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def payRestock(request, pk):
     """Add a payment to a restock's transaction"""

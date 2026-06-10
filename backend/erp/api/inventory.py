@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from erp.permissions import IsStaffOrAbove
 from erp.utils.responses import api_error_handler, not_found_response
 
 from ..models import (
@@ -65,7 +66,7 @@ def getProductsFromInventory(request):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateInventory(request, pk):
     try:
@@ -82,7 +83,7 @@ def updateInventory(request, pk):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def addProductToInventory(request):
     from erp.services.inventory_service import InventoryService
