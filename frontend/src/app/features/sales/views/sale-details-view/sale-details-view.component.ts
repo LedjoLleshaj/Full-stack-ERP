@@ -12,6 +12,7 @@ import { DeleteConfirmationDialogComponent } from "src/app/shared/components/del
 import { SaleDetails, PaymentRequest } from "../../../../models/sale.model";
 import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
 import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
+import { AuthApiService } from "src/app/shared/services/auth-api/auth-api.service";
 
 @Component({
   selector: "app-sale-details-view",
@@ -52,7 +53,8 @@ export class SaleDetailsViewComponent implements OnInit {
     private productService: ProductService,
     private paymentService: PaymentApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    public authService: AuthApiService
   ) {}
 
   ngOnInit(): void {

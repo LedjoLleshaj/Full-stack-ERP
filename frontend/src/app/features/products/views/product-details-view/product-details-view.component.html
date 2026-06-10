@@ -24,11 +24,11 @@
         <span class="category-badge">{{ productHistory.product.category }}</span>
       </div>
       <div class="header-actions">
-        <button mat-stroked-button color="primary" (click)="toggleEdit()" class="action-btn edit-btn">
+        <button *ngIf="authService.canWrite()" mat-stroked-button color="primary" (click)="toggleEdit()" class="action-btn edit-btn">
           <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
           {{ isEditing ? 'Anullo' : 'Modifiko' }}
         </button>
-        <button mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
+        <button *ngIf="authService.canDelete()" mat-stroked-button color="warn" (click)="confirmDelete()" class="action-btn delete-btn" [disabled]="isDeleting">
           <mat-icon>delete</mat-icon>
           Fshi
         </button>

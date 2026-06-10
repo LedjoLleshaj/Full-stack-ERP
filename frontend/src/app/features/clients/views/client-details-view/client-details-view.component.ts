@@ -8,6 +8,7 @@ import { Client } from "../../../../models/client.model";
 import { Product } from "../../../../models/product.model";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
 import { SaleFormService, SaleFormState } from "src/app/shared/services/sale-form/sale-form.service";
+import { AuthApiService } from "src/app/shared/services/auth-api/auth-api.service";
 
 @Component({
   selector: "app-client-details-view",
@@ -46,7 +47,8 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
     private saleFormService: SaleFormService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private excelExport: ExcelExportService
+    private excelExport: ExcelExportService,
+    public authService: AuthApiService
   ) {
     this.state = this.saleFormService.getInitialState();
   }
