@@ -25,7 +25,7 @@ def existing_user():
         email="existing@example.com",
         firstname="Existing",
         lastname="User",
-        role="STAFF",
+        role="ADMIN",
     )
 
 

@@ -1,6 +1,8 @@
 from rest_framework import permissions, viewsets
 from rest_framework import serializers as drf_serializers
 
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
+
 from erp.models import (
     Account,
     AccountTransaction,
@@ -40,8 +42,14 @@ class ExchangeRateSerializer(drf_serializers.ModelSerializer):
 
 
 class BaseViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardPagination
+
+    def get_permissions(self):
+        if self.action == "destroy":
+            return [IsManagerOrAbove()]
+        if self.action in ("create", "update", "partial_update"):
+            return [IsStaffOrAbove()]
+        return [permissions.IsAuthenticated()]
 
 
 class UserViewSet(BaseViewSet):

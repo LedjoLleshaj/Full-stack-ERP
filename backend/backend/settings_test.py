@@ -16,3 +16,4 @@ DATABASES = {
 
 # Disable throttling in tests to avoid rate-limit flakiness
 REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []  # noqa: F405
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {"anon": "10000/second", "user": "10000/second"}  # noqa: F405

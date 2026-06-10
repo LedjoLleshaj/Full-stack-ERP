@@ -27,6 +27,7 @@ class ErpTestCase(TestCase):
             password="testpass123",
             firstname="Test",
             lastname="User",
+            role="ADMIN",
         )
 
         cls.account = Account.objects.create(
