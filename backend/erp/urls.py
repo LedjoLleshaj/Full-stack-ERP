@@ -8,8 +8,10 @@ from .api import (
     exchange_rates,
     health,
     inventory,
+    invoices,
     payments,
     products,
+    quotations,
     reports,
     restocks,
     sales,
@@ -134,6 +136,18 @@ urlpatterns = [
     path("profit-by-category", reports.profit_by_category),
     path("top-clients", reports.top_clients),
     
+    # ======== INVOICES ========
+    path("transaction/<str:pk>/invoice/", invoices.generate_invoice),
+
+    # ======== QUOTATIONS ========
+    path("quotations", quotations.list_quotations),
+    path("quotation/<str:pk>", quotations.get_quotation),
+    path("create-quotation", quotations.create_quotation),
+    path("update-quotation/<str:pk>", quotations.update_quotation),
+    path("delete-quotation/<str:pk>", quotations.delete_quotation),
+    path("quotation/<str:pk>/status", quotations.update_status),
+    path("quotation/<str:pk>/convert", quotations.convert_to_sale),
+
     # ======== EXCHANGE RATES ========
     path("exchange-rates", exchange_rates.get_exchange_rates),
     path("exchange-rate/<str:from_currency>/<str:to_currency>", exchange_rates.get_exchange_rate),
