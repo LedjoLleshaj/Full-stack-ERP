@@ -8,16 +8,20 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { startWith, pairwise } from 'rxjs'; // Added rxjs operators
 import { MatSnackBar } from '@angular/material/snack-bar'; // Added snackbar
 
 import { RestockResponse } from '../../../models/restock.model';
 import { Product } from '../../../models/product.model';
+import { TaxRate } from '../../../models/tax-rate.model';
 import { CurrencyExchangeService } from '../../services/currency-exchange/currency-exchange.service'; // Added service
+import { TaxRateApiService } from '../../services/tax-rate-api/tax-rate-api.service';
 
 export interface RestockEditDialogData {
   restock: RestockResponse;
   products: Product[];
+  taxRateId?: number;
 }
 
 @Component({
@@ -27,6 +31,7 @@ export interface RestockEditDialogData {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -45,10 +50,13 @@ export class RestockEditDialogComponent implements OnInit {
   isLoadingRate = false; // Added loading state
   totalPaid = 0;
   readonly ROUNDING_TOLERANCE = 0.10;
+  taxRates: TaxRate[] = [];
+  selectedTaxRateId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
     private currencyService: CurrencyExchangeService, // Added service
+    private taxRateService: TaxRateApiService,
     private snackBar: MatSnackBar, // Added snackbar
     public dialogRef: MatDialogRef<RestockEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: RestockEditDialogData
@@ -57,6 +65,12 @@ export class RestockEditDialogComponent implements OnInit {
   ngOnInit(): void {
     // Check if restock has payments
     this.hasPayments = this.data.restock.transaction_info?.status !== 'PENDING';
+
+    // Load tax rates
+    this.selectedTaxRateId = this.data.taxRateId || null;
+    this.taxRateService.getTaxRates().subscribe(rates => {
+      this.taxRates = rates;
+    });
     
     // Calculate initial values
     // Use transaction total amount if available, otherwise fallback to restock_price
@@ -176,6 +190,18 @@ export class RestockEditDialogComponent implements OnInit {
     });
   }
 
+  getTaxAmount(): number {
+    if (!this.selectedTaxRateId) return 0;
+    const rate = this.taxRates.find(r => r.id === this.selectedTaxRateId);
+    if (!rate) return 0;
+    const total = this.editForm.get('restock_price')?.value || 0;
+    return Math.round(total * parseFloat(rate.rate) / 100 * 100) / 100;
+  }
+
+  getTotalWithTax(): number {
+    return (this.editForm.get('restock_price')?.value || 0) + this.getTaxAmount();
+  }
+
   onCancel(): void {
     this.dialogRef.close();
   }
@@ -183,7 +209,11 @@ export class RestockEditDialogComponent implements OnInit {
   onSave(): void {
     if (this.editForm.valid) {
       this.isSaving = true;
-      this.dialogRef.close(this.editForm.value);
+      const result: any = { ...this.editForm.value };
+      if (this.selectedTaxRateId) {
+        result.tax_rate_id = this.selectedTaxRateId;
+      }
+      this.dialogRef.close(result);
     }
   }
 

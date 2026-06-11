@@ -83,10 +83,38 @@
       <mat-spinner matSuffix *ngIf="isLoadingRate" [diameter]="20"></mat-spinner>
     </mat-form-field>
 
+    <!-- Tax Rate -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>TVSH</mat-label>
+      <mat-select [(ngModel)]="selectedTaxRateId" [ngModelOptions]="{standalone: true}">
+        <mat-option [value]="null">Pa TVSH</mat-option>
+        <mat-option *ngFor="let rate of taxRates" [value]="rate.id">
+          {{ rate.name }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matSuffix>receipt_long</mat-icon>
+    </mat-form-field>
+
+    <!-- Tax Amount Display -->
+    <div class="total-display" *ngIf="getTaxAmount() > 0">
+      <span class="total-label">TVSH:</span>
+      <span class="total-value">
+        {{ getTaxAmount() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
+      </span>
+    </div>
+
+    <!-- Total with Tax -->
+    <div class="total-display">
+      <span class="total-label">Totali me TVSH:</span>
+      <span class="total-value">
+        {{ getTotalWithTax() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
+      </span>
+    </div>
+
     <!-- Payment Warning -->
     <div class="info-message" *ngIf="hasPayments">
       <mat-icon color="accent">info</mat-icon>
-      <span>Ky furnizim ka pagesa të regjistruara (Paguar: {{ totalPaid | number:'1.2-2' }}). Sigurohuni që çmimi i ri të mos jetë më i vogël se shuma e paguar.</span>
+      <span>Ky furnizim ka pagesa te regjistruara (Paguar: {{ totalPaid | number:'1.2-2' }}). Sigurohuni qe cmimi i ri te mos jete me i vogel se shuma e paguar.</span>
     </div>
 
   </form>

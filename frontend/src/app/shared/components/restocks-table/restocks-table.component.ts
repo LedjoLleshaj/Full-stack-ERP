@@ -60,7 +60,7 @@ export class RestocksTableComponent implements AfterViewInit, OnChanges {
         case "restock_date":
           return item.restock_date;
         case "total":
-          return item.quantity * parseFloat(item.restock_price);
+          return item.quantity * parseFloat(item.restock_price) + (item.tax_amount || 0);
         case "payment_status":
           return item.transaction_info?.status || '';
         default:

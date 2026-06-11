@@ -13,6 +13,29 @@
   width: 100%;
 }
 
+.total-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  margin: 8px 0;
+  background-color: var(--primary-light, #e3f2fd);
+  border-radius: 4px;
+  border-left: 4px solid var(--primary);
+}
+
+.total-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.total-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
 .info-message {
   display: flex;
   align-items: flex-start;
@@ -51,6 +74,10 @@ mat-dialog-actions {
 
 // Dark mode support
 :host-context(.dark-mode) {
+  .total-display {
+    background-color: rgba(33, 150, 243, 0.15);
+  }
+
   .info-message {
     background-color: rgba(255, 152, 0, 0.15);
     border-color: rgba(255, 152, 0, 0.4);

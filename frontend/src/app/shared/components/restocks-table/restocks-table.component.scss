@@ -7,9 +7,20 @@
   }
 }
 
+.tax-badge {
+  font-size: 0.7em;
+  color: #666;
+  margin-left: 4px;
+  vertical-align: super;
+}
+
 // Dark mode hover effect
 :host-context(.dark-mode) {
   .clickable-row:hover {
     background-color: rgba(102, 126, 234, 0.15);
+  }
+
+  .tax-badge {
+    color: #aaa;
   }
 }

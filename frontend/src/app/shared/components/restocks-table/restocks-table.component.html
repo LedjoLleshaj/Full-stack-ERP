@@ -57,7 +57,8 @@
         Totali
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let restock">
-        {{ getTotal(restock) }} {{ getCurrency(restock) }}
+        {{ getTotal(restock) + (restock.tax_amount || 0) }} {{ getCurrency(restock) }}
+        <span *ngIf="restock.tax_amount > 0" class="tax-badge" matTooltip="TVSH: {{ restock.tax_amount }} {{ getCurrency(restock) }}">+T</span>
       </td>
     </ng-container>
 
