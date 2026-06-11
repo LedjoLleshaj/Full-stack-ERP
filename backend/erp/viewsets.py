@@ -13,6 +13,7 @@ from erp.models import (
     Restock,
     Sales,
     Supplier,
+    TaxRate,
     Transaction,
     User,
 )
@@ -29,6 +30,7 @@ from erp.serializers import (
     RestockSerializer,
     SalesSerializer,
     SupplierSerializer,
+    TaxRateSerializer,
     TransactionSerializer,
     UserSerializer,
 )
@@ -109,6 +111,11 @@ class SalesViewSet(BaseViewSet):
 class RestockViewSet(BaseViewSet):
     queryset = Restock.objects.all()
     serializer_class = RestockSerializer
+
+
+class TaxRateViewSet(BaseViewSet):
+    queryset = TaxRate.objects.filter(is_active=True)
+    serializer_class = TaxRateSerializer
 
 
 class ExchangeRateViewSet(viewsets.ReadOnlyModelViewSet):

@@ -12,6 +12,7 @@ from erp.viewsets import (
     RestockViewSet,
     SalesViewSet,
     SupplierViewSet,
+    TaxRateViewSet,
     TransactionViewSet,
     UserViewSet,
 )
@@ -29,6 +30,7 @@ router.register("categories", CategoryViewSet)
 router.register("inventory", InventoryViewSet)
 router.register("sales", SalesViewSet)
 router.register("restocks", RestockViewSet)
+router.register("tax-rates", TaxRateViewSet)
 router.register("exchange-rates", ExchangeRateViewSet)
 
 urlpatterns = router.urls

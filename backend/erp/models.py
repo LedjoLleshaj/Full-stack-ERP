@@ -51,6 +51,25 @@ class ExchangeRate(models.Model):
         return f"{self.from_currency} → {self.to_currency}: {self.rate}"
 
 
+class TaxRate(models.Model):
+    name = models.CharField(max_length=50)
+    rate = models.DecimalField(max_digits=5, decimal_places=2)
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "tax_rate"
+        verbose_name = "Tax Rate"
+        verbose_name_plural = "Tax Rates"
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(fields=["name"], name="unique_tax_rate_name")
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.rate}%)"
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=255, blank=True, default="")
@@ -354,6 +373,10 @@ class Sales(models.Model):
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     sale_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
+    tax_rate = models.ForeignKey(
+        TaxRate, null=True, blank=True, on_delete=models.SET_NULL, related_name="sales"
+    )
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 
     class Meta:
         db_table = "sales"
@@ -377,6 +400,10 @@ class Restock(models.Model):
     restock_price = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     restock_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)
+    tax_rate = models.ForeignKey(
+        TaxRate, null=True, blank=True, on_delete=models.SET_NULL, related_name="restocks"
+    )
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 
     class Meta:
         db_table = "restock"

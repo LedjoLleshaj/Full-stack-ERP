@@ -14,6 +14,7 @@ from .models import (
     Restock,
     Sales,
     Supplier,
+    TaxRate,
     Transaction,
     Users,
 )
@@ -108,6 +109,12 @@ class RestockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Restock
+        fields = "__all__"
+
+
+class TaxRateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaxRate
         fields = "__all__"
 
 
