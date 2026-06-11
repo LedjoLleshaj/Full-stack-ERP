@@ -10,7 +10,7 @@ from erp.constants import TransactionStatus, TransactionType
 from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
-from ..models import Payment, Product, Restock, Transaction
+from ..models import Payment, Product, Restock, TaxRate, Transaction
 from ..serializers import (
     PaymentSerializer,
     ProductSerializer,
@@ -29,7 +29,8 @@ def getRestocks(request):
     restocks = Restock.objects.select_related(
         'prod',
         'transaction',
-        'transaction__supplier'
+        'transaction__supplier',
+        'tax_rate',
     ).prefetch_related(
         'transaction__payments'
     ).order_by("-restock_date")
@@ -80,7 +81,10 @@ def getRestocks(request):
         else:
             restock_data["transaction_info"] = None
             restock_data["payments"] = []
-        
+
+        restock_data["tax_amount"] = float(restock.tax_amount)
+        restock_data["tax_rate_name"] = restock.tax_rate.name if restock.tax_rate else None
+
         results.append(restock_data)
     
     return Response(results)
@@ -91,7 +95,7 @@ def getRestocks(request):
 @api_error_handler
 def getRestock(request, pk):
     try:
-        restock = Restock.objects.select_related('transaction', 'prod').prefetch_related('transaction__payments').get(id=pk)
+        restock = Restock.objects.select_related('transaction', 'prod', 'tax_rate').prefetch_related('transaction__payments').get(id=pk)
     except ObjectDoesNotExist:
         return not_found_response("Restock")
     
@@ -109,6 +113,9 @@ def getRestock(request, pk):
     # Add payments for this transaction (already loaded via prefetch_related)
     payment_serializer = PaymentSerializer(restock.transaction.payments.all(), many=True)
     response_data["payments"] = payment_serializer.data
+
+    response_data["tax_amount"] = float(restock.tax_amount)
+    response_data["tax_rate_name"] = restock.tax_rate.name if restock.tax_rate else None
 
     return Response(response_data)
 
@@ -138,11 +145,24 @@ def addRestock(request):
     except ObjectDoesNotExist:
         return not_found_response("Product")
 
+    # Tax calculation
+    tax_rate_id = request.data.get("tax_rate_id")
+    tax_rate_obj = None
+    tax_amount = Decimal("0")
+    if tax_rate_id:
+        try:
+            tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
+            tax_amount = (restock_price * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+        except TaxRate.DoesNotExist:
+            return bad_request_response("Tax rate not found or inactive")
+
+    total_amount = restock_price + tax_amount
+
     # Create Transaction record
     transaction = Transaction.objects.create(
         transaction_type=TransactionType.PURCHASE,
         supplier_id=supplier_id,
-        total_amount=restock_price,
+        total_amount=total_amount,
         currency=currency,
         status=TransactionStatus.PENDING,
         notes=f"Restock of {quantity} units of {product.name}"
@@ -151,12 +171,14 @@ def addRestock(request):
     # Create Restock record linked to transaction
     # Store unit price in Restock model, while Transaction has total_amount
     unit_price = restock_price / Decimal(str(quantity))
-    
+
     restock = Restock.objects.create(
         transaction=transaction,
         prod=product,
         quantity=quantity,
-        restock_price=unit_price
+        restock_price=unit_price,
+        tax_rate=tax_rate_obj,
+        tax_amount=tax_amount,
     )
 
     # Update inventory using InventoryService
@@ -176,7 +198,7 @@ def addRestock(request):
             )
 
             # Update transaction status based on payment
-            if payment_amount >= restock_price:
+            if payment_amount >= total_amount:
                 transaction.status = TransactionStatus.COMPLETED
                 transaction.completed_date = timezone.now()
             elif payment_amount > 0:
@@ -227,7 +249,7 @@ def updateRestock(request, pk):
     # Validate inputs
     if new_quantity <= 0:
         return bad_request_response("Quantity must be greater than zero")
-    
+
     # Get new product if changed
     if new_prod_id != old_prod_id:
         try:
@@ -236,7 +258,20 @@ def updateRestock(request, pk):
             return not_found_response("Product")
     else:
         new_product = old_product
-    
+
+    # Tax calculation
+    tax_rate_id = request.data.get("tax_rate_id")
+    tax_rate_obj = None
+    tax_amount = Decimal("0")
+    if tax_rate_id:
+        try:
+            tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
+            tax_amount = (new_restock_price * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+        except TaxRate.DoesNotExist:
+            return bad_request_response("Tax rate not found or inactive")
+
+    new_total_with_tax = new_restock_price + tax_amount
+
     # Handle inventory changes
     if new_prod_id != old_prod_id:
         # Product changed: reverse old inventory, add new
@@ -249,36 +284,38 @@ def updateRestock(request, pk):
             InventoryService.add_inventory(new_product, quantity_diff)
         elif quantity_diff < 0:
             InventoryService.reduce_inventory(new_product, abs(quantity_diff), allow_negative=True)
-    
+
     # Calculate unit price for storage
     unit_price = new_restock_price / new_quantity
-    
+
     # Update restock record
     restock.prod = new_product
     restock.quantity = new_quantity
     restock.restock_price = unit_price # Store unit price
+    restock.tax_rate = tax_rate_obj
+    restock.tax_amount = tax_amount
     restock.save()
-    
+
     # Update transaction details and status via PaymentService
     try:
         PaymentService.update_transaction_status(
             transaction=transaction,
-            new_total_amount=new_restock_price,
+            new_total_amount=new_total_with_tax,
             transaction_currency=currency
         )
         # Recalculate total_paid for response after update
         total_paid = PaymentService.calculate_total_paid(transaction)
     except PaymentError as e:
         return bad_request_response(str(e))
-    
+
     return Response({
         "message": "Restock updated successfully",
         "restock_id": restock.id,
         "transaction_id": transaction.id,
         "transaction_status": transaction.status,
-        "total_amount": float(new_restock_price),
+        "total_amount": float(new_total_with_tax),
         "total_paid": float(total_paid),
-        "remaining": float(new_restock_price - total_paid),
+        "remaining": float(new_total_with_tax - total_paid),
     })
 
 

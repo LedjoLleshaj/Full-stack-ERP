@@ -10,7 +10,7 @@ from erp.constants import TransactionStatus, TransactionType
 from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
-from ..models import Payment, Product, Sales, Transaction, User
+from ..models import Payment, Product, Sales, TaxRate, Transaction, User
 from ..serializers import (
     ClientSerializer,
     PaymentSerializer,
@@ -72,7 +72,8 @@ def getProductsFromSales(request):
         "prod",
         "transaction",
         "transaction__client",
-        "user"
+        "user",
+        "tax_rate",
     ).order_by("-sale_date")
     
     # Build response data directly from prefetched objects (no additional queries)
@@ -115,7 +116,10 @@ def getProductsFromSales(request):
             sale_data["client"] = {"error": "No client associated with transaction"}
             sale_data["payment_status"] = None
             sale_data["currency"] = None
-        
+
+        sale_data["tax_amount"] = float(sale.tax_amount)
+        sale_data["tax_rate_name"] = sale.tax_rate.name if sale.tax_rate else None
+
         results.append(sale_data)
     
     return Response(results)
@@ -239,7 +243,20 @@ def createSale(request):
         return bad_request_response("Not enough product in inventory")
 
     # Calculate total amount
-    total_amount = prod_price * quantity
+    subtotal = prod_price * quantity
+
+    # Tax calculation
+    tax_rate_id = request.data.get("tax_rate_id")
+    tax_rate_obj = None
+    tax_amount = Decimal("0")
+    if tax_rate_id:
+        try:
+            tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
+            tax_amount = (subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+        except TaxRate.DoesNotExist:
+            return bad_request_response("Tax rate not found or inactive")
+
+    total_amount = subtotal + tax_amount
 
     # Create Transaction record
     transaction = Transaction.objects.create(
@@ -258,6 +275,8 @@ def createSale(request):
         prod_price=prod_price,
         user_id=user_id,
         quantity=quantity,
+        tax_rate=tax_rate_obj,
+        tax_amount=tax_amount,
     )
 
     # Use InventoryService to reduce inventory (disallow overselling)
@@ -296,6 +315,7 @@ def createSale(request):
             "transaction_id": transaction.id,
             "transaction_status": transaction.status,
             "total_amount": float(total_amount),
+            "tax_amount": float(tax_amount),
         },
         status=status.HTTP_201_CREATED,
     )
@@ -336,7 +356,7 @@ def getSaleDetails(request, pk):
     try:
         # Retrieve sale with related transaction
         sale = Sales.objects.select_related(
-            "transaction", "transaction__client", "prod"
+            "transaction", "transaction__client", "prod", "tax_rate"
         ).get(id=pk)
     except Sales.DoesNotExist:
         return not_found_response("Sale")
@@ -347,6 +367,9 @@ def getSaleDetails(request, pk):
         "quantity": sale.quantity,
         "sale_date": sale.sale_date,
         "prod_price": float(sale.prod_price),
+        "tax_amount": float(sale.tax_amount),
+        "tax_rate_name": sale.tax_rate.name if sale.tax_rate else None,
+        "tax_rate_percent": float(sale.tax_rate.rate) if sale.tax_rate else None,
     }
     
     # Add product info
@@ -443,7 +466,20 @@ def updateSale(request, pk):
     
     # Calculate new total
     new_total = new_prod_price * new_quantity
-    
+
+    # Tax calculation
+    tax_rate_id = request.data.get("tax_rate_id")
+    tax_rate_obj = None
+    tax_amount = Decimal("0")
+    if tax_rate_id:
+        try:
+            tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
+            tax_amount = (new_total * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+        except TaxRate.DoesNotExist:
+            return bad_request_response("Tax rate not found or inactive")
+
+    new_total_with_tax = new_total + tax_amount
+
     # Handle inventory changes
     if new_prod_id != old_prod_id:
         # Product changed: reverse old, add new
@@ -468,13 +504,15 @@ def updateSale(request, pk):
     sale.quantity = new_quantity
     sale.prod_price = new_prod_price
     sale.user_id = new_user_id
+    sale.tax_rate = tax_rate_obj
+    sale.tax_amount = tax_amount
     sale.save()
     
     # Update transaction details and status via PaymentService
     try:
         PaymentService.update_transaction_status(
             transaction=transaction,
-            new_total_amount=new_total,
+            new_total_amount=new_total_with_tax,
             transaction_currency=currency
         )
         # Recalculate total_paid for response after update
@@ -487,9 +525,9 @@ def updateSale(request, pk):
         "sale_id": sale.id,
         "transaction_id": transaction.id,
         "transaction_status": transaction.status,
-        "total_amount": float(new_total),
+        "total_amount": float(new_total_with_tax),
         "total_paid": float(total_paid),
-        "remaining": float(new_total - total_paid),
+        "remaining": float(new_total_with_tax - total_paid),
     })
 
 

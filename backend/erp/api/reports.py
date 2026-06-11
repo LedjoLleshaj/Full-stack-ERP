@@ -21,7 +21,7 @@ def sales_report(request):
     end_date = request.GET.get("end_date")
 
     # Fix: Access client through transaction, not directly on sale
-    sales_qs = Sales.objects.select_related("prod", "transaction", "transaction__client")
+    sales_qs = Sales.objects.select_related("prod", "transaction", "transaction__client", "tax_rate")
 
     # Handle date filtering with smart defaults
     if start_date and end_date:
@@ -66,6 +66,8 @@ def sales_report(request):
             "Sasia": sale.quantity,
             "Cmimi shitje": float(sale.prod_price),
             "Totali": float(sale.total),
+            "TVSH": float(sale.tax_amount),
+            "Totali me TVSH": float(sale.total) + float(sale.tax_amount),
             "Data e shitjes": sale.sale_date.date().isoformat(),
             "Klienti": client_name,
             "Adresa e klientit": client_address,
