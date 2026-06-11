@@ -94,4 +94,5 @@ export class SalesApiService extends BaseApiService {
       `${this.apiUrl}/delete-sale/${saleId}`
     );
   }
+
 }
