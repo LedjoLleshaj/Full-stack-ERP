@@ -97,9 +97,36 @@
         </div>
 
         <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>TVSH</mat-label>
+            <mat-select [(ngModel)]="state.selectedTaxRateId">
+              <mat-option [value]="null">Pa TVSH</mat-option>
+              <mat-option *ngFor="let rate of state.availableTaxRates" [value]="rate.id">
+                {{ rate.name }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>receipt_long</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <div class="total-display">
+            <span class="total-label">Nentotali:</span>
+            <span class="total-value">{{ getTotal() | currency:state.currency }}</span>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="getTaxAmount() > 0">
+          <div class="total-display">
+            <span class="total-label">TVSH:</span>
+            <span class="total-value">{{ getTaxAmount() | currency:state.currency }}</span>
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="total-display">
             <span class="total-label">Totali:</span>
-            <span class="total-value">{{ getTotal() | currency:state.currency }}</span>
+            <span class="total-value total-final">{{ getTotalWithTax() | currency:state.currency }}</span>
           </div>
         </div>
 

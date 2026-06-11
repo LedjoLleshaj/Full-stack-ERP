@@ -70,11 +70,39 @@
       <mat-spinner matSuffix *ngIf="isLoadingRate" [diameter]="20"></mat-spinner>
     </mat-form-field>
 
-    <!-- Total Display -->
+    <!-- Tax Rate -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>TVSH</mat-label>
+      <mat-select [(ngModel)]="selectedTaxRateId" [ngModelOptions]="{standalone: true}">
+        <mat-option [value]="null">Pa TVSH</mat-option>
+        <mat-option *ngFor="let rate of taxRates" [value]="rate.id">
+          {{ rate.name }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matSuffix>receipt_long</mat-icon>
+    </mat-form-field>
+
+    <!-- Subtotal -->
+    <div class="total-display">
+      <span class="total-label">Nentotali:</span>
+      <span class="total-value">
+        {{ calculateTotal() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
+      </span>
+    </div>
+
+    <!-- Tax Amount -->
+    <div class="total-display" *ngIf="getTaxAmount() > 0">
+      <span class="total-label">TVSH:</span>
+      <span class="total-value">
+        {{ getTaxAmount() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
+      </span>
+    </div>
+
+    <!-- Total with Tax -->
     <div class="total-display">
       <span class="total-label">Totali:</span>
       <span class="total-value">
-        {{ calculateTotal() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
+        {{ getTotalWithTax() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
       </span>
     </div>
 
@@ -83,7 +111,7 @@
       <mat-icon color="accent">info</mat-icon>
       <span *ngIf="!isTotalInvalid()">Kjo shitje ka pagesa të regjistruara (Paguar: {{ totalPaid | number:'1.2-2' }} {{ editForm.get('currency')?.value }}). Sigurohuni që totali i ri të mos jetë më i vogël se shuma e paguar.</span>
       <span *ngIf="isTotalInvalid()" color="warn" class="error-text">
-        <strong>Vini re:</strong> Totali i ri ({{ calculateTotal() | number:'1.2-2' }}) është më i vogël se shuma e paguar tashmë ({{ totalPaid | number:'1.2-2' }}). Ju lutem rritni sasinë ose çmimin.
+        <strong>Vini re:</strong> Totali i ri ({{ getTotalWithTax() | number:'1.2-2' }}) është më i vogël se shuma e paguar tashmë ({{ totalPaid | number:'1.2-2' }}). Ju lutem rritni sasinë ose çmimin.
       </span>
     </div>
 

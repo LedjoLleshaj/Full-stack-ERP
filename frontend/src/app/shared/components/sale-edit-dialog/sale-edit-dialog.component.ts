@@ -9,18 +9,22 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Observable, map, startWith, pairwise } from 'rxjs'; // Added pairwise
 import { MatSnackBar } from '@angular/material/snack-bar'; // Added
 
 import { SaleResponse } from '../../../models/sale.model';
 import { Product } from '../../../models/product.model';
+import { TaxRate } from '../../../models/tax-rate.model';
 import { ProductService } from '../../services/product-api/product.service';
 import { CurrencyExchangeService } from '../../services/currency-exchange/currency-exchange.service'; // Added
+import { TaxRateApiService } from '../../services/tax-rate-api/tax-rate-api.service';
 
 export interface SaleEditDialogData {
   sale: SaleResponse;
   products: Product[];
   totalPaid?: number;
+  taxRateId?: number;
 }
 
 @Component({
@@ -30,6 +34,7 @@ export interface SaleEditDialogData {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -50,11 +55,14 @@ export class SaleEditDialogComponent implements OnInit {
   totalPaid = 0;
   isLoadingRate = false; // Added to track rate fetching
   readonly ROUNDING_TOLERANCE = 0.10;
+  taxRates: TaxRate[] = [];
+  selectedTaxRateId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
     private currencyService: CurrencyExchangeService, // Added
+    private taxRateService: TaxRateApiService,
     private snackBar: MatSnackBar, // Added for error reporting
     public dialogRef: MatDialogRef<SaleEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: SaleEditDialogData
@@ -64,6 +72,12 @@ export class SaleEditDialogComponent implements OnInit {
     // Check if sale has payments
     this.totalPaid = this.data.totalPaid || 0;
     this.hasPayments = this.totalPaid > 0;
+
+    // Load tax rates
+    this.selectedTaxRateId = this.data.taxRateId || null;
+    this.taxRateService.getTaxRates().subscribe(rates => {
+      this.taxRates = rates;
+    });
     
     // Initialize form with current sale data
     this.editForm = this.fb.group({
@@ -114,6 +128,17 @@ export class SaleEditDialogComponent implements OnInit {
     return quantity * price;
   }
 
+  getTaxAmount(): number {
+    if (!this.selectedTaxRateId) return 0;
+    const rate = this.taxRates.find(r => r.id === this.selectedTaxRateId);
+    if (!rate) return 0;
+    return Math.round(this.calculateTotal() * parseFloat(rate.rate) / 100 * 100) / 100;
+  }
+
+  getTotalWithTax(): number {
+    return this.calculateTotal() + this.getTaxAmount();
+  }
+
   /**
    * Converts the product price when currency changes
    */
@@ -158,7 +183,7 @@ export class SaleEditDialogComponent implements OnInit {
 
   isTotalInvalid(): boolean {
     if (!this.hasPayments) return false;
-    const total = this.calculateTotal();
+    const total = this.getTotalWithTax();
     return total < (this.totalPaid - this.ROUNDING_TOLERANCE);
   }
 
@@ -166,14 +191,18 @@ export class SaleEditDialogComponent implements OnInit {
     if (this.editForm.valid && !this.isTotalInvalid()) {
       this.isSaving = true;
       const formValue = this.editForm.value;
-      
-      const updateData = {
+
+      const updateData: any = {
         prod: formValue.product.id,
         quantity: formValue.quantity,
         prod_price: formValue.prod_price,
         currency: formValue.currency,
         user: this.data.sale.user
       };
+
+      if (this.selectedTaxRateId) {
+        updateData.tax_rate_id = this.selectedTaxRateId;
+      }
 
       this.dialogRef.close(updateData);
     }
