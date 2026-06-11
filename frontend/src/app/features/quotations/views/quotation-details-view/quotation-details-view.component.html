@@ -1,0 +1,180 @@
+<div class="quotation-details-container">
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Duke ngarkuar detajet...</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMessage" class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="goBack()">Kthehu te Ofertat</button>
+  </div>
+
+  <div *ngIf="!isLoading && quotation" class="content">
+    <!-- Header -->
+    <div class="header">
+      <button mat-icon-button (click)="goBack()" matTooltip="Kthehu">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1>Oferta QUO-{{ quotation.id.toString().padStart(6, '0') }}</h1>
+        <span class="status-badge" [ngClass]="getStatusClass(quotation.status)">
+          {{ getStatusLabel(quotation.status) }}
+        </span>
+      </div>
+      <div class="header-actions">
+        <!-- Status change buttons -->
+        <button
+          *ngFor="let action of getAvailableActions()"
+          mat-stroked-button
+          [color]="action.color"
+          (click)="updateStatus(action.status)"
+          class="action-btn"
+        >
+          <mat-icon>{{ action.icon }}</mat-icon>
+          {{ action.label }}
+        </button>
+
+        <!-- Convert to Sale button -->
+        <button
+          *ngIf="canConvert()"
+          mat-raised-button
+          color="primary"
+          (click)="convertToSale()"
+          [disabled]="isConverting"
+          class="action-btn convert-btn"
+        >
+          <mat-spinner *ngIf="isConverting" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!isConverting">transform</mat-icon>
+          {{ isConverting ? 'Duke konvertuar...' : 'Konverto në Shitje' }}
+        </button>
+
+        <!-- Delete -->
+        <button
+          *ngIf="authService.canDelete() && quotation.status !== 'CONVERTED'"
+          mat-stroked-button
+          color="warn"
+          (click)="onDelete()"
+          class="action-btn"
+        >
+          <mat-icon>delete</mat-icon>
+          Fshi
+        </button>
+      </div>
+    </div>
+
+    <!-- Info grid -->
+    <div class="details-grid">
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>person</mat-icon>
+          <mat-card-title>Klienti</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Emri:</span>
+            <span class="value">{{ quotation.client_name }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>info</mat-icon>
+          <mat-card-title>Detaje</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Valuta:</span>
+            <span class="value">{{ quotation.currency }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Vlefshme deri:</span>
+            <span class="value">{{ formatDate(quotation.valid_until) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Krijuar:</span>
+            <span class="value">{{ formatDateTime(quotation.created_date) }}</span>
+          </div>
+          <div class="info-row" *ngIf="quotation.created_by_name">
+            <span class="label">Krijuar nga:</span>
+            <span class="value">{{ quotation.created_by_name }}</span>
+          </div>
+          <div class="info-row" *ngIf="quotation.converted_transaction">
+            <span class="label">Transaksioni:</span>
+            <span class="value highlight">#{{ quotation.converted_transaction }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card total-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>receipt_long</mat-icon>
+          <mat-card-title>Totali</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="total-display">
+            {{ formatCurrency(quotation.total_amount, quotation.currency) }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Items table -->
+    <mat-card class="items-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>list</mat-icon>
+        <mat-card-title>Artikujt ({{ quotation.items?.length || 0 }})</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="quotation.items || []" class="items-table">
+          <ng-container matColumnDef="product_name">
+            <th mat-header-cell *matHeaderCellDef>Produkti</th>
+            <td mat-cell *matCellDef="let item">{{ item.product_name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef>Sasia</th>
+            <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="unit_price">
+            <th mat-header-cell *matHeaderCellDef>Çmimi</th>
+            <td mat-cell *matCellDef="let item">{{ formatCurrency(item.unit_price, quotation.currency) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="tax_rate_name">
+            <th mat-header-cell *matHeaderCellDef>TVSH</th>
+            <td mat-cell *matCellDef="let item">{{ item.tax_rate_name || '-' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="tax_amount">
+            <th mat-header-cell *matHeaderCellDef>Tatimi</th>
+            <td mat-cell *matCellDef="let item">{{ formatCurrency(item.tax_amount || 0, quotation.currency) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="line_total">
+            <th mat-header-cell *matHeaderCellDef>Totali</th>
+            <td mat-cell *matCellDef="let item" class="amount-cell">
+              {{ formatCurrency(item.line_total, quotation.currency) }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Notes -->
+    <mat-card *ngIf="quotation.notes" class="notes-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>notes</mat-icon>
+        <mat-card-title>Shënime</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ quotation.notes }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

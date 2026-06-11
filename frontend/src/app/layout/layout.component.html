@@ -70,6 +70,17 @@
       </div>
       <mat-divider></mat-divider>
       <button
+        mat-list-item
+        aria-label="Hap ofertat"
+        title="Hap ofertat"
+        [activated]="this.router.url.startsWith('/quotations')"
+        (click)="this.router.navigate(['/quotations'])"
+      >
+        <mat-icon matListItemIcon>request_quote</mat-icon>
+        <div matListItemTitle>Ofertat</div>
+      </button>
+      <mat-divider></mat-divider>
+      <button
         class="flex flex-row"
         mat-list-item
         aria-label="Hap historikun e furnizimeve"

@@ -1,0 +1,96 @@
+<div class="quotations-container">
+  <div class="header">
+    <h1>Ofertat</h1>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Filtro sipas statusit</mat-label>
+        <mat-select [(ngModel)]="statusFilter" (selectionChange)="onStatusFilterChange()">
+          <mat-option value="">Të gjitha</mat-option>
+          <mat-option *ngFor="let s of statuses.slice(1)" [value]="s">{{ getStatusLabel(s) }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Kërko</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Kërko ofertë...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      <button *ngIf="authService.canWrite()" mat-raised-button color="primary" routerLink="/quotations/create">
+        <mat-icon>add</mat-icon>
+        Ofertë e Re
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && dataSource.data.length === 0" class="empty-state">
+    <mat-icon>description</mat-icon>
+    <p>Nuk ka oferta</p>
+    <button *ngIf="authService.canWrite()" mat-raised-button color="primary" routerLink="/quotations/create">
+      Krijo Ofertën e Parë
+    </button>
+  </div>
+
+  <table
+    mat-table
+    [dataSource]="dataSource"
+    matSort
+    *ngIf="!isLoading && dataSource.data.length > 0"
+    class="quotations-table"
+  >
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Nr.</th>
+      <td mat-cell *matCellDef="let q">QUO-{{ q.id.toString().padStart(6, '0') }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="client_name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Klienti</th>
+      <td mat-cell *matCellDef="let q">{{ q.client_name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="total_amount">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Totali</th>
+      <td mat-cell *matCellDef="let q" class="amount-cell">{{ formatCurrency(q.total_amount, q.currency) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="currency">
+      <th mat-header-cell *matHeaderCellDef>Valuta</th>
+      <td mat-cell *matCellDef="let q">{{ q.currency }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Statusi</th>
+      <td mat-cell *matCellDef="let q">
+        <span class="status-badge" [ngClass]="getStatusClass(q.status)">
+          {{ getStatusLabel(q.status) }}
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="valid_until">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Vlefshme deri</th>
+      <td mat-cell *matCellDef="let q">{{ formatDate(q.valid_until) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="created_date">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Krijuar</th>
+      <td mat-cell *matCellDef="let q">{{ formatDate(q.created_date) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Veprime</th>
+      <td mat-cell *matCellDef="let q">
+        <button mat-icon-button color="primary" (click)="viewDetails(q.id)" matTooltip="Shiko">
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns" class="clickable-row" (click)="viewDetails(row.id)"></tr>
+  </table>
+
+  <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+</div>

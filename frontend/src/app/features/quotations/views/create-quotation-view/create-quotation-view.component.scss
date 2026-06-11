@@ -1,0 +1,81 @@
+.create-quotation-container {
+  max-width: 900px;
+  margin: 0 auto;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    h1 { margin: 0; }
+  }
+
+  .form-card, .items-card {
+    margin-bottom: 20px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    .form-field { flex: 1; min-width: 200px; }
+  }
+
+  .full-width { width: 100%; }
+
+  .search-input {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+  }
+
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    .add-item-btn { margin-left: auto; }
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+
+    .item-number {
+      width: 24px;
+      text-align: center;
+      font-weight: 600;
+      color: #888;
+    }
+    .product-field { flex: 2; min-width: 180px; }
+    .qty-field { flex: 0.7; min-width: 80px; }
+    .price-field { flex: 1; min-width: 100px; }
+    .tax-field { flex: 1; min-width: 120px; }
+    .item-total {
+      min-width: 100px;
+      text-align: right;
+      font-weight: 500;
+    }
+  }
+
+  .grand-total {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    border-top: 2px solid #2c3e50;
+    margin-top: 16px;
+    font-size: 16px;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+  }
+}
