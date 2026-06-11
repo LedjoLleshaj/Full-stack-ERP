@@ -1,15 +1,14 @@
 from decimal import Decimal
 
 from django.db import transaction as db_transaction
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from erp.constants import QuotationStatus, TransactionStatus, TransactionType
-from erp.models import Quotation, QuotationItem, TaxRate, Transaction, Sales
-from erp.permissions import IsStaffOrAbove, IsManagerOrAbove
+from erp.models import Quotation, Sales, Transaction
+from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.serializers import (
     QuotationCreateSerializer,
     QuotationDetailSerializer,
@@ -18,7 +17,6 @@ from erp.serializers import (
 from erp.utils.responses import (
     api_error_handler,
     bad_request_response,
-    created_response,
     not_found_response,
     success_response,
 )
