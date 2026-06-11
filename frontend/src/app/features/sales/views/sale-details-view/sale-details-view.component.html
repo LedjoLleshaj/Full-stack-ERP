@@ -26,6 +26,10 @@
         </span>
       </div>
       <div class="header-actions">
+        <button mat-stroked-button (click)="downloadInvoice()" class="action-btn invoice-btn">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Faturë
+        </button>
         <button *ngIf="authService.canWrite()" mat-stroked-button color="primary" (click)="onEdit()" class="action-btn edit-btn">
           <mat-icon>edit</mat-icon>
           Modifiko

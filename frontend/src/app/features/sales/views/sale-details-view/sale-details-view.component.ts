@@ -13,6 +13,7 @@ import { SaleDetails, PaymentRequest } from "../../../../models/sale.model";
 import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
 import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
 import { AuthApiService } from "src/app/shared/services/auth-api/auth-api.service";
+import { InvoiceService } from "src/app/shared/services/invoice/invoice.service";
 
 @Component({
   selector: "app-sale-details-view",
@@ -54,7 +55,8 @@ export class SaleDetailsViewComponent implements OnInit {
     private paymentService: PaymentApiService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    public authService: AuthApiService
+    public authService: AuthApiService,
+    private invoiceService: InvoiceService
   ) {}
 
   ngOnInit(): void {
@@ -277,6 +279,12 @@ export class SaleDetailsViewComponent implements OnInit {
     if (!this.saleDetails?.payment_summary) return 0;
     const { total_amount, total_paid } = this.saleDetails.payment_summary;
     return total_amount > 0 ? (total_paid / total_amount) * 100 : 0;
+  }
+
+  downloadInvoice(): void {
+    if (!this.saleDetails?.transaction) return;
+    this.invoiceService.downloadInvoice(this.saleDetails.transaction.id);
+    this.snackBar.open("Duke shkarkuar faturën...", "Mbyll", { duration: 3000 });
   }
 
   goBack(): void {

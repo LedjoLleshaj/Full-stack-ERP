@@ -12,6 +12,7 @@ import { DeleteConfirmationDialogComponent } from "src/app/shared/components/del
 import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
 import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
 import { AuthApiService } from "src/app/shared/services/auth-api/auth-api.service";
+import { InvoiceService } from "src/app/shared/services/invoice/invoice.service";
 
 interface Payment {
   id: number;
@@ -96,7 +97,8 @@ export class RestockDetailsViewComponent implements OnInit {
     private paymentService: PaymentApiService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    public authService: AuthApiService
+    public authService: AuthApiService,
+    private invoiceService: InvoiceService
   ) {}
 
   ngOnInit(): void {
@@ -333,6 +335,12 @@ export class RestockDetailsViewComponent implements OnInit {
     const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
     const symbols: { [key: string]: string } = { 'EUR': '€', 'USD': '$', 'LEK': 'Lek' };
     return `${numAmount.toFixed(2)} ${symbols[currency] || currency}`;
+  }
+
+  downloadInvoice(): void {
+    if (!this.restockDetails?.transaction_info) return;
+    this.invoiceService.downloadInvoice(this.restockDetails.transaction_info.id);
+    this.snackBar.open("Duke shkarkuar faturën...", "Mbyll", { duration: 3000 });
   }
 
   goBack(): void {
