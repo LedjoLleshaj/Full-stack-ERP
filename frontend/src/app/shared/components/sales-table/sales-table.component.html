@@ -88,8 +88,8 @@
         Totali
       </th>
       <td class="se-table-row" mat-cell *matCellDef="let sale">
-        <!-- {{ sale.payment ? sale.payment.amount + " €" : "In progress" }} -->
-        {{ (sale.quantity * sale.prod_price) | albanianCurrency:(sale.currency || 'EUR') }}
+        {{ (sale.quantity * sale.prod_price) + (sale.tax_amount || 0) | albanianCurrency:(sale.currency || 'EUR') }}
+        <span *ngIf="sale.tax_amount > 0" class="tax-badge" matTooltip="TVSH: {{ sale.tax_amount | albanianCurrency:(sale.currency || 'EUR') }}">+T</span>
       </td>
     </ng-container>
 

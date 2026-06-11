@@ -73,7 +73,7 @@ export class SalesTableComponent implements AfterViewInit, OnChanges {
         case "address": //TODO: Add address to sale model
           return "address";
         case "amount":
-          return item.prod_price * item.quantity;
+          return item.prod_price * item.quantity + (item.tax_amount || 0);
         default:
           return item.id;
       }
