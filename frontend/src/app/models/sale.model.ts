@@ -17,6 +17,8 @@ export interface SaleResponse {
   product: Product;
   payment_status: string; // PENDING, PARTIAL, COMPLETED
   currency?: string;
+  tax_amount?: number;
+  tax_rate_name?: string;
 }
 
 export interface Sale {
@@ -26,6 +28,7 @@ export interface Sale {
   client_id: number; // Changed from 'client'
   quantity: number;
   currency?: string;
+  tax_rate_id?: number;
   payment?: PaymentData; // Optional payment info
 }
 
@@ -43,6 +46,7 @@ export interface SaleCreateResponse {
   transaction_id: number;
   transaction_status: string;
   total_amount: number;
+  tax_amount: number;
 }
 
 export interface PaymentRequest {
@@ -115,6 +119,9 @@ export interface SaleDetails {
   quantity: number;
   sale_date: string;
   prod_price: number;
+  tax_amount: number;
+  tax_rate_name: string | null;
+  tax_rate_percent: number | null;
   product: {
     id: number;
     name: string;

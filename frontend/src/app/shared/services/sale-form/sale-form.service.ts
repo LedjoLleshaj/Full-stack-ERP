@@ -9,7 +9,9 @@ import { ClientService } from '../clients-api/client.service';
 import { ProductService } from '../product-api/product.service';
 import { SalesApiService } from '../sales-api/sales-api.service';
 import { CurrencyExchangeService } from '../currency-exchange/currency-exchange.service';
+import { TaxRateApiService } from '../tax-rate-api/tax-rate-api.service';
 import { AuthApiService } from '../auth-api/auth-api.service';
+import { TaxRate } from '../../../models/tax-rate.model';
 
 /**
  * Shared state for sale form across multiple components.
@@ -38,6 +40,10 @@ export interface SaleFormState {
   paymentMethod: string;
   currency: string;
 
+  // Tax
+  availableTaxRates: TaxRate[];
+  selectedTaxRateId: number | null;
+
   // UI state
   isSubmitting: boolean;
 }
@@ -63,6 +69,7 @@ export class SaleFormService {
     private productService: ProductService,
     private saleService: SalesApiService,
     private currencyExchange: CurrencyExchangeService,
+    private taxRateService: TaxRateApiService,
     private authService: AuthApiService,
     private snackBar: MatSnackBar,
     private router: Router
@@ -85,6 +92,8 @@ export class SaleFormService {
       isPaid: true,
       lastSoldPrice: null,
       lastSoldCurrency: null,
+      availableTaxRates: [],
+      selectedTaxRateId: null,
       paymentMethod: 'CASH',
       currency: 'EUR',
       isSubmitting: false,
@@ -242,10 +251,47 @@ export class SaleFormService {
   }
 
   /**
-   * Calculates total sale amount
+   * Calculates total sale amount (subtotal before tax)
    */
   getTotal(state: SaleFormState): number {
     return state.salePrice * state.saleQuantity;
+  }
+
+  /**
+   * Loads available tax rates into the state
+   */
+  loadTaxRates(state: SaleFormState): void {
+    this.taxRateService.getTaxRates().subscribe({
+      next: (rates) => {
+        state.availableTaxRates = rates;
+        const defaultRate = rates.find(r => r.is_default);
+        if (defaultRate) {
+          state.selectedTaxRateId = defaultRate.id;
+        }
+        this.stateChange$.next();
+      },
+      error: (err) => {
+        console.error('Failed to fetch tax rates:', err);
+      },
+    });
+  }
+
+  /**
+   * Calculates tax amount based on selected tax rate
+   */
+  getTaxAmount(state: SaleFormState): number {
+    if (!state.selectedTaxRateId) return 0;
+    const rate = state.availableTaxRates.find(r => r.id === state.selectedTaxRateId);
+    if (!rate) return 0;
+    const subtotal = this.getTotal(state);
+    return Math.round(subtotal * parseFloat(rate.rate) / 100 * 100) / 100;
+  }
+
+  /**
+   * Calculates total including tax
+   */
+  getTotalWithTax(state: SaleFormState): number {
+    return this.getTotal(state) + this.getTaxAmount(state);
   }
 
   /**
@@ -277,7 +323,7 @@ export class SaleFormService {
     }
 
     state.isSubmitting = true;
-    const total = this.getTotal(state);
+    const total = this.getTotalWithTax(state);
     const userId = this.authService.getUserId();
 
     if (!userId) {
@@ -296,6 +342,10 @@ export class SaleFormService {
       client_id: effectiveClientId,
       currency: state.currency,
     };
+
+    if (state.selectedTaxRateId) {
+      newSale.tax_rate_id = state.selectedTaxRateId;
+    }
 
     if (state.isPaid) {
       newSale.payment = {
@@ -347,6 +397,8 @@ export class SaleFormService {
     state.isPaid = true;
     state.lastSoldPrice = null;
     state.lastSoldCurrency = null;
+    const defaultRate = state.availableTaxRates.find(r => r.is_default);
+    state.selectedTaxRateId = defaultRate ? defaultRate.id : null;
     state.paymentMethod = 'CASH';
     state.currency = 'EUR';
     this.stateChange$.next();

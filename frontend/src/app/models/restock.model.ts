@@ -32,6 +32,8 @@ export interface RestockResponse {
   product_info: RestockProductInfo | null;
   transaction_info: RestockTransactionInfo | null;
   payments: RestockPayment[];
+  tax_amount?: number;
+  tax_rate_name?: string;
 }
 
 export interface RestockReportRow {

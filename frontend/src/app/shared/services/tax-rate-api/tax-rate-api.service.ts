@@ -1,0 +1,22 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { TaxRate } from '../../../models/tax-rate.model';
+import { BaseApiService } from '../base-api.service';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TaxRateApiService extends BaseApiService {
+  private readonly endpoint = '/api/v1/tax-rates/';
+
+  constructor(http: HttpClient) {
+    super(http);
+  }
+
+  getTaxRates(): Observable<TaxRate[]> {
+    return this.http
+      .get<{ results: TaxRate[] }>(this.apiUrl + this.endpoint)
+      .pipe(map((response) => response.results));
+  }
+}
