@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    color: #333;
+    line-height: 1.5;
+  }
+  .header {
+    overflow: hidden;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 15px;
+  }
+  .company-info {
+    float: left;
+    width: 50%;
+  }
+  .company-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+  }
+  .invoice-info {
+    float: right;
+    width: 45%;
+    text-align: right;
+  }
+  .invoice-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 8px;
+  }
+  .invoice-number {
+    font-size: 13px;
+    color: #666;
+  }
+  .parties {
+    overflow: hidden;
+    margin-bottom: 25px;
+  }
+  .party-box {
+    float: left;
+    width: 48%;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+  .party-box.right {
+    float: right;
+  }
+  .party-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #999;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+  .party-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 3px;
+  }
+  table.items {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+  }
+  table.items thead th {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  table.items thead th.right {
+    text-align: right;
+  }
+  table.items tbody td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+  }
+  table.items tbody td.right {
+    text-align: right;
+  }
+  table.items tbody tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+  .totals {
+    float: right;
+    width: 280px;
+  }
+  .totals table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .totals table td {
+    padding: 6px 8px;
+  }
+  .totals table td.label {
+    text-align: right;
+    color: #666;
+    font-size: 11px;
+  }
+  .totals table td.value {
+    text-align: right;
+    font-weight: bold;
+    width: 120px;
+  }
+  .totals table tr.total {
+    border-top: 2px solid #2c3e50;
+  }
+  .totals table tr.total td {
+    font-size: 14px;
+    color: #2c3e50;
+    padding-top: 10px;
+  }
+  .totals table tr.paid td {
+    color: #27ae60;
+  }
+  .totals table tr.remaining td {
+    color: #e74c3c;
+  }
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-completed { background-color: #d4edda; color: #155724; }
+  .status-partial { background-color: #fff3cd; color: #856404; }
+  .status-pending { background-color: #f8d7da; color: #721c24; }
+  .payments-section {
+    clear: both;
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+  }
+  .payments-section h3 {
+    font-size: 13px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+  }
+  table.payments {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+  table.payments th {
+    background-color: #ecf0f1;
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #666;
+  }
+  table.payments td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+  }
+  .footer {
+    clear: both;
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    color: #999;
+    font-size: 9px;
+  }
+  .notes {
+    clear: both;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 10px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="company-info">
+    <div class="company-name">{{ company_name }}</div>
+    <div>{{ company_address }}</div>
+    {% if company_phone %}<div>Tel: {{ company_phone }}</div>{% endif %}
+    {% if company_email %}<div>{{ company_email }}</div>{% endif %}
+  </div>
+  <div class="invoice-info">
+    <div class="invoice-title">{% if transaction_type == "SALE" %}FATURË{% else %}FATURË BLERJE{% endif %}</div>
+    <div class="invoice-number">
+      Nr: <strong>{{ invoice_number }}</strong><br>
+      Data: {{ created_date }}<br>
+      <span class="status-badge status-{{ status|lower }}">{{ status_label }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="parties">
+  {% if transaction_type == "SALE" and client %}
+  <div class="party-box">
+    <div class="party-label">Klienti</div>
+    <div class="party-name">{{ client.firstname }} {{ client.lastname }}</div>
+    {% if client.address %}<div>{{ client.address }}</div>{% endif %}
+    {% if client.city %}<div>{{ client.city }}</div>{% endif %}
+    {% if client.phone %}<div>Tel: {{ client.phone }}</div>{% endif %}
+    {% if client.email %}<div>{{ client.email }}</div>{% endif %}
+  </div>
+  {% endif %}
+  {% if transaction_type == "PURCHASE" and supplier %}
+  <div class="party-box">
+    <div class="party-label">Furnitori</div>
+    <div class="party-name">{{ supplier.firstname }} {{ supplier.lastname }}</div>
+    {% if supplier.address %}<div>{{ supplier.address }}</div>{% endif %}
+    {% if supplier.phone %}<div>Tel: {{ supplier.phone }}</div>{% endif %}
+    {% if supplier.email %}<div>{{ supplier.email }}</div>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<table class="items">
+  <thead>
+    <tr>
+      <th style="width: 5%;">#</th>
+      <th style="width: 35%;">Produkti</th>
+      <th class="right" style="width: 12%;">Sasia</th>
+      <th class="right" style="width: 16%;">Çmimi</th>
+      {% if has_tax %}<th class="right" style="width: 12%;">TVSH</th>{% endif %}
+      <th class="right" style="width: 20%;">Totali</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in line_items %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ item.product_name }}</td>
+      <td class="right">{{ item.quantity }}</td>
+      <td class="right">{{ item.unit_price }} {{ currency_symbol }}</td>
+      {% if has_tax %}<td class="right">{{ item.tax_amount }} {{ currency_symbol }}</td>{% endif %}
+      <td class="right">{{ item.line_total }} {{ currency_symbol }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals">
+  <table>
+    <tr>
+      <td class="label">Nëntotali:</td>
+      <td class="value">{{ subtotal }} {{ currency_symbol }}</td>
+    </tr>
+    {% if has_tax %}
+    <tr>
+      <td class="label">TVSH:</td>
+      <td class="value">{{ total_tax }} {{ currency_symbol }}</td>
+    </tr>
+    {% endif %}
+    <tr class="total">
+      <td class="label">TOTALI:</td>
+      <td class="value">{{ total_amount }} {{ currency_symbol }}</td>
+    </tr>
+    <tr class="paid">
+      <td class="label">Paguar:</td>
+      <td class="value">{{ total_paid }} {{ currency_symbol }}</td>
+    </tr>
+    {% if remaining > 0 %}
+    <tr class="remaining">
+      <td class="label">Mbetur:</td>
+      <td class="value">{{ remaining }} {{ currency_symbol }}</td>
+    </tr>
+    {% endif %}
+  </table>
+</div>
+
+{% if payments %}
+<div class="payments-section">
+  <h3>Historia e Pagesave</h3>
+  <table class="payments">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Shuma</th>
+        <th>Monedha</th>
+        <th>Mënyra</th>
+        <th>Shënime</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in payments %}
+      <tr>
+        <td>{{ payment.date }}</td>
+        <td>{{ payment.amount }} {{ payment.currency_symbol }}</td>
+        <td>{{ payment.currency }}</td>
+        <td>{{ payment.method }}</td>
+        <td>{{ payment.notes }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if notes %}
+<div class="notes">
+  <strong>Shënime:</strong> {{ notes }}
+</div>
+{% endif %}
+
+<div class="footer">
+  {{ company_name }} &mdash; Faturë e gjeneruar automatikisht &mdash; {{ generated_date }}
+</div>
+
+</body>
+</html>
