@@ -12,6 +12,7 @@ from erp.models import (
     Product_Categories,
     Sales,
     Supplier,
+    TaxRate,
     Transaction,
 )
 
@@ -61,6 +62,17 @@ class ErpTestCase(TestCase):
             phone="1234567890",
             address="456 Client Ave",
             city="Tirana",
+        )
+
+        cls.tax_rate = TaxRate.objects.create(
+            name="VAT 20%",
+            rate=Decimal("20.00"),
+            is_default=True,
+        )
+
+        cls.tax_rate_zero = TaxRate.objects.create(
+            name="No Tax",
+            rate=Decimal("0.00"),
         )
 
     def create_inventory(self, product=None, quantity=100):
