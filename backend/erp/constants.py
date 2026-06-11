@@ -76,6 +76,27 @@ class UserRole:
     STAFF_AND_ABOVE = {ADMIN, MANAGER, STAFF}
 
 
+class QuotationStatus:
+    """Status values for Quotation records."""
+    DRAFT = "DRAFT"
+    SENT = "SENT"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    EXPIRED = "EXPIRED"
+    CONVERTED = "CONVERTED"
+
+    CHOICES = [
+        (DRAFT, "Draft"),
+        (SENT, "Sent"),
+        (ACCEPTED, "Accepted"),
+        (REJECTED, "Rejected"),
+        (EXPIRED, "Expired"),
+        (CONVERTED, "Converted"),
+    ]
+
+    CONVERTIBLE = {ACCEPTED}
+
+
 class Currency:
     """Currency codes."""
     EUR = "EUR"

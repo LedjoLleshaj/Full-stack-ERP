@@ -11,6 +11,8 @@ from .models import (
     Product,
     Product_Categories,
     Product_Names,
+    Quotation,
+    QuotationItem,
     Restock,
     Sales,
     Supplier,
@@ -116,6 +118,93 @@ class TaxRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaxRate
         fields = "__all__"
+
+
+class QuotationItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    subtotal = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    line_total = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    tax_rate_name = serializers.CharField(source="tax_rate.name", read_only=True, default=None)
+
+    class Meta:
+        model = QuotationItem
+        fields = [
+            "id", "product", "product_name", "quantity", "unit_price",
+            "tax_rate", "tax_rate_name", "tax_amount", "subtotal", "line_total",
+        ]
+
+
+class QuotationListSerializer(serializers.ModelSerializer):
+    client_name = serializers.SerializerMethodField()
+    total_amount = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    item_count = serializers.IntegerField(source="items.count", read_only=True)
+
+    class Meta:
+        model = Quotation
+        fields = [
+            "id", "client", "client_name", "status", "currency",
+            "valid_until", "notes", "created_date", "total_amount", "item_count",
+        ]
+
+    def get_client_name(self, obj):
+        return f"{obj.client.firstname} {obj.client.lastname}" if obj.client else None
+
+
+class QuotationDetailSerializer(serializers.ModelSerializer):
+    items = QuotationItemSerializer(many=True, read_only=True)
+    client_name = serializers.SerializerMethodField()
+    total_amount = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Quotation
+        fields = [
+            "id", "client", "client_name", "status", "currency",
+            "valid_until", "notes", "created_date", "created_by", "created_by_name",
+            "converted_transaction", "items", "total_amount",
+        ]
+
+    def get_client_name(self, obj):
+        return f"{obj.client.firstname} {obj.client.lastname}" if obj.client else None
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return f"{obj.created_by.firstname} {obj.created_by.lastname}"
+        return None
+
+
+class QuotationCreateSerializer(serializers.ModelSerializer):
+    items = QuotationItemSerializer(many=True)
+
+    class Meta:
+        model = Quotation
+        fields = ["client", "currency", "valid_until", "notes", "items"]
+
+    def create(self, validated_data):
+        items_data = validated_data.pop("items")
+        quotation = Quotation.objects.create(**validated_data)
+        for item_data in items_data:
+            item_data.pop("product_name", None)
+            item_data.pop("subtotal", None)
+            item_data.pop("line_total", None)
+            item_data.pop("tax_rate_name", None)
+            QuotationItem.objects.create(quotation=quotation, **item_data)
+        return quotation
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop("items", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if items_data is not None:
+            instance.items.all().delete()
+            for item_data in items_data:
+                item_data.pop("product_name", None)
+                item_data.pop("subtotal", None)
+                item_data.pop("line_total", None)
+                item_data.pop("tax_rate_name", None)
+                QuotationItem.objects.create(quotation=instance, **item_data)
+        return instance
 
 
 class SalesReportSerializer(serializers.Serializer):

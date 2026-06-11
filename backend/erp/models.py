@@ -9,6 +9,7 @@ from erp.constants import (
     AccountType,
     Currency,
     PaymentMethod,
+    QuotationStatus,
     TransactionStatus,
     TransactionType,
     UserRole,
@@ -361,6 +362,61 @@ class Product_Names(models.Model):
 
     def __str__(self):
         return f"{self.product_name}, {self.category}"
+
+
+class Quotation(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="quotations")
+    status = models.CharField(max_length=20, choices=QuotationStatus.CHOICES, default=QuotationStatus.DRAFT)
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES, default=Currency.DEFAULT)
+    valid_until = models.DateField()
+    notes = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey("erp.User", on_delete=models.SET_NULL, null=True, related_name="quotations")
+    created_date = models.DateTimeField(auto_now_add=True)
+    converted_transaction = models.ForeignKey(
+        "Transaction", on_delete=models.SET_NULL, null=True, blank=True, related_name="source_quotation"
+    )
+
+    class Meta:
+        db_table = "quotation"
+        verbose_name = "Quotation"
+        verbose_name_plural = "Quotations"
+        ordering = ["-created_date"]
+        indexes = [
+            models.Index(fields=["status"], name="quotation_status_idx"),
+            models.Index(fields=["-created_date"], name="quotation_created_idx"),
+        ]
+
+    def __str__(self):
+        return f"QUO-{self.id:06d} ({self.status})"
+
+    @property
+    def total_amount(self):
+        return sum(item.line_total for item in self.items.all())
+
+
+class QuotationItem(models.Model):
+    quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="quotation_items")
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    unit_price = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    tax_rate = models.ForeignKey(TaxRate, null=True, blank=True, on_delete=models.SET_NULL)
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
+    class Meta:
+        db_table = "quotation_item"
+        verbose_name = "Quotation Item"
+        verbose_name_plural = "Quotation Items"
+
+    @property
+    def subtotal(self):
+        return self.unit_price * self.quantity
+
+    @property
+    def line_total(self):
+        return self.subtotal + self.tax_amount
+
+    def __str__(self):
+        return f"{self.product.name} x{self.quantity}"
 
 
 class Sales(models.Model):
