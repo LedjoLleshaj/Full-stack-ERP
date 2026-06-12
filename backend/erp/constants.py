@@ -11,14 +11,16 @@ class TransactionStatus:
     PARTIAL = "PARTIAL"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
-    
+    REFUNDED = "REFUNDED"
+
     CHOICES = [
         (PENDING, "Pending"),
         (PARTIAL, "Partial"),
         (COMPLETED, "Completed"),
         (CANCELLED, "Cancelled"),
+        (REFUNDED, "Refunded"),
     ]
-    
+
     # Statuses that indicate unpaid or partially paid
     UNPAID_STATUSES = [PENDING, PARTIAL]
 
@@ -27,10 +29,12 @@ class TransactionType:
     """Type values for Transaction records."""
     PURCHASE = "PURCHASE"
     SALE = "SALE"
-    
+    RETURN = "RETURN"
+
     CHOICES = [
         (PURCHASE, "Purchase"),
         (SALE, "Sale"),
+        (RETURN, "Return"),
     ]
 
 
