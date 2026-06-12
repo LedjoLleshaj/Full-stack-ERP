@@ -14,6 +14,7 @@ from .api import (
     quotations,
     reports,
     restocks,
+    returns,
     sales,
     suppliers,
     transactions,
@@ -147,6 +148,12 @@ urlpatterns = [
     path("delete-quotation/<str:pk>", quotations.delete_quotation),
     path("quotation/<str:pk>/status", quotations.update_status),
     path("quotation/<str:pk>/convert", quotations.convert_to_sale),
+
+    # ======== RETURNS ========
+    path("create-return/<str:pk>", returns.create_return),
+    path("returns", returns.get_returns),
+    path("return/<str:pk>", returns.get_return),
+    path("sale-returns/<str:sale_id>", returns.get_sale_returns),
 
     # ======== EXCHANGE RATES ========
     path("exchange-rates", exchange_rates.get_exchange_rates),

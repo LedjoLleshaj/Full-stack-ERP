@@ -201,6 +201,13 @@ class Transaction(models.Model):
     completed_date = models.DateTimeField(null=True, blank=True)
     invoice_number = models.CharField(max_length=50, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
+    original_transaction = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='returns',
+    )
 
     class Meta:
         db_table = "transaction"

@@ -12,7 +12,8 @@ from django.db import transaction as db_transaction
 from django.db.models import Sum
 from django.utils import timezone
 
-from erp.models import Account, Payment, Transaction
+from erp.constants import TransactionStatus, TransactionType
+from erp.models import Account, Payment, Sales, Transaction
 from erp.utils.currency import get_exchange_rate
 
 
@@ -525,3 +526,156 @@ class PaymentService:
             
         transaction.save()
         return transaction
+
+    @classmethod
+    @db_transaction.atomic
+    def process_return(
+        cls,
+        original_transaction: Transaction,
+        return_items: list[dict],
+        refund_method: str,
+        refund_currency: str,
+        user,
+    ) -> dict[str, Any]:
+        from erp.services.inventory_service import InventoryService
+
+        if original_transaction.transaction_type != TransactionType.SALE:
+            raise PaymentError("Returns can only be created for sale transactions")
+
+        if original_transaction.status in (TransactionStatus.CANCELLED, TransactionStatus.REFUNDED):
+            raise PaymentError(
+                f"Cannot return a {original_transaction.status.lower()} transaction"
+            )
+
+        if not return_items:
+            raise PaymentError("No return items provided")
+
+        total_return_value = Decimal("0")
+        return_sales_data = []
+        inventory_restored = []
+
+        for item in return_items:
+            sale_line = Sales.objects.select_related("prod", "tax_rate").get(
+                id=item["sale_line_id"]
+            )
+
+            if sale_line.transaction_id != original_transaction.id:
+                raise PaymentError(
+                    f"Sale line {sale_line.id} does not belong to this transaction"
+                )
+
+            return_qty = Decimal(str(item["quantity"]))
+            if return_qty <= 0:
+                raise PaymentError("Return quantity must be greater than zero")
+
+            already_returned = Sales.objects.filter(
+                transaction__original_transaction=original_transaction,
+                transaction__transaction_type=TransactionType.RETURN,
+                prod=sale_line.prod,
+            ).aggregate(total=Sum("quantity"))["total"] or 0
+
+            max_returnable = sale_line.quantity - already_returned
+            if return_qty > max_returnable:
+                raise PaymentError(
+                    f"Cannot return {return_qty} of {sale_line.prod.name}. "
+                    f"Max returnable: {max_returnable}"
+                )
+
+            subtotal = sale_line.prod_price * return_qty
+            tax_amount = Decimal("0")
+            if sale_line.tax_rate and sale_line.tax_rate.rate > 0:
+                tax_amount = (subtotal * sale_line.tax_rate.rate / Decimal("100")).quantize(
+                    Decimal("0.01")
+                )
+            line_return_value = subtotal + tax_amount
+
+            total_return_value += line_return_value
+            return_sales_data.append({
+                "prod": sale_line.prod,
+                "prod_price": sale_line.prod_price,
+                "quantity": return_qty,
+                "tax_rate": sale_line.tax_rate,
+                "tax_amount": tax_amount,
+            })
+            inventory_restored.append({
+                "product": sale_line.prod.name,
+                "quantity": int(return_qty),
+            })
+
+        return_transaction = Transaction.objects.create(
+            transaction_type=TransactionType.RETURN,
+            client=original_transaction.client,
+            total_amount=total_return_value,
+            currency=original_transaction.currency,
+            status=TransactionStatus.COMPLETED,
+            original_transaction=original_transaction,
+            notes=f"Return against transaction #{original_transaction.id}",
+        )
+
+        for data in return_sales_data:
+            Sales.objects.create(
+                transaction=return_transaction,
+                prod=data["prod"],
+                prod_price=data["prod_price"],
+                user=user,
+                quantity=data["quantity"],
+                tax_rate=data["tax_rate"],
+                tax_amount=data["tax_amount"],
+            )
+            InventoryService.add_inventory(data["prod"], data["quantity"])
+
+        total_paid = cls.calculate_total_paid(original_transaction)
+        original_transaction.total_amount -= total_return_value
+        new_total = original_transaction.total_amount
+
+        refund_amount = max(Decimal("0"), total_paid - new_total)
+
+        if refund_amount > 0:
+            account = cls.get_account_for_payment(refund_method, refund_currency)
+
+            if refund_currency != original_transaction.currency:
+                exchange_rate = get_exchange_rate(
+                    original_transaction.currency, refund_currency
+                )
+                refund_in_payment_currency = (refund_amount * exchange_rate).quantize(
+                    Decimal("0.01")
+                )
+            else:
+                exchange_rate = Decimal("1.0")
+                refund_in_payment_currency = refund_amount
+
+            Payment.objects.create(
+                transaction=return_transaction,
+                account=account,
+                amount=refund_amount,
+                currency=original_transaction.currency,
+                original_amount=refund_in_payment_currency if refund_currency != original_transaction.currency else None,
+                original_currency=refund_currency if refund_currency != original_transaction.currency else None,
+                exchange_rate=exchange_rate if refund_currency != original_transaction.currency else None,
+                payment_method=refund_method,
+                notes=f"Refund for return #{return_transaction.id}",
+            )
+
+            account.current_balance -= refund_in_payment_currency
+            account.save()
+
+        tolerance = Decimal("0.01")
+        if new_total <= tolerance:
+            original_transaction.status = TransactionStatus.REFUNDED
+            original_transaction.total_amount = Decimal("0.00")
+        elif total_paid >= new_total - tolerance:
+            original_transaction.status = TransactionStatus.COMPLETED
+        elif total_paid > tolerance:
+            original_transaction.status = TransactionStatus.PARTIAL
+        else:
+            original_transaction.status = TransactionStatus.PENDING
+
+        original_transaction.save()
+
+        return {
+            "return_transaction_id": return_transaction.id,
+            "return_value": float(total_return_value),
+            "refund_amount": float(refund_amount),
+            "inventory_restored": inventory_restored,
+            "original_transaction_status": original_transaction.status,
+        }

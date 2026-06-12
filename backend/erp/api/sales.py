@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Sum
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -68,7 +69,10 @@ def getSale(request, pk):
 @api_error_handler
 def getProductsFromSales(request):
     # Optimized query: load all related data in ONE query
-    sales = Sales.objects.select_related(
+    # Exclude RETURN transactions — only show original sales
+    sales = Sales.objects.filter(
+        transaction__transaction_type=TransactionType.SALE
+    ).select_related(
         "prod",
         "transaction",
         "transaction__client",
@@ -420,7 +424,47 @@ def getSaleDetails(request, pk):
             "remaining": float(transaction.total_amount) - total_paid,
             "payment_count": len(payments),
         }
-    
+
+        # Get linked returns
+        return_txs = Transaction.objects.filter(
+            original_transaction=transaction,
+            transaction_type=TransactionType.RETURN,
+        ).order_by("-created_date")
+
+        returns_data = []
+        for ret in return_txs:
+            ret_items = Sales.objects.filter(transaction=ret).select_related("prod")
+            ret_payments = Payment.objects.filter(transaction=ret)
+            refund = sum(float(p.amount) for p in ret_payments)
+            returns_data.append({
+                "id": ret.id,
+                "return_date": ret.created_date.isoformat(),
+                "return_value": float(ret.total_amount),
+                "refund_amount": refund,
+                "notes": ret.notes,
+                "items": [
+                    {
+                        "product_name": s.prod.name,
+                        "quantity": s.quantity,
+                        "unit_price": float(s.prod_price),
+                    }
+                    for s in ret_items
+                ],
+            })
+        response_data["returns"] = returns_data
+
+        # Already-returned quantities per product
+        already_returned = {}
+        sale_lines = Sales.objects.filter(transaction=transaction)
+        for sl in sale_lines:
+            returned_qty = Sales.objects.filter(
+                transaction__original_transaction=transaction,
+                transaction__transaction_type=TransactionType.RETURN,
+                prod=sl.prod,
+            ).aggregate(total=Sum("quantity"))["total"] or 0
+            already_returned[str(sl.prod_id)] = returned_qty
+        response_data["already_returned"] = already_returned
+
     return Response(response_data)
 
 

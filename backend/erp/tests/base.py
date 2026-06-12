@@ -101,3 +101,18 @@ class ErpTestCase(TestCase):
             quantity=quantity,
         )
         return sale
+
+    def create_return(self, sale, quantity=None):
+        """Create a return for a sale using PaymentService."""
+        from erp.services.payment_service import PaymentService
+
+        if quantity is None:
+            quantity = sale.quantity
+
+        return PaymentService.process_return(
+            original_transaction=sale.transaction,
+            return_items=[{"sale_line_id": sale.id, "quantity": quantity}],
+            refund_method="CASH",
+            refund_currency=sale.transaction.currency,
+            user=self.user,
+        )
