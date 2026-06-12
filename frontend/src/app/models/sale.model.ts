@@ -134,6 +134,8 @@ export interface SaleDetails {
   transaction?: TransactionInfo;
   payments: PaymentInfo[];
   payment_summary?: PaymentSummary;
+  returns?: ReturnInfo[];
+  already_returned?: { [productId: string]: number };
 }
 
 export interface SaleUpdateResponse {
@@ -155,4 +157,34 @@ export interface SaleDeleteResponse {
   payments_reversed: number;
   total_reversed: number;
   accounts_affected: number[];
+}
+
+export interface ReturnItem {
+  sale_line_id: number;
+  quantity: number;
+}
+
+export interface ReturnRequest {
+  items: ReturnItem[];
+  refund_method: 'CASH' | 'CARD';
+  refund_currency: string;
+  notes?: string;
+}
+
+export interface ReturnResponse {
+  message: string;
+  return_transaction_id: number;
+  return_value: number;
+  refund_amount: number;
+  inventory_restored: { product: string; quantity: number }[];
+  original_transaction_status: string;
+}
+
+export interface ReturnInfo {
+  id: number;
+  return_date: string;
+  return_value: number;
+  refund_amount: number;
+  items: { product_name: string; quantity: number; unit_price: number }[];
+  notes?: string;
 }

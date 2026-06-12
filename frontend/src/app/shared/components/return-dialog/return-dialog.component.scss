@@ -1,0 +1,64 @@
+.return-items {
+  margin-bottom: 16px;
+}
+
+.return-item {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .product-name {
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    .item-info {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  .quantity-field {
+    width: 100%;
+  }
+}
+
+.refund-options {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+.notes-field {
+  width: 100%;
+}
+
+.return-preview {
+  margin-top: 16px;
+  padding-top: 16px;
+
+  .preview-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+
+    &.refund-row {
+      .refund-amount {
+        color: #d32f2f;
+        font-size: 16px;
+      }
+    }
+  }
+}

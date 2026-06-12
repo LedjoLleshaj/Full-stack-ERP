@@ -29,6 +29,8 @@ export const environment = {
     getLastSoldPrice: '/last-sold-price',
     report: '/report/sales/',
     invoice: '/transaction/',
+    createReturn: '/create-return/',
+    getSaleReturns: '/sale-returns/',
   },
   clients: {
     getAll: '/clients',
@@ -67,4 +69,6 @@ export const environment = {
   getSaleDetails: '/sale-details/',
   dailyProfit: '/daily-profit',
   invoice: '/transaction/',
+  createReturn: '/create-return/',
+  getSaleReturns: '/sale-returns/',
 };

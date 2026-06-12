@@ -30,6 +30,10 @@
           <mat-icon>picture_as_pdf</mat-icon>
           Faturë
         </button>
+        <button *ngIf="authService.canWrite() && canReturn()" mat-stroked-button color="warn" (click)="onReturn()" class="action-btn return-btn">
+          <mat-icon>assignment_return</mat-icon>
+          Kthe
+        </button>
         <button *ngIf="authService.canWrite()" mat-stroked-button color="primary" (click)="onEdit()" class="action-btn edit-btn">
           <mat-icon>edit</mat-icon>
           Modifiko
@@ -212,6 +216,36 @@
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Returns Section -->
+    <mat-card class="returns-card" *ngIf="saleDetails.returns && saleDetails.returns.length > 0">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>assignment_return</mat-icon>
+        <mat-card-title>Kthimet ({{ saleDetails.returns.length }})</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="return-entry" *ngFor="let ret of saleDetails.returns">
+          <div class="return-header">
+            <span class="return-date">{{ ret.return_date | albanianDate:'datetime' }}</span>
+            <span class="return-value">-{{ formatCurrency(ret.return_value, saleDetails.transaction?.currency || 'EUR') }}</span>
+          </div>
+          <div class="return-items-list">
+            <div *ngFor="let item of ret.items" class="return-item-row">
+              <span>{{ item.product_name }}</span>
+              <span>{{ item.quantity }} kg × {{ formatCurrency(item.unit_price, saleDetails.transaction?.currency || 'EUR') }}</span>
+            </div>
+          </div>
+          <div class="return-refund" *ngIf="ret.refund_amount > 0">
+            <mat-icon>payments</mat-icon>
+            <span>Rimbursim: {{ formatCurrency(ret.refund_amount, saleDetails.transaction?.currency || 'EUR') }}</span>
+          </div>
+          <div class="return-notes" *ngIf="ret.notes">
+            <mat-icon>notes</mat-icon>
+            <span>{{ ret.notes }}</span>
+          </div>
+        </div>
       </mat-card-content>
     </mat-card>
 

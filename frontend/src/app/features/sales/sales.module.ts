@@ -10,6 +10,7 @@ import { RestocksTableComponent } from '../../shared/components/restocks-table/r
 import { SalesViewComponent } from './views/sales-view/sales-view.component';
 import { AddSaleViewComponent } from './views/add-sale-view/add-sale-view.component';
 import { SaleDetailsViewComponent } from './views/sale-details-view/sale-details-view.component';
+import { ReturnDialogComponent } from '../../shared/components/return-dialog/return-dialog.component';
 
 // Material modules needed
 import { MatTableModule } from '@angular/material/table';
@@ -30,6 +31,8 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 // Shared pipes
@@ -46,6 +49,7 @@ const routes: Routes = [
     SalesViewComponent,
     AddSaleViewComponent,
     SaleDetailsViewComponent,
+    ReturnDialogComponent,
   ],
   imports: [
     CommonModule,
@@ -71,6 +75,8 @@ const routes: Routes = [
     MatCheckboxModule,
     MatDividerModule,
     MatProgressBarModule,
+    MatDialogModule,
+    MatTooltipModule,
     // Standalone components
     SalesTableComponent,
     // Pipes

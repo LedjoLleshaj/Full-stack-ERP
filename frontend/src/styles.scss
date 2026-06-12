@@ -190,3 +190,29 @@ mat-card {
   @apply text-xs font-medium;
   @apply ring-1 ring-inset;
 }
+
+// Status badge styles
+.status-completed {
+  background-color: #4caf50;
+  color: white;
+}
+
+.status-partial {
+  background-color: #ff9800;
+  color: white;
+}
+
+.status-pending {
+  background-color: #f44336;
+  color: white;
+}
+
+.status-cancelled {
+  background-color: #9e9e9e;
+  color: white;
+}
+
+.status-refunded {
+  background-color: #7c4dff;
+  color: white;
+}

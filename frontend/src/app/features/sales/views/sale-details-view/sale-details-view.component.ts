@@ -9,7 +9,8 @@ import { ProductService } from "src/app/shared/services/product-api/product.serv
 import { MatDialog } from "@angular/material/dialog";
 import { SaleEditDialogComponent } from "src/app/shared/components/sale-edit-dialog/sale-edit-dialog.component";
 import { DeleteConfirmationDialogComponent } from "src/app/shared/components/delete-confirmation-dialog/delete-confirmation-dialog.component";
-import { SaleDetails, PaymentRequest } from "../../../../models/sale.model";
+import { SaleDetails, PaymentRequest, ReturnRequest } from "../../../../models/sale.model";
+import { ReturnDialogComponent, ReturnDialogData } from 'src/app/shared/components/return-dialog/return-dialog.component';
 import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
 import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
 import { AuthApiService } from "src/app/shared/services/auth-api/auth-api.service";
@@ -457,6 +458,69 @@ export class SaleDetailsViewComponent implements OnInit {
           }
         });
       }
+    });
+  }
+
+  canReturn(): boolean {
+    if (!this.saleDetails?.transaction) return false;
+    const status = this.saleDetails.transaction.status;
+    return status !== 'CANCELLED' && status !== 'REFUNDED';
+  }
+
+  onReturn(): void {
+    if (!this.saleDetails) return;
+
+    const alreadyReturned = this.saleDetails.already_returned || {};
+
+    const dialogData: ReturnDialogData = {
+      saleId: this.saleDetails.id,
+      items: [{
+        sale_line_id: this.saleDetails.id,
+        product_name: this.saleDetails.product.name,
+        original_quantity: this.saleDetails.quantity,
+        already_returned: alreadyReturned[String(this.saleDetails.product.id)] || 0,
+        unit_price: this.saleDetails.prod_price,
+        currency: this.saleDetails.transaction?.currency || 'EUR',
+      }],
+      transactionCurrency: this.saleDetails.transaction?.currency || 'EUR',
+      totalPaid: this.saleDetails.payment_summary?.total_paid || 0,
+      totalAmount: this.saleDetails.payment_summary?.total_amount || 0,
+    };
+
+    const dialogRef = this.dialog.open(ReturnDialogComponent, {
+      width: '600px',
+      data: dialogData,
+    });
+
+    dialogRef.afterClosed().subscribe((result: ReturnRequest | null) => {
+      if (result) {
+        this.processReturn(result);
+      }
+    });
+  }
+
+  private processReturn(returnRequest: ReturnRequest): void {
+    this.isLoading = true;
+    this.salesService.createReturn(this.saleId, returnRequest).subscribe({
+      next: (response) => {
+        const refundMsg = response.refund_amount > 0
+          ? ` Rimbursim: ${response.refund_amount.toFixed(2)} ${this.saleDetails?.transaction?.currency || 'EUR'}`
+          : '';
+        this.snackBar.open(
+          `Kthimi u regjistrua me sukses!${refundMsg}`,
+          'OK',
+          { duration: 5000 }
+        );
+        this.loadSaleDetails();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.snackBar.open(
+          err?.error?.error || 'Gabim gjatë regjistrimit të kthimit',
+          'OK',
+          { duration: 5000 }
+        );
+      },
     });
   }
 }

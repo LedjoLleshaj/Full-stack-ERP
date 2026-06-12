@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
-import { Sale, SaleResponse, SaleCreateResponse, PaymentRequest, PaymentResponse, SaleDetails, SaleUpdateResponse, SaleDeleteResponse } from "src/app/models/sale.model";
+import { Sale, SaleResponse, SaleCreateResponse, PaymentRequest, PaymentResponse, SaleDetails, SaleUpdateResponse, SaleDeleteResponse, ReturnRequest, ReturnResponse, ReturnInfo } from "src/app/models/sale.model";
 import { BaseApiService } from "../base-api.service";
 
 @Injectable({
@@ -92,6 +92,28 @@ export class SalesApiService extends BaseApiService {
   deleteSale(saleId: number): Observable<SaleDeleteResponse> {
     return this.http.delete<SaleDeleteResponse>(
       `${this.apiUrl}/delete-sale/${saleId}`
+    );
+  }
+
+  /**
+   * Create a return for a sale
+   * @param saleId - ID of the sale to return
+   * @param data - Return request data
+   */
+  createReturn(saleId: number, data: ReturnRequest): Observable<ReturnResponse> {
+    return this.http.post<ReturnResponse>(
+      `${this.apiUrl}${environment.createReturn}${saleId}`,
+      data
+    );
+  }
+
+  /**
+   * Get returns for a sale
+   * @param saleId - ID of the sale
+   */
+  getSaleReturns(saleId: number): Observable<ReturnInfo[]> {
+    return this.http.get<ReturnInfo[]>(
+      `${this.apiUrl}${environment.getSaleReturns}${saleId}`
     );
   }
 

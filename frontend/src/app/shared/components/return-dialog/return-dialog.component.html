@@ -1,0 +1,82 @@
+<h2 mat-dialog-title>Kthe Produktet</h2>
+
+<mat-dialog-content>
+  <!-- Line items -->
+  <div class="return-items">
+    <div class="return-item" *ngFor="let item of lineItems">
+      <div class="item-header">
+        <span class="product-name">{{ item.product_name }}</span>
+        <span class="item-info">
+          Shitur: {{ item.original_quantity }} kg |
+          Kthyer: {{ item.already_returned }} kg |
+          Max: {{ item.max_returnable }} kg
+        </span>
+      </div>
+      <mat-form-field appearance="outline" class="quantity-field">
+        <mat-label>Sasia për kthim</mat-label>
+        <input
+          matInput
+          type="number"
+          [(ngModel)]="item.return_quantity"
+          [min]="0"
+          [max]="item.max_returnable"
+          step="1"
+        />
+        <span matTextSuffix>kg</span>
+        <mat-hint>Max: {{ item.max_returnable }} kg</mat-hint>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Refund options -->
+  <div class="refund-options">
+    <mat-form-field appearance="outline">
+      <mat-label>Mënyra e Rimbursimit</mat-label>
+      <mat-select [(ngModel)]="refundMethod">
+        <mat-option *ngFor="let method of refundMethods" [value]="method">
+          <mat-icon>{{ method === 'CASH' ? 'money' : 'credit_card' }}</mat-icon>
+          {{ getMethodLabel(method) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Valuta</mat-label>
+      <mat-select [(ngModel)]="refundCurrency">
+        <mat-option *ngFor="let curr of currencies" [value]="curr">{{ curr }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Notes -->
+  <mat-form-field appearance="outline" class="notes-field">
+    <mat-label>Shënime (opsionale)</mat-label>
+    <textarea matInput [(ngModel)]="notes" rows="2"></textarea>
+  </mat-form-field>
+
+  <!-- Preview -->
+  <div class="return-preview" *ngIf="hasReturnItems">
+    <mat-divider></mat-divider>
+    <div class="preview-row">
+      <span>Vlera e kthimit:</span>
+      <strong>{{ returnValue | number:'1.2-2' }} {{ data.transactionCurrency }}</strong>
+    </div>
+    <div class="preview-row refund-row">
+      <span>Rimbursim i vlerësuar:</span>
+      <strong class="refund-amount">{{ estimatedRefund | number:'1.2-2' }} {{ data.transactionCurrency }}</strong>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Anullo</button>
+  <button
+    mat-raised-button
+    color="warn"
+    (click)="onSubmit()"
+    [disabled]="!hasReturnItems"
+  >
+    <mat-icon>assignment_return</mat-icon>
+    Kthe Produktet
+  </button>
+</mat-dialog-actions>

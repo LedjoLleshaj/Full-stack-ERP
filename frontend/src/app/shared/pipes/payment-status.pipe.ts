@@ -13,14 +13,16 @@ export class PaymentStatusPipe implements PipeTransform {
     'COMPLETED': 'Paguar',
     'PARTIAL': 'Pjesërisht',
     'PENDING': 'Pa Paguar',
-    'CANCELLED': 'Anuluar'
+    'CANCELLED': 'Anuluar',
+    'REFUNDED': 'Rimbursuar'
   };
 
   private readonly statusClasses: { [key: string]: string } = {
     'COMPLETED': 'status-completed',
     'PARTIAL': 'status-partial',
     'PENDING': 'status-pending',
-    'CANCELLED': 'status-cancelled'
+    'CANCELLED': 'status-cancelled',
+    'REFUNDED': 'status-refunded'
   };
 
   transform(value: string | null | undefined, format: 'label' | 'class' = 'label'): string {
