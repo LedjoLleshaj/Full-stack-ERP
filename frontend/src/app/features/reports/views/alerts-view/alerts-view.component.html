@@ -11,7 +11,7 @@
       <mat-card-title class="flex items-center gap-2 text-orange-700 dark:text-orange-400">
         <mat-icon class="text-orange-500">inventory_2</mat-icon>
         Stoku i Ulet
-        <span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">(nen {{ lowStockThreshold }} njesi)</span>
+        <span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">(nen nivelin e porosise)</span>
       </mat-card-title>
     </mat-card-header>
     <mat-card-content class="p-0">
@@ -36,19 +36,34 @@
         </ng-container>
 
         <!-- Stock Column -->
-        <ng-container matColumnDef="disponibility">
+        <ng-container matColumnDef="quantity">
           <th mat-header-cell *matHeaderCellDef>Stoku</th>
           <td mat-cell *matCellDef="let product">
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-semibold"
                   [ngClass]="{
-                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': product.disponibility === 0,
-                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400': product.disponibility > 0 && product.disponibility < lowStockThreshold
+                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': product.quantity === 0,
+                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400': product.quantity > 0
                   }">
               <mat-icon class="text-sm" style="font-size: 16px; width: 16px; height: 16px;">
-                {{ product.disponibility === 0 ? 'error' : 'warning' }}
+                {{ product.quantity === 0 ? 'error' : 'warning' }}
               </mat-icon>
-              {{ product.disponibility }} kg
+              {{ product.quantity }} kg
             </span>
+          </td>
+        </ng-container>
+
+        <!-- Reorder Level Column -->
+        <ng-container matColumnDef="reorder_level">
+          <th mat-header-cell *matHeaderCellDef>Niveli i Porosise</th>
+          <td mat-cell *matCellDef="let product">{{ product.reorder_level }} kg</td>
+        </ng-container>
+
+        <!-- Reorder Quantity Column -->
+        <ng-container matColumnDef="reorder_quantity">
+          <th mat-header-cell *matHeaderCellDef>Sasia per Porosi</th>
+          <td mat-cell *matCellDef="let product">
+            <span *ngIf="product.reorder_quantity > 0">{{ product.reorder_quantity }} kg</span>
+            <span *ngIf="product.reorder_quantity === 0" class="text-gray-400">—</span>
           </td>
         </ng-container>
 

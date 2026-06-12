@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
-import { ProductService } from "src/app/shared/services/product-api/product.service";
+import { InventoryService } from "src/app/shared/services/inventory-api/inventory.service";
 import { ClientService } from "src/app/shared/services/clients-api/client.service";
-import { Product } from "../../../../models/product.model";
+import { LowStockProduct } from "../../../../models/low-stock.model";
 import { Client } from "../../../../models/client.model";
 
 @Component({
@@ -9,16 +9,14 @@ import { Client } from "../../../../models/client.model";
   templateUrl: "./alerts-view.component.html",
 })
 export class AlertsViewComponent implements OnInit {
-  lowStockProducts: Product[] = [];
+  lowStockProducts: LowStockProduct[] = [];
   clientsWithDebt: Client[] = [];
-  
-  lowStockThreshold = 5; // Products with stock under 5 units are considered low
 
-  stockColumns: string[] = ['name', 'category', 'disponibility', 'price'];
+  stockColumns: string[] = ['name', 'category', 'quantity', 'reorder_level', 'reorder_quantity', 'price'];
   debtColumns: string[] = ['name', 'city', 'phone', 'unpaidBalance'];
 
   constructor(
-    private productService: ProductService,
+    private inventoryService: InventoryService,
     private clientService: ClientService
   ) {}
 
@@ -28,10 +26,8 @@ export class AlertsViewComponent implements OnInit {
   }
 
   loadLowStockProducts() {
-    this.productService.getProducts().subscribe((products) => {
-      this.lowStockProducts = products.filter(
-        (p) => p.disponibility < this.lowStockThreshold
-      ).sort((a, b) => a.disponibility - b.disponibility);
+    this.inventoryService.getLowStock().subscribe((products) => {
+      this.lowStockProducts = products;
     });
   }
 
