@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
 import { Inventory } from "src/app/models/inventory.model";
+import { LowStockProduct } from "src/app/models/low-stock.model";
 
 import { BaseApiService } from "../base-api.service";
 
@@ -16,5 +17,10 @@ export class InventoryService extends BaseApiService {
 
   updateInventory(data: Inventory): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}${environment.updateInventory}`, data);
+  }
+
+  /** Products at or below their reorder level, most critical first. */
+  getLowStock(): Observable<LowStockProduct[]> {
+    return this.http.get<LowStockProduct[]>(`${this.apiV1Url}/inventory/low-stock/`);
   }
 }

@@ -6,4 +6,6 @@ export interface Product {
   description: string;
   disponibility: number;
   selectedQuantity?: number;
+  reorder_level?: number;
+  reorder_quantity?: number;
 }

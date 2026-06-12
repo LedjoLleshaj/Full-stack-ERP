@@ -8,6 +8,9 @@ import { environment } from 'src/environments/environment';
 export abstract class BaseApiService {
   protected apiUrl = environment.apiUrl;
 
+  /** Root for the modern DRF router (mounted at /api/v1, not under /erp). */
+  protected apiV1Url = environment.apiUrl.replace(/\/erp$/, '') + '/api/v1';
+
   constructor(protected http: HttpClient) {}
 
   /**
