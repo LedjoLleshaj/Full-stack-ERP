@@ -41,8 +41,10 @@ def getProducts(request):
             "price": float(product.price) if product.price else None,
             "description": product.description,
             "disponibility": float(product.disponibility) if product.disponibility else 0,
+            "reorder_level": product.reorder_level,
+            "reorder_quantity": product.reorder_quantity,
         })
-    
+
     return Response(results)
 
 
@@ -118,7 +120,11 @@ def updateProduct(request, pk):
         product.price = data["price"]
     if "description" in data:
         product.description = data["description"]
-    
+    if "reorder_level" in data:
+        product.reorder_level = data["reorder_level"]
+    if "reorder_quantity" in data:
+        product.reorder_quantity = data["reorder_quantity"]
+
     product.save()
     
     # Also update inventory if product name changed (for consistency)

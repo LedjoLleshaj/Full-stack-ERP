@@ -8,6 +8,8 @@ across sales.py, restocks.py, and inventory.py.
 from decimal import Decimal
 
 from django.db import transaction as db_transaction
+from django.db.models import F, IntegerField, OuterRef, QuerySet, Subquery
+from django.db.models.functions import Coalesce
 
 from erp.models import Inventory, Product
 
@@ -151,6 +153,25 @@ class InventoryService:
             return inventory.quantity
         except Inventory.DoesNotExist:
             return 0
+
+    @classmethod
+    def get_low_stock_products(cls) -> QuerySet:
+        """
+        Active products whose on-hand stock is at or below their reorder level.
+
+        Products with no inventory record count as out of stock (quantity 0),
+        so they alert even at the default reorder_level of 0.
+
+        Returns:
+            QuerySet of Product annotated with `stock` (int), most critical first.
+        """
+        stock_subquery = Inventory.objects.filter(prod=OuterRef("pk")).values("quantity")[:1]
+        return (
+            Product.objects.filter(is_active=True)
+            .annotate(stock=Coalesce(Subquery(stock_subquery, output_field=IntegerField()), 0))
+            .filter(stock__lte=F("reorder_level"))
+            .order_by("stock", "name")
+        )
 
     @classmethod
     def check_availability(

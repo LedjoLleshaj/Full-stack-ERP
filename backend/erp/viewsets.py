@@ -1,5 +1,6 @@
 from rest_framework import permissions, viewsets
 from rest_framework import serializers as drf_serializers
+from rest_framework.decorators import action
 
 from erp.models import (
     Account,
@@ -34,6 +35,8 @@ from erp.serializers import (
     TransactionSerializer,
     UserSerializer,
 )
+from erp.services.inventory_service import InventoryService
+from erp.utils.responses import success_response
 
 
 class ExchangeRateSerializer(drf_serializers.ModelSerializer):
@@ -101,6 +104,23 @@ class CategoryViewSet(BaseViewSet):
 class InventoryViewSet(BaseViewSet):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
+
+    @action(detail=False, methods=["get"], url_path="low-stock")
+    def low_stock(self, request):
+        products = InventoryService.get_low_stock_products()
+        data = [
+            {
+                "id": product.id,
+                "name": product.name,
+                "category": product.category,
+                "price": float(product.price),
+                "quantity": product.stock,
+                "reorder_level": product.reorder_level,
+                "reorder_quantity": product.reorder_quantity,
+            }
+            for product in products
+        ]
+        return success_response(data)
 
 
 class SalesViewSet(BaseViewSet):
