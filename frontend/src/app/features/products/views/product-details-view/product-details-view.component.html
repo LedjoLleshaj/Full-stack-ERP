@@ -59,6 +59,16 @@
               <input matInput [(ngModel)]="editForm.description" />
             </mat-form-field>
           </div>
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Niveli i Porosisë (njoftim kur stoku bie nën)</mat-label>
+              <input matInput type="number" step="1" min="0" [(ngModel)]="editForm.reorder_level" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Sasia për Porosi</mat-label>
+              <input matInput type="number" step="1" min="0" [(ngModel)]="editForm.reorder_quantity" />
+            </mat-form-field>
+          </div>
           <div class="form-actions">
             <button mat-raised-button color="primary" (click)="saveEdit()" [disabled]="isSaving">
               <mat-icon>save</mat-icon>

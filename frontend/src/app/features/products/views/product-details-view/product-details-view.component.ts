@@ -43,7 +43,7 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
   isEditing = false;
   isSaving = false;
   isDeleting = false;
-  editForm: { name?: string; category?: string; price?: number; description?: string } = {};
+  editForm: { name?: string; category?: string; price?: number; description?: string; reorder_level?: number; reorder_quantity?: number } = {};
 
   private darkModeSubscription: Subscription | undefined;
 
@@ -314,7 +314,9 @@ export class ProductDetailsViewComponent implements OnInit, OnDestroy {
         name: this.productHistory.product.name,
         category: this.productHistory.product.category,
         price: this.productHistory.product.price,
-        description: this.productHistory.product.description
+        description: this.productHistory.product.description,
+        reorder_level: this.productHistory.product.reorder_level ?? 0,
+        reorder_quantity: this.productHistory.product.reorder_quantity ?? 0
       };
     }
   }
