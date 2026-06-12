@@ -8,15 +8,13 @@ import { BaseApiService } from '../base-api.service';
   providedIn: 'root',
 })
 export class TaxRateApiService extends BaseApiService {
-  private readonly endpoint = '/api/v1/tax-rates/';
-
   constructor(http: HttpClient) {
     super(http);
   }
 
   getTaxRates(): Observable<TaxRate[]> {
     return this.http
-      .get<{ results: TaxRate[] }>(this.apiUrl + this.endpoint)
+      .get<{ results: TaxRate[] }>(`${this.apiV1Url}/tax-rates/`)
       .pipe(map((response) => response.results));
   }
 }
