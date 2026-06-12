@@ -305,6 +305,8 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     description = models.TextField()
     is_active = models.BooleanField(default=True)  # Soft delete flag
+    reorder_level = models.PositiveIntegerField(default=0)  # Alert when stock <= this; 0 = alert only when out of stock
+    reorder_quantity = models.PositiveIntegerField(default=0)  # Suggested quantity to reorder
 
     class Meta:
         db_table = "product"
