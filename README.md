@@ -4,7 +4,7 @@ A multi-currency ERP for small wholesale/retail businesses — inventory, sales,
 
 <p>
   <img alt="Backend" src="https://img.shields.io/badge/backend-Django%205.1%20%2B%20DRF-092E20">
-  <img alt="Frontend" src="https://img.shields.io/badge/frontend-Angular%2016-DD0031">
+  <img alt="Frontend" src="https://img.shields.io/badge/frontend-Angular%2018-DD0031">
   <img alt="Database" src="https://img.shields.io/badge/db-PostgreSQL-336791">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
   <img alt="CI" src="https://github.com/ledjolleshaj/Full-stack-ERP/actions/workflows/ci.yml/badge.svg">
@@ -16,7 +16,7 @@ A multi-currency ERP for small wholesale/retail businesses — inventory, sales,
 
 ```mermaid
 flowchart LR
-    User([User]) -->|HTTPS| NG[Angular 16 SPA<br/>Material · Tailwind · ECharts]
+    User([User]) -->|HTTPS| NG[Angular 18 SPA<br/>Material · Tailwind · ECharts]
     NG -->|/api · HttpOnly JWT cookie| NGINX[nginx]
     NGINX -->|reverse proxy| API[Django 5.1 + DRF<br/>cookie JWT auth]
     API -->|psycopg2| DB[(PostgreSQL)]
@@ -35,64 +35,69 @@ See the full entity-relationship diagram: [`db/ERdatabaseSchema.svg`](db/ERdatab
 
 ## Tech stack
 
-| Layer | Tech |
-|---|---|
-| Frontend | Angular 16, Angular Material, TailwindCSS, ngx-echarts, xlsx |
-| Backend | Django 5.1, Django REST Framework, SimpleJWT (cookie-based), gunicorn |
-| Database | PostgreSQL |
-| Infra | Docker Compose, nginx |
-| Quality | pytest, ruff, GitHub Actions, drf-spectacular (OpenAPI) |
+| Layer    | Tech                                                                  |
+| -------- | --------------------------------------------------------------------- |
+| Frontend | Angular 16, Angular Material, TailwindCSS, ngx-echarts, xlsx          |
+| Backend  | Django 5.1, Django REST Framework, SimpleJWT (cookie-based), gunicorn |
+| Database | PostgreSQL                                                            |
+| Infra    | Docker Compose, nginx                                                 |
+| Quality  | pytest, ruff, GitHub Actions, drf-spectacular (OpenAPI)               |
 
 ## Features & Screenshots
 
 ### Real-time Dashboards
+
 Comprehensive analytics with live data visualization, multi-currency support, and at-a-glance KPIs.
 
 **Sales & Purchase Analytics**
 ![Sales vs Purchases](docs/screenshots/01-dashboard-sales-vs-purchases.png)
-*Track sales and purchase trends over time with detailed revenue breakdown.*
+_Track sales and purchase trends over time with detailed revenue breakdown._
 
 **Top Products & Customers**
 ![Top Products](docs/screenshots/02-dashboard-top-products.png)
-*Identify your best-performing products by inventory moved.*
+_Identify your best-performing products by inventory moved._
 
 ![Top Customers](docs/screenshots/06-dashboard-top-customers.png)
-*Monitor top clients and suppliers with transaction volumes.*
+_Monitor top clients and suppliers with transaction volumes._
 
 ### Payment & Cash Flow Management
+
 Handle multi-currency payments, installments, and cross-currency settlements with auditable ledgers.
 
 **Payment Status Overview**
 ![Payment Status](docs/screenshots/03-dashboard-payment-status.png)
-*Visualize pending, partial, and completed payments at a glance.*
+_Visualize pending, partial, and completed payments at a glance._
 
 **Revenue Breakdown by Category**
 ![Revenue Breakdown](docs/screenshots/05-dashboard-revenue-breakdown.png)
-*Track revenue, costs, and profit margins across product categories.*
+_Track revenue, costs, and profit margins across product categories._
 
 ### Transaction Management
+
 Create, track, and manage sales and purchases with full audit trails.
 
 **Transaction Details**
 ![Transaction Detail](docs/screenshots/09-transaction-detail.png)
-*View complete transaction history with line items, payment status, and client information.*
+_View complete transaction history with line items, payment status, and client information._
 
 ### Client & Product Management
+
 Maintain detailed profiles with transaction history and inventory metrics.
 
 **Client Information**
 ![Client Detail](docs/screenshots/10-client-detail-page.png)
-*Access client details, outstanding balances, transaction history, and purchase patterns.*
+_Access client details, outstanding balances, transaction history, and purchase patterns._
 
 **Product Analytics**
 ![Product Detail](docs/screenshots/11-product-detail-analytics.png)
-*Monitor product pricing trends, inventory levels, sales velocity, and supplier activity.*
+_Monitor product pricing trends, inventory levels, sales velocity, and supplier activity._
 
 ### Inventory & Supplier Tracking
+
 Real-time stock monitoring with low-stock alerts and supplier management.
 
 ![Inventory Overview](docs/screenshots/12-inventory-and-suppliers.png)
-*Track current stock levels, manage suppliers, and monitor active account balances.*
+_Track current stock levels, manage suppliers, and monitor active account balances._
 
 ## Quickstart
 
@@ -109,13 +114,13 @@ python3 -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(64))"   
 docker compose up --build
 ```
 
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:4200 |
-| API (v1) | http://localhost:8080/api/v1/ |
-| API docs (Swagger) | http://localhost:8080/api/docs |
-| API health | http://localhost:8080/erp/health/ |
-| Django admin | http://localhost:8080/admin |
+| Service            | URL                               |
+| ------------------ | --------------------------------- |
+| Frontend           | http://localhost:4200             |
+| API (v1)           | http://localhost:8080/api/v1/     |
+| API docs (Swagger) | http://localhost:8080/api/docs    |
+| API health         | http://localhost:8080/erp/health/ |
+| Django admin       | http://localhost:8080/admin       |
 
 Migrations run automatically on backend startup; a demo admin (`admin` / `adminpass`) is seeded by [`backend/entrypoint.sh`](backend/entrypoint.sh) — change these before any non-local use.
 
