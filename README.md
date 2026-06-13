@@ -124,6 +124,46 @@ docker compose up --build
 
 Migrations run automatically on backend startup; a demo admin (`admin` / `adminpass`) is seeded by [`backend/entrypoint.sh`](backend/entrypoint.sh) — change these before any non-local use.
 
+## Make commands
+
+The project includes a [`Makefile`](Makefile) with shortcuts for common operations. All commands run from the repo root.
+
+| Command | What it does | When to use |
+| --- | --- | --- |
+| `make up` | Builds and starts all Docker containers in detached mode (`docker compose up --build -d`) | **Quick run / first launch.** Spin up the full stack (nginx, API, DB, frontend) to test the app end-to-end. Also use after pulling new changes to rebuild images. |
+| `make down` | Stops and removes all containers (`docker compose down`) | When you're done working and want to free up resources. Preserves database volumes. |
+| `make build` | Builds Docker images without starting containers (`docker compose build`) | When you only need to verify that images build successfully (e.g., after changing a Dockerfile or dependencies) without running the stack. |
+| `make test` | Runs the backend pytest suite (`pytest -v`) using the local `.venv` | **Development.** Run frequently while writing code. Uses SQLite in-memory (via `settings_test`), so no Docker needed. |
+| `make lint` | Runs ruff linter on the backend (`ruff check erp/`) | **Development.** Check for code style issues and errors before committing. |
+| `make lint-fix` | Runs ruff with `--fix` to auto-correct lint issues | **Development.** Quickly fix auto-fixable lint errors (unused imports, formatting, etc.). |
+| `make migrate` | Applies Django migrations using the local `.venv` | **Development.** After creating or pulling new migrations, run this to update your local database schema. |
+| `make shell` | Opens a Django interactive shell | **Development / debugging.** Explore models, test queries, or inspect data interactively via the Django ORM. |
+| `make seed` | Loads `db/seed.sql` into the running Postgres container | **After `make up`.** Populate the database with sample data for manual testing or demos. Requires the Docker stack to be running. |
+| `make clean` | Stops containers **and removes volumes** (`docker compose down -v`) | **Nuclear reset.** Destroys the database and all container state. Use when you want a completely fresh start. |
+
+### Typical workflows
+
+**Quick demo / full-stack test:**
+```bash
+make up        # start everything
+make seed      # load sample data
+# open http://localhost:4200
+make down      # stop when done
+```
+
+**Day-to-day development:**
+```bash
+make test      # run tests (no Docker needed)
+make lint-fix  # auto-fix lint issues
+make migrate   # apply new migrations locally
+```
+
+**Fresh start (wipe database):**
+```bash
+make clean     # stop + delete volumes
+make up        # rebuild from scratch
+```
+
 ## API documentation
 
 Once running, interactive OpenAPI docs are available at **http://localhost:8080/api/docs**.
