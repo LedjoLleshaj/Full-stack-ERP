@@ -1,0 +1,89 @@
+<div class="aging-report-container">
+  <div class="header">
+    <button mat-icon-button routerLink="/reports" matTooltip="Kthehu">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>Raporti i Moshimit te Borxheve</h1>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <mat-card *ngFor="let bucket of buckets" class="summary-card" [ngClass]="getSeverityClass(bucket.key)">
+        <mat-card-header>
+          <mat-card-title>{{ bucket.label }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="count">{{ bucket.summary.count }} transaksione</p>
+          <p class="total">{{ bucket.summary.total | currency:'EUR':'symbol':'1.2-2' }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Grand Total -->
+    <div class="grand-total" *ngIf="grandCount > 0">
+      <span>Totali i borxheve te papaguara: <strong>{{ grandTotal | currency:'EUR':'symbol':'1.2-2' }}</strong> ({{ grandCount }} transaksione)</span>
+    </div>
+
+    <!-- Bucket Tables -->
+    <ng-container *ngFor="let bucket of buckets">
+      <mat-card class="bucket-card" *ngIf="bucket.entries.length > 0" [ngClass]="getSeverityClass(bucket.key)">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>schedule</mat-icon>
+          <mat-card-title>{{ bucket.label }} ({{ bucket.entries.length }})</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <table mat-table [dataSource]="bucket.entries" class="aging-table">
+            <ng-container matColumnDef="invoice_number">
+              <th mat-header-cell *matHeaderCellDef>Fatura</th>
+              <td mat-cell *matCellDef="let row">{{ row.invoice_number || '#' + row.id }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="client">
+              <th mat-header-cell *matHeaderCellDef>Klienti / Furnitori</th>
+              <td mat-cell *matCellDef="let row">{{ row.client || row.supplier || '-' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="total_amount">
+              <th mat-header-cell *matHeaderCellDef>Shuma</th>
+              <td mat-cell *matCellDef="let row" class="amount-cell">
+                {{ row.total_amount | currency:row.currency:'symbol':'1.2-2' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="due_date">
+              <th mat-header-cell *matHeaderCellDef>Afati</th>
+              <td mat-cell *matCellDef="let row">{{ row.due_date }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="days_overdue">
+              <th mat-header-cell *matHeaderCellDef>Dite vonese</th>
+              <td mat-cell *matCellDef="let row" class="days-cell">
+                <span [class.overdue]="row.days_overdue > 0">{{ row.days_overdue }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Statusi</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="status-chip" [ngClass]="row.status.toLowerCase()">{{ row.status }}</span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="navigateToSale(row.id)"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </ng-container>
+
+    <div *ngIf="grandCount === 0" class="empty-state">
+      <mat-icon>check_circle</mat-icon>
+      <p>Nuk ka borxhe te papaguara me afat!</p>
+    </div>
+  </ng-container>
+</div>

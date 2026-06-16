@@ -66,6 +66,7 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
     });
 
     this.saleFormService.loadProducts(this.state);
+    this.saleFormService.loadPaymentTerms(this.state);
   }
 
   ngOnDestroy() {

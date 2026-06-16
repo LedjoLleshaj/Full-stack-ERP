@@ -10,6 +10,7 @@ import { TopProductsViewComponent } from './views/top-products-view/top-products
 import { ProfitByCategoryViewComponent } from './views/profit-by-category-view/profit-by-category-view.component';
 import { TopClientsViewComponent } from './views/top-clients-view/top-clients-view.component';
 import { AlertsViewComponent } from './views/alerts-view/alerts-view.component';
+import { AgingReportViewComponent } from './views/aging-report-view/aging-report-view.component';
 
 // Material
 import { MatButtonModule } from '@angular/material/button';
@@ -18,6 +19,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -38,6 +40,7 @@ const routes: Routes = [
   { path: 'profit-by-category', component: ProfitByCategoryViewComponent, title: 'Profit By Category' },
   { path: 'top-clients', component: TopClientsViewComponent, title: 'Top Clients' },
   { path: 'alerts', component: AlertsViewComponent, title: 'Alerts' },
+  { path: 'aging', component: AgingReportViewComponent, title: 'Aging Report' },
 ];
 
 @NgModule({
@@ -49,6 +52,7 @@ const routes: Routes = [
     ProfitByCategoryViewComponent,
     TopClientsViewComponent,
     AlertsViewComponent,
+    AgingReportViewComponent,
   ],
   imports: [
     CommonModule,
@@ -63,6 +67,7 @@ const routes: Routes = [
     MatTableModule,
     MatProgressSpinnerModule,
     MatDividerModule,
+    MatTooltipModule,
     MatFormFieldModule,
     MatSelectModule,
     MatDatepickerModule,

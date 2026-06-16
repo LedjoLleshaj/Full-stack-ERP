@@ -1,0 +1,137 @@
+.aging-report-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  text-align: center;
+
+  .count {
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.54);
+    margin: 4px 0;
+  }
+
+  .total {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &.severity-ok .total { color: #4caf50; }
+  &.severity-low .total { color: #ff9800; }
+  &.severity-medium .total { color: #f57c00; }
+  &.severity-high .total { color: #e65100; }
+  &.severity-critical .total { color: #d32f2f; }
+}
+
+.grand-total {
+  text-align: center;
+  padding: 12px;
+  margin-bottom: 24px;
+  font-size: 16px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+
+  strong {
+    color: #d32f2f;
+  }
+}
+
+.bucket-card {
+  margin-bottom: 16px;
+
+  &.severity-critical mat-card-header {
+    color: #d32f2f;
+  }
+  &.severity-high mat-card-header {
+    color: #e65100;
+  }
+}
+
+.aging-table {
+  width: 100%;
+}
+
+.amount-cell {
+  font-weight: 500;
+}
+
+.days-cell .overdue {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.status-chip {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.pending {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  &.partial {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+}
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: #4caf50;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  p {
+    font-size: 16px;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
