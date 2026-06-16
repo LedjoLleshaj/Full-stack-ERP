@@ -320,7 +320,9 @@ export class SaleDetailsViewComponent implements OnInit {
               sale_date: this.saleDetails?.sale_date
             },
             products: products,
-            totalPaid: this.saleDetails?.payment_summary?.total_paid || 0
+            totalPaid: this.saleDetails?.payment_summary?.total_paid || 0,
+            discountType: this.saleDetails?.discount_type,
+            discountValue: this.saleDetails?.discount_value || 0
           }
         });
 

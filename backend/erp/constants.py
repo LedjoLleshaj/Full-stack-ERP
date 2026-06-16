@@ -101,6 +101,16 @@ class QuotationStatus:
     CONVERTIBLE = {ACCEPTED}
 
 
+class DiscountType:
+    PERCENT = "PERCENT"
+    FIXED = "FIXED"
+
+    CHOICES = [
+        (PERCENT, "Percentage"),
+        (FIXED, "Fixed Amount"),
+    ]
+
+
 class Currency:
     """Currency codes."""
     EUR = "EUR"

@@ -19,6 +19,9 @@ export interface SaleResponse {
   currency?: string;
   tax_amount?: number;
   tax_rate_name?: string;
+  discount_type?: string | null;
+  discount_value?: number;
+  discount_amount?: number;
 }
 
 export interface Sale {
@@ -29,6 +32,8 @@ export interface Sale {
   quantity: number;
   currency?: string;
   tax_rate_id?: number;
+  discount_type?: string;
+  discount_value?: number;
   payment?: PaymentData; // Optional payment info
 }
 
@@ -47,6 +52,7 @@ export interface SaleCreateResponse {
   transaction_status: string;
   total_amount: number;
   tax_amount: number;
+  discount_amount: number;
 }
 
 export interface PaymentRequest {
@@ -78,6 +84,11 @@ export interface TransactionInfo {
   completed_date?: string;
   invoice_number?: string;
   notes?: string;
+  payment_terms?: number | null;
+  payment_terms_name?: string | null;
+  payment_terms_days?: number | null;
+  due_date?: string | null;
+  is_overdue?: boolean;
 }
 
 export interface PaymentInfo {
@@ -122,6 +133,9 @@ export interface SaleDetails {
   tax_amount: number;
   tax_rate_name: string | null;
   tax_rate_percent: number | null;
+  discount_type: string | null;
+  discount_value: number;
+  discount_amount: number;
   product: {
     id: number;
     name: string;

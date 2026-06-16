@@ -7,11 +7,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from erp.constants import TransactionStatus, TransactionType
+from erp.constants import DiscountType, TransactionStatus, TransactionType
 from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
-from ..models import Payment, Product, Sales, TaxRate, Transaction, User
+from ..models import Payment, PaymentTerms, Product, Sales, TaxRate, Transaction, User
 from ..serializers import (
     ClientSerializer,
     PaymentSerializer,
@@ -123,6 +123,9 @@ def getProductsFromSales(request):
 
         sale_data["tax_amount"] = float(sale.tax_amount)
         sale_data["tax_rate_name"] = sale.tax_rate.name if sale.tax_rate else None
+        sale_data["discount_type"] = sale.discount_type
+        sale_data["discount_value"] = float(sale.discount_value)
+        sale_data["discount_amount"] = float(sale.discount_amount)
 
         results.append(sale_data)
     
@@ -249,18 +252,48 @@ def createSale(request):
     # Calculate total amount
     subtotal = prod_price * quantity
 
-    # Tax calculation
+    # Discount calculation
+    discount_type = request.data.get("discount_type")
+    discount_value = Decimal(str(request.data.get("discount_value", 0)))
+    discount_amount = Decimal("0")
+    if discount_type and discount_value > 0:
+        if discount_type not in (DiscountType.PERCENT, DiscountType.FIXED):
+            return bad_request_response("Invalid discount type. Use PERCENT or FIXED.")
+        if discount_type == DiscountType.PERCENT:
+            if discount_value > 100:
+                return bad_request_response("Percentage discount cannot exceed 100%")
+            discount_amount = (subtotal * discount_value / Decimal("100")).quantize(Decimal("0.01"))
+        else:
+            if discount_value > subtotal:
+                return bad_request_response("Fixed discount cannot exceed subtotal")
+            discount_amount = discount_value
+    else:
+        discount_type = None
+        discount_value = Decimal("0")
+
+    discounted_subtotal = subtotal - discount_amount
+
+    # Tax calculation (on discounted subtotal)
     tax_rate_id = request.data.get("tax_rate_id")
     tax_rate_obj = None
     tax_amount = Decimal("0")
     if tax_rate_id:
         try:
             tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
-            tax_amount = (subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+            tax_amount = (discounted_subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
         except TaxRate.DoesNotExist:
             return bad_request_response("Tax rate not found or inactive")
 
-    total_amount = subtotal + tax_amount
+    total_amount = discounted_subtotal + tax_amount
+
+    # Resolve payment terms
+    payment_terms_id = request.data.get("payment_terms_id")
+    payment_terms = None
+    if payment_terms_id:
+        try:
+            payment_terms = PaymentTerms.objects.get(id=payment_terms_id, is_active=True)
+        except PaymentTerms.DoesNotExist:
+            return bad_request_response("Payment terms not found or inactive")
 
     # Create Transaction record
     transaction = Transaction.objects.create(
@@ -269,6 +302,7 @@ def createSale(request):
         total_amount=total_amount,
         currency=currency,
         status=TransactionStatus.PENDING,
+        payment_terms=payment_terms,
         notes=f"Sale of {quantity} units of {product.name}",
     )
 
@@ -281,6 +315,9 @@ def createSale(request):
         quantity=quantity,
         tax_rate=tax_rate_obj,
         tax_amount=tax_amount,
+        discount_type=discount_type,
+        discount_value=discount_value,
+        discount_amount=discount_amount,
     )
 
     # Use InventoryService to reduce inventory (disallow overselling)
@@ -320,6 +357,7 @@ def createSale(request):
             "transaction_status": transaction.status,
             "total_amount": float(total_amount),
             "tax_amount": float(tax_amount),
+            "discount_amount": float(discount_amount),
         },
         status=status.HTTP_201_CREATED,
     )
@@ -374,6 +412,9 @@ def getSaleDetails(request, pk):
         "tax_amount": float(sale.tax_amount),
         "tax_rate_name": sale.tax_rate.name if sale.tax_rate else None,
         "tax_rate_percent": float(sale.tax_rate.rate) if sale.tax_rate else None,
+        "discount_type": sale.discount_type,
+        "discount_value": float(sale.discount_value),
+        "discount_amount": float(sale.discount_amount),
     }
     
     # Add product info
@@ -509,20 +550,41 @@ def updateSale(request, pk):
         new_product = old_product
     
     # Calculate new total
-    new_total = new_prod_price * new_quantity
+    new_subtotal = new_prod_price * new_quantity
 
-    # Tax calculation
+    # Discount calculation
+    discount_type = request.data.get("discount_type", sale.discount_type)
+    discount_value = Decimal(str(request.data.get("discount_value", sale.discount_value)))
+    discount_amount = Decimal("0")
+    if discount_type and discount_value > 0:
+        if discount_type not in (DiscountType.PERCENT, DiscountType.FIXED):
+            return bad_request_response("Invalid discount type. Use PERCENT or FIXED.")
+        if discount_type == DiscountType.PERCENT:
+            if discount_value > 100:
+                return bad_request_response("Percentage discount cannot exceed 100%")
+            discount_amount = (new_subtotal * discount_value / Decimal("100")).quantize(Decimal("0.01"))
+        else:
+            if discount_value > new_subtotal:
+                return bad_request_response("Fixed discount cannot exceed subtotal")
+            discount_amount = discount_value
+    else:
+        discount_type = None
+        discount_value = Decimal("0")
+
+    discounted_subtotal = new_subtotal - discount_amount
+
+    # Tax calculation (on discounted subtotal)
     tax_rate_id = request.data.get("tax_rate_id")
     tax_rate_obj = None
     tax_amount = Decimal("0")
     if tax_rate_id:
         try:
             tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
-            tax_amount = (new_total * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+            tax_amount = (discounted_subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
         except TaxRate.DoesNotExist:
             return bad_request_response("Tax rate not found or inactive")
 
-    new_total_with_tax = new_total + tax_amount
+    new_total_with_tax = discounted_subtotal + tax_amount
 
     # Handle inventory changes
     if new_prod_id != old_prod_id:
@@ -550,6 +612,9 @@ def updateSale(request, pk):
     sale.user_id = new_user_id
     sale.tax_rate = tax_rate_obj
     sale.tax_amount = tax_amount
+    sale.discount_type = discount_type
+    sale.discount_value = discount_value
+    sale.discount_amount = discount_amount
     sale.save()
     
     # Update transaction details and status via PaymentService

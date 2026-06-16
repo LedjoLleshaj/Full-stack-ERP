@@ -73,6 +73,13 @@
               formatCurrency(saleDetails.prod_price, saleDetails.transaction?.currency || "LEK")
             }}</span>
           </div>
+          <div class="info-row" *ngIf="saleDetails.discount_amount > 0">
+            <span class="label">Zbritja:</span>
+            <span class="value discount">
+              -{{ formatCurrency(saleDetails.discount_amount, saleDetails.transaction?.currency || "LEK") }}
+              <span *ngIf="saleDetails.discount_type === 'PERCENT'">({{ saleDetails.discount_value }}%)</span>
+            </span>
+          </div>
         </mat-card-content>
       </mat-card>
 
@@ -126,6 +133,18 @@
             <span class="value remaining">{{
               formatCurrency(saleDetails.payment_summary?.remaining || 0, saleDetails.transaction?.currency || "LEK")
             }}</span>
+          </div>
+
+          <div class="info-row" *ngIf="saleDetails.transaction?.payment_terms_name">
+            <span class="label">Kushtet:</span>
+            <span class="value">{{ saleDetails.transaction?.payment_terms_name }}</span>
+          </div>
+          <div class="info-row" *ngIf="saleDetails.transaction?.due_date">
+            <span class="label">Afati:</span>
+            <span class="value" [class.overdue]="saleDetails.transaction?.is_overdue">
+              {{ saleDetails.transaction?.due_date | albanianDate }}
+              <mat-icon *ngIf="saleDetails.transaction?.is_overdue" class="overdue-icon">warning</mat-icon>
+            </span>
           </div>
 
           <!-- Payment progress bar -->
