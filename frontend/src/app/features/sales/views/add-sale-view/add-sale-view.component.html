@@ -107,12 +107,56 @@
             </mat-select>
             <mat-icon matPrefix>receipt_long</mat-icon>
           </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Kushtet e Pagesës</mat-label>
+            <mat-select [(ngModel)]="state.selectedPaymentTermsId">
+              <mat-option [value]="null">Pa afat</mat-option>
+              <mat-option *ngFor="let term of state.availablePaymentTerms" [value]="term.id">
+                {{ term.name }} ({{ term.days }} ditë)
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>event</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <!-- Discount -->
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Lloji i Zbritjes</mat-label>
+            <mat-select [(ngModel)]="state.discountType">
+              <mat-option [value]="null">Pa zbritje</mat-option>
+              <mat-option value="PERCENT">Përqindje (%)</mat-option>
+              <mat-option value="FIXED">Vlerë fikse</mat-option>
+            </mat-select>
+            <mat-icon matPrefix>discount</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width" *ngIf="state.discountType">
+            <mat-label>{{ state.discountType === 'PERCENT' ? 'Përqindja (%)' : 'Vlera e zbritjes' }}</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              [max]="state.discountType === 'PERCENT' ? 100 : getTotal()"
+              step="1"
+              [(ngModel)]="state.discountValue"
+            />
+            <span matTextSuffix>{{ state.discountType === 'PERCENT' ? '%' : state.currency }}</span>
+          </mat-form-field>
         </div>
 
         <div class="form-row">
           <div class="total-display">
-            <span class="total-label">Nentotali:</span>
+            <span class="total-label">Nëntotali:</span>
             <span class="total-value">{{ getTotal() | currency:state.currency }}</span>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="getDiscountAmount() > 0">
+          <div class="total-display">
+            <span class="total-label">Zbritja:</span>
+            <span class="total-value discount">-{{ getDiscountAmount() | currency:state.currency }}</span>
           </div>
         </div>
 

@@ -25,6 +25,8 @@ export interface SaleEditDialogData {
   products: Product[];
   totalPaid?: number;
   taxRateId?: number;
+  discountType?: string | null;
+  discountValue?: number;
 }
 
 @Component({
@@ -57,6 +59,8 @@ export class SaleEditDialogComponent implements OnInit {
   readonly ROUNDING_TOLERANCE = 0.10;
   taxRates: TaxRate[] = [];
   selectedTaxRateId: number | null = null;
+  discountType: string | null = null;
+  discountValue: number = 0;
 
   constructor(
     private fb: FormBuilder,
@@ -73,8 +77,10 @@ export class SaleEditDialogComponent implements OnInit {
     this.totalPaid = this.data.totalPaid || 0;
     this.hasPayments = this.totalPaid > 0;
 
-    // Load tax rates
+    // Load tax rates and discount
     this.selectedTaxRateId = this.data.taxRateId || null;
+    this.discountType = this.data.discountType || null;
+    this.discountValue = this.data.discountValue || 0;
     this.taxRateService.getTaxRates().subscribe(rates => {
       this.taxRates = rates;
     });
@@ -128,15 +134,28 @@ export class SaleEditDialogComponent implements OnInit {
     return quantity * price;
   }
 
+  getDiscountAmount(): number {
+    if (!this.discountType || this.discountValue <= 0) return 0;
+    const subtotal = this.calculateTotal();
+    if (this.discountType === 'PERCENT') {
+      return Math.round(subtotal * this.discountValue / 100 * 100) / 100;
+    }
+    return Math.min(this.discountValue, subtotal);
+  }
+
+  getDiscountedSubtotal(): number {
+    return this.calculateTotal() - this.getDiscountAmount();
+  }
+
   getTaxAmount(): number {
     if (!this.selectedTaxRateId) return 0;
     const rate = this.taxRates.find(r => r.id === this.selectedTaxRateId);
     if (!rate) return 0;
-    return Math.round(this.calculateTotal() * parseFloat(rate.rate) / 100 * 100) / 100;
+    return Math.round(this.getDiscountedSubtotal() * parseFloat(rate.rate) / 100 * 100) / 100;
   }
 
   getTotalWithTax(): number {
-    return this.calculateTotal() + this.getTaxAmount();
+    return this.getDiscountedSubtotal() + this.getTaxAmount();
   }
 
   /**
@@ -203,6 +222,9 @@ export class SaleEditDialogComponent implements OnInit {
       if (this.selectedTaxRateId) {
         updateData.tax_rate_id = this.selectedTaxRateId;
       }
+
+      updateData.discount_type = this.discountType;
+      updateData.discount_value = this.discountType ? this.discountValue : 0;
 
       this.dialogRef.close(updateData);
     }

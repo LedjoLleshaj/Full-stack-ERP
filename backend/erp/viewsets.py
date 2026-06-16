@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import permissions, viewsets
 from rest_framework import serializers as drf_serializers
 from rest_framework.decorators import action
@@ -9,6 +10,7 @@ from erp.models import (
     ExchangeRate,
     Inventory,
     Payment,
+    PaymentTerms,
     Product,
     Product_Categories,
     Restock,
@@ -26,6 +28,7 @@ from erp.serializers import (
     ClientSerializer,
     InventorySerializer,
     PaymentSerializer,
+    PaymentTermsSerializer,
     ProductCategoriesSerializer,
     ProductSerializer,
     RestockSerializer,
@@ -76,9 +79,81 @@ class AccountViewSet(BaseViewSet):
     serializer_class = AccountSerializer
 
 
+class PaymentTermsViewSet(BaseViewSet):
+    queryset = PaymentTerms.objects.filter(is_active=True)
+    serializer_class = PaymentTermsSerializer
+
+
 class TransactionViewSet(BaseViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+
+    @action(detail=False, methods=["get"], url_path="overdue")
+    def overdue(self, request):
+        today = timezone.now().date()
+        qs = Transaction.objects.filter(
+            due_date__lt=today,
+            status__in=["PENDING", "PARTIAL"],
+        ).select_related("client", "supplier", "payment_terms")
+        serializer = self.get_serializer(qs, many=True)
+        return success_response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="aging-report")
+    def aging_report(self, request):
+        today = timezone.now().date()
+        unpaid = Transaction.objects.filter(
+            due_date__isnull=False,
+            status__in=["PENDING", "PARTIAL"],
+        ).select_related("client", "supplier", "payment_terms")
+
+        buckets = {
+            "current": [],
+            "1_30": [],
+            "31_60": [],
+            "61_90": [],
+            "over_90": [],
+        }
+        summary = {k: {"count": 0, "total": 0} for k in buckets}
+
+        for txn in unpaid:
+            days_overdue = (today - txn.due_date).days
+            if days_overdue <= 0:
+                bucket = "current"
+            elif days_overdue <= 30:
+                bucket = "1_30"
+            elif days_overdue <= 60:
+                bucket = "31_60"
+            elif days_overdue <= 90:
+                bucket = "61_90"
+            else:
+                bucket = "over_90"
+
+            entry = {
+                "id": txn.id,
+                "invoice_number": txn.invoice_number,
+                "transaction_type": txn.transaction_type,
+                "client": (
+                    f"{txn.client.firstname} {txn.client.lastname}"
+                    if txn.client else None
+                ),
+                "supplier": (
+                    f"{txn.supplier.firstname} {txn.supplier.lastname}"
+                    if txn.supplier else None
+                ),
+                "total_amount": str(txn.total_amount),
+                "currency": txn.currency,
+                "due_date": str(txn.due_date),
+                "days_overdue": max(days_overdue, 0),
+                "status": txn.status,
+            }
+            buckets[bucket].append(entry)
+            summary[bucket]["count"] += 1
+            summary[bucket]["total"] += float(txn.total_amount)
+
+        return success_response({
+            "buckets": buckets,
+            "summary": summary,
+        })
 
 
 class PaymentViewSet(BaseViewSet):

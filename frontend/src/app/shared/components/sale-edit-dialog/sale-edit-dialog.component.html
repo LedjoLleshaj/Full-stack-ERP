@@ -82,11 +82,44 @@
       <mat-icon matSuffix>receipt_long</mat-icon>
     </mat-form-field>
 
+    <!-- Discount -->
+    <div class="discount-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Lloji i Zbritjes</mat-label>
+        <mat-select [(ngModel)]="discountType" [ngModelOptions]="{standalone: true}">
+          <mat-option [value]="null">Pa zbritje</mat-option>
+          <mat-option value="PERCENT">Përqindje (%)</mat-option>
+          <mat-option value="FIXED">Vlerë fikse</mat-option>
+        </mat-select>
+        <mat-icon matSuffix>discount</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="discountType">
+        <mat-label>{{ discountType === 'PERCENT' ? 'Përqindja (%)' : 'Vlera e zbritjes' }}</mat-label>
+        <input matInput
+               type="number"
+               [(ngModel)]="discountValue"
+               [ngModelOptions]="{standalone: true}"
+               min="0"
+               [max]="discountType === 'PERCENT' ? 100 : calculateTotal()"
+               step="1">
+        <span matTextSuffix>{{ discountType === 'PERCENT' ? '%' : editForm.get('currency')?.value }}</span>
+      </mat-form-field>
+    </div>
+
     <!-- Subtotal -->
     <div class="total-display">
-      <span class="total-label">Nentotali:</span>
+      <span class="total-label">Nëntotali:</span>
       <span class="total-value">
         {{ calculateTotal() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
+      </span>
+    </div>
+
+    <!-- Discount Amount -->
+    <div class="total-display" *ngIf="getDiscountAmount() > 0">
+      <span class="total-label">Zbritja:</span>
+      <span class="total-value discount">
+        -{{ getDiscountAmount() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
       </span>
     </div>
 

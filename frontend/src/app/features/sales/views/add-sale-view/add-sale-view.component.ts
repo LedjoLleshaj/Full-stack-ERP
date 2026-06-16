@@ -33,6 +33,7 @@ export class AddSaleViewComponent implements OnInit, OnDestroy {
     this.saleFormService.loadClients(this.state);
     this.saleFormService.loadProducts(this.state);
     this.saleFormService.loadTaxRates(this.state);
+    this.saleFormService.loadPaymentTerms(this.state);
   }
 
   ngOnDestroy() {
@@ -84,6 +85,14 @@ export class AddSaleViewComponent implements OnInit, OnDestroy {
 
   getTaxAmount(): number {
     return this.saleFormService.getTaxAmount(this.state);
+  }
+
+  getDiscountAmount(): number {
+    return this.saleFormService.getDiscountAmount(this.state);
+  }
+
+  getDiscountedSubtotal(): number {
+    return this.saleFormService.getDiscountedSubtotal(this.state);
   }
 
   getTotalWithTax(): number {

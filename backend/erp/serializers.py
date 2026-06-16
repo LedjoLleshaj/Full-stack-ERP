@@ -8,6 +8,7 @@ from .models import (
     Client,
     Inventory,
     Payment,
+    PaymentTerms,
     Product,
     Product_Categories,
     Product_Names,
@@ -48,12 +49,34 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PaymentTermsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentTerms
+        fields = "__all__"
+
+
 class TransactionSerializer(serializers.ModelSerializer):
     created_date = serializers.DateTimeField(read_only=True)
+    payment_terms_name = serializers.CharField(
+        source="payment_terms.name", read_only=True, default=None
+    )
+    payment_terms_days = serializers.IntegerField(
+        source="payment_terms.days", read_only=True, default=None
+    )
+    is_overdue = serializers.SerializerMethodField()
 
     class Meta:
         model = Transaction
         fields = "__all__"
+
+    def get_is_overdue(self, obj):
+        if not obj.due_date:
+            return False
+        from django.utils import timezone
+        return (
+            obj.due_date < timezone.now().date()
+            and obj.status in ("PENDING", "PARTIAL")
+        )
 
 
 class PaymentSerializer(serializers.ModelSerializer):

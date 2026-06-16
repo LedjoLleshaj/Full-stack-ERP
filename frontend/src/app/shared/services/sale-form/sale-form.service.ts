@@ -9,8 +9,10 @@ import { ClientService } from '../clients-api/client.service';
 import { ProductService } from '../product-api/product.service';
 import { SalesApiService } from '../sales-api/sales-api.service';
 import { CurrencyExchangeService } from '../currency-exchange/currency-exchange.service';
+import { PaymentTermsApiService } from '../payment-terms-api/payment-terms-api.service';
 import { TaxRateApiService } from '../tax-rate-api/tax-rate-api.service';
 import { AuthApiService } from '../auth-api/auth-api.service';
+import { PaymentTerms } from '../../../models/payment-terms.model';
 import { TaxRate } from '../../../models/tax-rate.model';
 
 /**
@@ -36,6 +38,10 @@ export interface SaleFormState {
   lastSoldPrice: number | null;
   lastSoldCurrency: string | null;
 
+  // Discount
+  discountType: string | null;
+  discountValue: number;
+
   // Payment options
   paymentMethod: string;
   currency: string;
@@ -43,6 +49,10 @@ export interface SaleFormState {
   // Tax
   availableTaxRates: TaxRate[];
   selectedTaxRateId: number | null;
+
+  // Payment terms
+  availablePaymentTerms: PaymentTerms[];
+  selectedPaymentTermsId: number | null;
 
   // UI state
   isSubmitting: boolean;
@@ -69,6 +79,7 @@ export class SaleFormService {
     private productService: ProductService,
     private saleService: SalesApiService,
     private currencyExchange: CurrencyExchangeService,
+    private paymentTermsService: PaymentTermsApiService,
     private taxRateService: TaxRateApiService,
     private authService: AuthApiService,
     private snackBar: MatSnackBar,
@@ -92,8 +103,12 @@ export class SaleFormService {
       isPaid: true,
       lastSoldPrice: null,
       lastSoldCurrency: null,
+      discountType: null,
+      discountValue: 0,
       availableTaxRates: [],
       selectedTaxRateId: null,
+      availablePaymentTerms: [],
+      selectedPaymentTermsId: null,
       paymentMethod: 'CASH',
       currency: 'EUR',
       isSubmitting: false,
@@ -257,6 +272,18 @@ export class SaleFormService {
     return state.salePrice * state.saleQuantity;
   }
 
+  loadPaymentTerms(state: SaleFormState): void {
+    this.paymentTermsService.getPaymentTerms().subscribe({
+      next: (terms) => {
+        state.availablePaymentTerms = terms;
+        this.stateChange$.next();
+      },
+      error: (err) => {
+        console.error('Failed to fetch payment terms:', err);
+      },
+    });
+  }
+
   /**
    * Loads available tax rates into the state
    */
@@ -276,22 +303,29 @@ export class SaleFormService {
     });
   }
 
-  /**
-   * Calculates tax amount based on selected tax rate
-   */
+  getDiscountAmount(state: SaleFormState): number {
+    if (!state.discountType || state.discountValue <= 0) return 0;
+    const subtotal = this.getTotal(state);
+    if (state.discountType === 'PERCENT') {
+      return Math.round(subtotal * state.discountValue / 100 * 100) / 100;
+    }
+    return Math.min(state.discountValue, subtotal);
+  }
+
+  getDiscountedSubtotal(state: SaleFormState): number {
+    return this.getTotal(state) - this.getDiscountAmount(state);
+  }
+
   getTaxAmount(state: SaleFormState): number {
     if (!state.selectedTaxRateId) return 0;
     const rate = state.availableTaxRates.find(r => r.id === state.selectedTaxRateId);
     if (!rate) return 0;
-    const subtotal = this.getTotal(state);
-    return Math.round(subtotal * parseFloat(rate.rate) / 100 * 100) / 100;
+    const discountedSubtotal = this.getDiscountedSubtotal(state);
+    return Math.round(discountedSubtotal * parseFloat(rate.rate) / 100 * 100) / 100;
   }
 
-  /**
-   * Calculates total including tax
-   */
   getTotalWithTax(state: SaleFormState): number {
-    return this.getTotal(state) + this.getTaxAmount(state);
+    return this.getDiscountedSubtotal(state) + this.getTaxAmount(state);
   }
 
   /**
@@ -347,6 +381,15 @@ export class SaleFormService {
       newSale.tax_rate_id = state.selectedTaxRateId;
     }
 
+    if (state.discountType && state.discountValue > 0) {
+      newSale.discount_type = state.discountType;
+      newSale.discount_value = state.discountValue;
+    }
+
+    if (state.selectedPaymentTermsId) {
+      newSale.payment_terms_id = state.selectedPaymentTermsId;
+    }
+
     if (state.isPaid) {
       newSale.payment = {
         amount: total,
@@ -397,8 +440,11 @@ export class SaleFormService {
     state.isPaid = true;
     state.lastSoldPrice = null;
     state.lastSoldCurrency = null;
+    state.discountType = null;
+    state.discountValue = 0;
     const defaultRate = state.availableTaxRates.find(r => r.is_default);
     state.selectedTaxRateId = defaultRate ? defaultRate.id : null;
+    state.selectedPaymentTermsId = null;
     state.paymentMethod = 'CASH';
     state.currency = 'EUR';
     this.stateChange$.next();

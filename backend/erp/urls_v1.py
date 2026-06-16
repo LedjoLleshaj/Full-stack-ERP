@@ -7,6 +7,7 @@ from erp.viewsets import (
     ClientViewSet,
     ExchangeRateViewSet,
     InventoryViewSet,
+    PaymentTermsViewSet,
     PaymentViewSet,
     ProductViewSet,
     RestockViewSet,
@@ -22,6 +23,7 @@ router.register("users", UserViewSet)
 router.register("suppliers", SupplierViewSet)
 router.register("clients", ClientViewSet)
 router.register("accounts", AccountViewSet)
+router.register("payment-terms", PaymentTermsViewSet)
 router.register("transactions", TransactionViewSet)
 router.register("payments", PaymentViewSet)
 router.register("account-transactions", AccountTransactionViewSet)

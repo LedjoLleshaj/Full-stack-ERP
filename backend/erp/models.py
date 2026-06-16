@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
@@ -178,6 +179,22 @@ class Account(models.Model):
         return f"{self.account_name} ({self.currency})"
 
 
+class PaymentTerms(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    days = models.PositiveIntegerField()
+    description = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "payment_terms"
+        verbose_name = "Payment Terms"
+        verbose_name_plural = "Payment Terms"
+        ordering = ["days"]
+
+    def __str__(self):
+        return self.name
+
+
 class Transaction(models.Model):
     transaction_type = models.CharField(max_length=20, choices=TransactionType.CHOICES)
     supplier = models.ForeignKey(
@@ -208,6 +225,14 @@ class Transaction(models.Model):
         on_delete=models.SET_NULL,
         related_name='returns',
     )
+    payment_terms = models.ForeignKey(
+        PaymentTerms,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="transactions",
+    )
+    due_date = models.DateField(null=True, blank=True)
 
     class Meta:
         db_table = "transaction"
@@ -219,7 +244,16 @@ class Transaction(models.Model):
             models.Index(fields=["status"], name="trans_status_idx"),
             models.Index(fields=["invoice_number"], name="trans_invoice_idx"),
             models.Index(fields=["-created_date"], name="trans_created_idx"),
+            models.Index(fields=["due_date"], name="trans_due_date_idx"),
         ]
+
+    def save(self, **kwargs):
+        if self.payment_terms and not self.due_date:
+            base = self.created_date or timezone.now()
+            if hasattr(base, "date"):
+                base = base.date()
+            self.due_date = base + datetime.timedelta(days=self.payment_terms.days)
+        super().save(**kwargs)
 
     def __str__(self):
         return f"{self.transaction_type} - {self.invoice_number or self.id}"
@@ -442,6 +476,9 @@ class Sales(models.Model):
         TaxRate, null=True, blank=True, on_delete=models.SET_NULL, related_name="sales"
     )
     tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    discount_type = models.CharField(max_length=10, null=True, blank=True)
+    discount_value = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 
     class Meta:
         db_table = "sales"
@@ -469,6 +506,9 @@ class Restock(models.Model):
         TaxRate, null=True, blank=True, on_delete=models.SET_NULL, related_name="restocks"
     )
     tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    discount_type = models.CharField(max_length=10, null=True, blank=True)
+    discount_value = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 
     class Meta:
         db_table = "restock"
