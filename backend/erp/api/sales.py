@@ -11,7 +11,7 @@ from erp.constants import DiscountType, TransactionStatus, TransactionType
 from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
-from ..models import Payment, PaymentTerms, Product, Sales, TaxRate, Transaction, User
+from ..models import Client, Payment, PaymentTerms, Product, Sales, TaxRate, Transaction, User
 from ..serializers import (
     ClientSerializer,
     PaymentSerializer,
@@ -68,67 +68,37 @@ def getSale(request, pk):
 @permission_classes([IsAuthenticated])
 @api_error_handler
 def getProductsFromSales(request):
-    # Optimized query: load all related data in ONE query
-    # Exclude RETURN transactions — only show original sales
-    sales = Sales.objects.filter(
-        transaction__transaction_type=TransactionType.SALE
-    ).select_related(
-        "prod",
-        "transaction",
-        "transaction__client",
-        "user",
-        "tax_rate",
-    ).order_by("-sale_date")
-    
-    # Build response data directly from prefetched objects (no additional queries)
+    """Return sales grouped by transaction (one row per transaction)"""
+    transactions = Transaction.objects.filter(
+        transaction_type=TransactionType.SALE
+    ).select_related("client").prefetch_related("sales__prod").order_by("-created_date")
+
     results = []
-    for sale in sales:
-        sale_data = {
-            "id": sale.id,
-            "prod": sale.prod_id,
-            "quantity": float(sale.quantity),
-            "prod_price": float(sale.prod_price),
-            "sale_date": sale.sale_date.isoformat() if sale.sale_date else None,
-            "transaction": sale.transaction_id,
-            "user": sale.user_id,
-        }
-        
-        # Product info (already loaded via select_related)
-        if sale.prod:
-            sale_data["product"] = {
-                "id": sale.prod.id,
-                "name": sale.prod.name,
-                "category": sale.prod.category,
-                "price": float(sale.prod.price) if sale.prod.price else None,
-                "description": sale.prod.description,
-            }
-        else:
-            sale_data["product"] = {"error": "Product not found"}
-        
-        # Client info (already loaded via select_related on transaction__client)
-        if sale.transaction and sale.transaction.client:
-            client = sale.transaction.client
-            sale_data["client"] = {
-                "id": client.id,
-                "name": f"{client.firstname} {client.lastname}",
-                "phone": client.phone,
-                "address": client.address,
-            }
-            sale_data["payment_status"] = sale.transaction.status
-            sale_data["currency"] = sale.transaction.currency
-        else:
-            sale_data["client"] = {"error": "No client associated with transaction"}
-            sale_data["payment_status"] = None
-            sale_data["currency"] = None
+    for tx in transactions:
+        sale_lines = list(tx.sales.all())
+        if not sale_lines:
+            continue
 
-        sale_data["tax_amount"] = float(sale.tax_amount)
-        sale_data["tax_rate_name"] = sale.tax_rate.name if sale.tax_rate else None
-        sale_data["discount_type"] = sale.discount_type
-        sale_data["discount_value"] = float(sale.discount_value)
-        sale_data["discount_amount"] = float(sale.discount_amount)
+        product_names = ", ".join(s.prod.name for s in sale_lines if s.prod)
+        if len(product_names) > 60:
+            product_names = product_names[:57] + "..."
 
-        results.append(sale_data)
-    
+        results.append({
+            "transaction_id": tx.id,
+            "products": product_names,
+            "item_count": len(sale_lines),
+            "total_amount": float(tx.total_amount),
+            "currency": tx.currency,
+            "sale_date": tx.created_date.isoformat(),
+            "payment_status": tx.status,
+            "client": {
+                "id": tx.client.id,
+                "name": f"{tx.client.firstname} {tx.client.lastname}",
+                "phone": tx.client.phone,
+                "address": tx.client.address,
+            } if tx.client else {"name": "N/A", "phone": "", "address": ""},
+        })
+
     return Response(results)
 
 
@@ -219,74 +189,27 @@ def paySale(request, pk):
 @permission_classes([IsStaffOrAbove])
 @api_error_handler
 def createSale(request):
-    """Create a new sale with transaction and optional payment"""
+    """Create a new sale with multiple line items and optional payment"""
+    from django.db import transaction as db_transaction
+
     from erp.services.inventory_service import InventoryError, InventoryService
     from erp.services.payment_service import PaymentError, PaymentService
-    
-    # Extract data from request
+
     client_id = request.data.get("client_id")
-    product_id = request.data.get("prod")
-    prod_price = Decimal(str(request.data.get("prod_price")))
-    quantity = Decimal(str(request.data.get("quantity")))
-    user_id = request.data.get("user")
+    items = request.data.get("items", [])
     currency = request.data.get("currency", "EUR")
-    payment_data = request.data.get("payment")  # Optional payment info
+    payment_data = request.data.get("payment")
+    user_id = request.user.id
 
-    # Validate inputs
-    if not all([client_id, product_id, prod_price, quantity, user_id]):
-        return bad_request_response("Missing required fields: client_id, prod, prod_price, quantity, user")
-
-    if quantity <= 0:
-        return bad_request_response("Quantity must be greater than zero")
-
-    # Check if product exists
+    if not client_id:
+        return bad_request_response("Missing required field: client_id")
     try:
-        product = Product.objects.get(id=product_id)
-    except ObjectDoesNotExist:
-        return not_found_response("Product")
-    
-    # Use InventoryService to check availability
-    if not InventoryService.check_availability(product, quantity):
-        return bad_request_response("Not enough product in inventory")
+        client = Client.objects.get(id=client_id, is_active=True)
+    except Client.DoesNotExist:
+        return bad_request_response("Client not found or inactive")
+    if not items:
+        return bad_request_response("At least one item is required")
 
-    # Calculate total amount
-    subtotal = prod_price * quantity
-
-    # Discount calculation
-    discount_type = request.data.get("discount_type")
-    discount_value = Decimal(str(request.data.get("discount_value", 0)))
-    discount_amount = Decimal("0")
-    if discount_type and discount_value > 0:
-        if discount_type not in (DiscountType.PERCENT, DiscountType.FIXED):
-            return bad_request_response("Invalid discount type. Use PERCENT or FIXED.")
-        if discount_type == DiscountType.PERCENT:
-            if discount_value > 100:
-                return bad_request_response("Percentage discount cannot exceed 100%")
-            discount_amount = (subtotal * discount_value / Decimal("100")).quantize(Decimal("0.01"))
-        else:
-            if discount_value > subtotal:
-                return bad_request_response("Fixed discount cannot exceed subtotal")
-            discount_amount = discount_value
-    else:
-        discount_type = None
-        discount_value = Decimal("0")
-
-    discounted_subtotal = subtotal - discount_amount
-
-    # Tax calculation (on discounted subtotal)
-    tax_rate_id = request.data.get("tax_rate_id")
-    tax_rate_obj = None
-    tax_amount = Decimal("0")
-    if tax_rate_id:
-        try:
-            tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
-            tax_amount = (discounted_subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
-        except TaxRate.DoesNotExist:
-            return bad_request_response("Tax rate not found or inactive")
-
-    total_amount = discounted_subtotal + tax_amount
-
-    # Resolve payment terms
     payment_terms_id = request.data.get("payment_terms_id")
     payment_terms = None
     if payment_terms_id:
@@ -295,69 +218,150 @@ def createSale(request):
         except PaymentTerms.DoesNotExist:
             return bad_request_response("Payment terms not found or inactive")
 
-    # Create Transaction record
-    transaction = Transaction.objects.create(
-        transaction_type=TransactionType.SALE,
-        client_id=client_id,
-        total_amount=total_amount,
-        currency=currency,
-        status=TransactionStatus.PENDING,
-        payment_terms=payment_terms,
-        notes=f"Sale of {quantity} units of {product.name}",
-    )
+    # Validate all items upfront before creating anything
+    validated_items = []
+    for idx, item in enumerate(items):
+        product_id = item.get("prod")
+        prod_price = item.get("prod_price")
+        quantity = item.get("quantity")
 
-    # Create Sale record linked to transaction
-    sale = Sales.objects.create(
-        transaction=transaction,
-        prod=product,
-        prod_price=prod_price,
-        user_id=user_id,
-        quantity=quantity,
-        tax_rate=tax_rate_obj,
-        tax_amount=tax_amount,
-        discount_type=discount_type,
-        discount_value=discount_value,
-        discount_amount=discount_amount,
-    )
+        if product_id is None or prod_price is None or quantity is None:
+            return bad_request_response(f"Item {idx + 1}: missing required fields (prod, prod_price, quantity)")
 
-    # Use InventoryService to reduce inventory (disallow overselling)
-    try:
-        InventoryService.reduce_inventory(product, quantity, allow_negative=False)
-    except InventoryError:
-        # Rollback: delete the sale and transaction we just created
-        sale.delete()
-        transaction.delete()
-        return bad_request_response(
-            f"Insufficient inventory for {product.name}. "
-            f"Available: {InventoryService.available_stock(product)}, Requested: {quantity}"
-        )
+        prod_price = Decimal(str(prod_price))
+        quantity = Decimal(str(quantity))
+        if quantity <= 0:
+            return bad_request_response(f"Item {idx + 1}: quantity must be greater than zero")
 
-    # If payment data provided, use PaymentService
-    if payment_data:
-        payment_amount = Decimal(str(payment_data.get("amount", 0)))
-        if payment_amount > 0:
+        try:
+            product = Product.objects.get(id=product_id, is_active=True)
+        except Product.DoesNotExist:
+            return bad_request_response(f"Item {idx + 1}: product not found or inactive")
+
+        if not InventoryService.check_availability(product, quantity):
+            return bad_request_response(
+                f"Item {idx + 1}: insufficient inventory for {product.name}. "
+                f"Available: {InventoryService.available_stock(product)}, Requested: {quantity}"
+            )
+
+        subtotal = prod_price * quantity
+
+        discount_type = item.get("discount_type")
+        discount_value = Decimal(str(item.get("discount_value", 0)))
+        discount_amount = Decimal("0")
+        if discount_type and discount_value > 0:
+            if discount_type not in (DiscountType.PERCENT, DiscountType.FIXED):
+                return bad_request_response(f"Item {idx + 1}: invalid discount type")
+            if discount_type == DiscountType.PERCENT:
+                if discount_value > 100:
+                    return bad_request_response(f"Item {idx + 1}: percentage discount cannot exceed 100%")
+                discount_amount = (subtotal * discount_value / Decimal("100")).quantize(Decimal("0.01"))
+            else:
+                if discount_value > subtotal:
+                    return bad_request_response(f"Item {idx + 1}: fixed discount cannot exceed subtotal")
+                discount_amount = discount_value
+        else:
+            discount_type = None
+            discount_value = Decimal("0")
+
+        discounted_subtotal = subtotal - discount_amount
+
+        tax_rate_id = item.get("tax_rate_id")
+        tax_rate_obj = None
+        tax_amount = Decimal("0")
+        if tax_rate_id:
             try:
-                PaymentService.create_payment(
-                    transaction=transaction,
-                    amount=payment_amount,
-                    payment_currency=payment_data.get("currency", currency),
-                    payment_method=payment_data.get("payment_method", "CASH"),
-                    notes=payment_data.get("notes", ""),
-                )
-            except PaymentError as e:
-                # Payment failed but sale was created - log and continue
-                transaction.notes += f" (Payment failed: {str(e)})"
-                transaction.save()
+                tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
+                tax_amount = (discounted_subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+            except TaxRate.DoesNotExist:
+                return bad_request_response(f"Item {idx + 1}: tax rate not found or inactive")
 
+        line_total = discounted_subtotal + tax_amount
+
+        validated_items.append({
+            "product": product,
+            "prod_price": prod_price,
+            "quantity": quantity,
+            "discount_type": discount_type,
+            "discount_value": discount_value,
+            "discount_amount": discount_amount,
+            "tax_rate_obj": tax_rate_obj,
+            "tax_amount": tax_amount,
+            "line_total": line_total,
+        })
+
+    grand_total = sum(v["line_total"] for v in validated_items)
+
+    payment_warning = None
+    try:
+        with db_transaction.atomic():
+            product_names = ", ".join(v["product"].name for v in validated_items)
+            transaction = Transaction.objects.create(
+                transaction_type=TransactionType.SALE,
+                client_id=client_id,
+                total_amount=grand_total,
+                currency=currency,
+                status=TransactionStatus.PENDING,
+                payment_terms=payment_terms,
+                notes=f"Sale: {product_names}",
+            )
+
+            sale_ids = []
+            items_response = []
+            for v in validated_items:
+                sale = Sales.objects.create(
+                    transaction=transaction,
+                    prod=v["product"],
+                    prod_price=v["prod_price"],
+                    user_id=user_id,
+                    quantity=v["quantity"],
+                    tax_rate=v["tax_rate_obj"],
+                    tax_amount=v["tax_amount"],
+                    discount_type=v["discount_type"],
+                    discount_value=v["discount_value"],
+                    discount_amount=v["discount_amount"],
+                )
+                InventoryService.reduce_inventory(v["product"], v["quantity"], allow_negative=False)
+                sale_ids.append(sale.id)
+                items_response.append({
+                    "sale_id": sale.id,
+                    "product_id": v["product"].id,
+                    "product_name": v["product"].name,
+                    "quantity": float(v["quantity"]),
+                    "prod_price": float(v["prod_price"]),
+                    "tax_amount": float(v["tax_amount"]),
+                    "discount_amount": float(v["discount_amount"]),
+                    "line_total": float(v["line_total"]),
+                })
+
+            if payment_data:
+                payment_amount = Decimal(str(payment_data.get("amount", 0)))
+                if payment_amount > 0:
+                    try:
+                        PaymentService.create_payment(
+                            transaction=transaction,
+                            amount=payment_amount,
+                            payment_currency=payment_data.get("currency", currency),
+                            payment_method=payment_data.get("payment_method", "CASH"),
+                            notes=payment_data.get("notes", ""),
+                        )
+                    except PaymentError as e:
+                        transaction.notes += f" (Payment failed: {str(e)})"
+                        transaction.save()
+                        payment_warning = str(e)
+
+    except InventoryError as e:
+        return bad_request_response(str(e))
+
+    transaction.refresh_from_db()
     return Response(
         {
             "message": "Sale created successfully!",
-            "sale_id": sale.id,
             "transaction_id": transaction.id,
             "transaction_status": transaction.status,
-            "total_amount": float(total_amount),
-            "tax_amount": float(tax_amount),
-            "discount_amount": float(discount_amount),
+            "total_amount": float(grand_total),
+            "items": items_response,
+            "payment_warning": payment_warning,
         },
         status=status.HTTP_201_CREATED,
     )
@@ -391,120 +395,103 @@ def getLastSoldPrice(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsStaffOrAbove])
 @api_error_handler
 def getSaleDetails(request, pk):
-    """Get detailed sale information including transaction and payment history"""
+    """Get detailed sale information by transaction ID, including all line items"""
     try:
-        # Retrieve sale with related transaction
-        sale = Sales.objects.select_related(
-            "transaction", "transaction__client", "prod", "tax_rate"
-        ).get(id=pk)
-    except Sales.DoesNotExist:
-        return not_found_response("Sale")
-    
-    # Build response data
+        transaction = Transaction.objects.select_related(
+            "client", "payment_terms"
+        ).get(id=pk, transaction_type=TransactionType.SALE)
+    except Transaction.DoesNotExist:
+        return not_found_response("Sale transaction")
+
+    sale_lines = Sales.objects.filter(
+        transaction=transaction
+    ).select_related("prod", "tax_rate", "user").order_by("id")
+
+    items_data = []
+    for sale in sale_lines:
+        subtotal = float(sale.prod_price) * float(sale.quantity)
+        discount_amt = float(sale.discount_amount)
+        tax_amt = float(sale.tax_amount)
+        line_total = subtotal - discount_amt + tax_amt
+
+        items_data.append({
+            "id": sale.id,
+            "product": ProductSerializer(sale.prod).data if sale.prod else None,
+            "quantity": sale.quantity,
+            "prod_price": float(sale.prod_price),
+            "tax_rate_name": sale.tax_rate.name if sale.tax_rate else None,
+            "tax_rate_percent": float(sale.tax_rate.rate) if sale.tax_rate else None,
+            "tax_amount": float(sale.tax_amount),
+            "discount_type": sale.discount_type,
+            "discount_value": float(sale.discount_value),
+            "discount_amount": float(sale.discount_amount),
+            "line_total": round(line_total, 2),
+        })
+
     response_data = {
-        "id": sale.id,
-        "quantity": sale.quantity,
-        "sale_date": sale.sale_date,
-        "prod_price": float(sale.prod_price),
-        "tax_amount": float(sale.tax_amount),
-        "tax_rate_name": sale.tax_rate.name if sale.tax_rate else None,
-        "tax_rate_percent": float(sale.tax_rate.rate) if sale.tax_rate else None,
-        "discount_type": sale.discount_type,
-        "discount_value": float(sale.discount_value),
-        "discount_amount": float(sale.discount_amount),
+        "transaction": TransactionSerializer(transaction).data,
+        "items": items_data,
     }
-    
-    # Add product info
-    if sale.prod:
-        product_serializer = ProductSerializer(sale.prod)
-        response_data["product"] = product_serializer.data
-    
-    # Add user info
-    try:
-        user = User.objects.get(id=sale.user_id)
-        response_data["user"] = {
-            "id": user.id,
-            "firstname": user.firstname,
-            "lastname": user.lastname,
-        }
-    except User.DoesNotExist:
-        response_data["user"] = None
-    
-    # Add transaction and client info
-    transaction = sale.transaction
-    if transaction:
-        transaction_serializer = TransactionSerializer(transaction)
-        response_data["transaction"] = transaction_serializer.data
-        
-        # Add client info from transaction
-        if transaction.client:
-            client_serializer = ClientSerializer(transaction.client)
-            response_data["client"] = {
-                "id": transaction.client.id,
-                "name": f"{client_serializer.data['firstname']} {client_serializer.data['lastname']}",
-                "firstname": client_serializer.data["firstname"],
-                "lastname": client_serializer.data["lastname"],
-                "phone": client_serializer.data["phone"],
-                "address": client_serializer.data["address"],
-                "city": client_serializer.data.get("city", ""),
-            }
-        
-        # Get all payments for this transaction
-        payments = Payment.objects.filter(transaction=transaction).order_by("payment_date")
-        payment_serializer = PaymentSerializer(payments, many=True)
-        response_data["payments"] = payment_serializer.data
-        
-        # Calculate payment summary
-        total_paid = sum(float(p.amount) for p in payments)
-        response_data["payment_summary"] = {
-            "total_amount": float(transaction.total_amount),
-            "total_paid": total_paid,
-            "remaining": float(transaction.total_amount) - total_paid,
-            "payment_count": len(payments),
+
+    if transaction.client:
+        client = transaction.client
+        response_data["client"] = {
+            "id": client.id,
+            "name": f"{client.firstname} {client.lastname}",
+            "firstname": client.firstname,
+            "lastname": client.lastname,
+            "phone": client.phone,
+            "address": client.address,
+            "city": getattr(client, "city", ""),
         }
 
-        # Get linked returns
-        return_txs = Transaction.objects.filter(
-            original_transaction=transaction,
-            transaction_type=TransactionType.RETURN,
-        ).order_by("-created_date")
+    payments = list(Payment.objects.filter(transaction=transaction).order_by("payment_date"))
+    response_data["payments"] = PaymentSerializer(payments, many=True).data
 
-        returns_data = []
-        for ret in return_txs:
-            ret_items = Sales.objects.filter(transaction=ret).select_related("prod")
-            ret_payments = Payment.objects.filter(transaction=ret)
-            refund = sum(float(p.amount) for p in ret_payments)
-            returns_data.append({
-                "id": ret.id,
-                "return_date": ret.created_date.isoformat(),
-                "return_value": float(ret.total_amount),
-                "refund_amount": refund,
-                "notes": ret.notes,
-                "items": [
-                    {
-                        "product_name": s.prod.name,
-                        "quantity": s.quantity,
-                        "unit_price": float(s.prod_price),
-                    }
-                    for s in ret_items
-                ],
-            })
-        response_data["returns"] = returns_data
+    total_paid = sum(float(p.amount) for p in payments)
+    response_data["payment_summary"] = {
+        "total_amount": float(transaction.total_amount),
+        "total_paid": total_paid,
+        "remaining": float(transaction.total_amount) - total_paid,
+        "payment_count": len(payments),
+    }
 
-        # Already-returned quantities per product
-        already_returned = {}
-        sale_lines = Sales.objects.filter(transaction=transaction)
-        for sl in sale_lines:
-            returned_qty = Sales.objects.filter(
-                transaction__original_transaction=transaction,
-                transaction__transaction_type=TransactionType.RETURN,
-                prod=sl.prod,
-            ).aggregate(total=Sum("quantity"))["total"] or 0
-            already_returned[str(sl.prod_id)] = returned_qty
-        response_data["already_returned"] = already_returned
+    return_txs = Transaction.objects.filter(
+        original_transaction=transaction,
+        transaction_type=TransactionType.RETURN,
+    ).prefetch_related("sales__prod", "payments").order_by("-created_date")
+
+    returns_data = []
+    for ret in return_txs:
+        ret_items = ret.sales.select_related("prod").all()
+        ret_payments = ret.payments.all()
+        refund = sum(float(p.amount) for p in ret_payments)
+        returns_data.append({
+            "id": ret.id,
+            "return_date": ret.created_date.isoformat(),
+            "return_value": float(ret.total_amount),
+            "refund_amount": refund,
+            "notes": ret.notes,
+            "items": [
+                {
+                    "product_name": s.prod.name if s.prod else "Unknown",
+                    "quantity": s.quantity,
+                    "unit_price": float(s.prod_price),
+                }
+                for s in ret_items
+            ],
+        })
+    response_data["returns"] = returns_data
+
+    returned_rows = Sales.objects.filter(
+        transaction__original_transaction=transaction,
+        transaction__transaction_type=TransactionType.RETURN,
+    ).values("prod_id").annotate(total=Sum("quantity"))
+    already_returned = {str(row["prod_id"]): row["total"] for row in returned_rows}
+    response_data["already_returned"] = already_returned
 
     return Response(response_data)
 
@@ -513,130 +500,210 @@ def getSaleDetails(request, pk):
 @permission_classes([IsStaffOrAbove])
 @api_error_handler
 def updateSale(request, pk):
-    """Update an existing sale with validation to prevent overpayment"""
-    from erp.services.inventory_service import InventoryService
+    """Update a sale transaction with multiple line items (replace strategy)"""
+    from django.db import transaction as db_transaction
+
+    from erp.services.inventory_service import InventoryError, InventoryService
     from erp.services.payment_service import PaymentError, PaymentService
-    
+
     try:
-        sale = Sales.objects.select_related('transaction', 'prod', 'user').get(id=pk)
-    except Sales.DoesNotExist:
-        return not_found_response("Sale")
-    
-    transaction = sale.transaction
-    
-    # Store old values for inventory reversal
-    old_quantity = sale.quantity
-    old_prod_id = sale.prod_id
-    old_product = sale.prod
-    
-    # Get new values from request
-    new_prod_id = request.data.get("prod", old_prod_id)
-    new_quantity = Decimal(str(request.data.get("quantity", old_quantity)))
-    new_prod_price = Decimal(str(request.data.get("prod_price", sale.prod_price)))
-    new_user_id = request.data.get("user", sale.user_id)
+        transaction = Transaction.objects.get(id=pk, transaction_type=TransactionType.SALE)
+    except Transaction.DoesNotExist:
+        return not_found_response("Sale transaction")
+
+    items = request.data.get("items", [])
+    if not items:
+        return bad_request_response("At least one item is required")
+
     currency = request.data.get("currency", transaction.currency)
-    
-    # Validate inputs
-    if new_quantity <= 0:
-        return bad_request_response("Quantity must be greater than zero")
-    
-    # Get new product if changed
-    if new_prod_id != old_prod_id:
-        try:
-            new_product = Product.objects.get(id=new_prod_id)
-        except ObjectDoesNotExist:
-            return not_found_response("Product")
-    else:
-        new_product = old_product
-    
-    # Calculate new total
-    new_subtotal = new_prod_price * new_quantity
+    old_sales = {s.id: s for s in Sales.objects.filter(transaction=transaction).select_related("prod")}
 
-    # Discount calculation
-    discount_type = request.data.get("discount_type", sale.discount_type)
-    discount_value = Decimal(str(request.data.get("discount_value", sale.discount_value)))
-    discount_amount = Decimal("0")
-    if discount_type and discount_value > 0:
-        if discount_type not in (DiscountType.PERCENT, DiscountType.FIXED):
-            return bad_request_response("Invalid discount type. Use PERCENT or FIXED.")
-        if discount_type == DiscountType.PERCENT:
-            if discount_value > 100:
-                return bad_request_response("Percentage discount cannot exceed 100%")
-            discount_amount = (new_subtotal * discount_value / Decimal("100")).quantize(Decimal("0.01"))
+    # Validate item IDs belong to this transaction
+    for item in items:
+        item_id = item.get("id")
+        if item_id and item_id not in old_sales:
+            return bad_request_response(f"Item ID {item_id} does not belong to this transaction")
+
+    # Validate all new/updated items
+    validated_items = []
+    for idx, item in enumerate(items):
+        product_id = item.get("prod")
+        prod_price_raw = item.get("prod_price")
+        quantity_raw = item.get("quantity")
+
+        if product_id is None or prod_price_raw is None or quantity_raw is None:
+            return bad_request_response(f"Item {idx + 1}: missing required fields")
+
+        prod_price = Decimal(str(prod_price_raw))
+        quantity = Decimal(str(quantity_raw))
+        if quantity <= 0:
+            return bad_request_response(f"Item {idx + 1}: quantity must be greater than zero")
+
+        try:
+            product = Product.objects.get(id=product_id, is_active=True)
+        except Product.DoesNotExist:
+            return bad_request_response(f"Item {idx + 1}: product not found or inactive")
+
+        subtotal = prod_price * quantity
+
+        discount_type = item.get("discount_type")
+        discount_value = Decimal(str(item.get("discount_value", 0)))
+        discount_amount = Decimal("0")
+        if discount_type and discount_value > 0:
+            if discount_type not in (DiscountType.PERCENT, DiscountType.FIXED):
+                return bad_request_response(f"Item {idx + 1}: invalid discount type")
+            if discount_type == DiscountType.PERCENT:
+                if discount_value > 100:
+                    return bad_request_response(f"Item {idx + 1}: percentage discount cannot exceed 100%")
+                discount_amount = (subtotal * discount_value / Decimal("100")).quantize(Decimal("0.01"))
+            else:
+                if discount_value > subtotal:
+                    return bad_request_response(f"Item {idx + 1}: fixed discount cannot exceed subtotal")
+                discount_amount = discount_value
         else:
-            if discount_value > new_subtotal:
-                return bad_request_response("Fixed discount cannot exceed subtotal")
-            discount_amount = discount_value
-    else:
-        discount_type = None
-        discount_value = Decimal("0")
+            discount_type = None
+            discount_value = Decimal("0")
 
-    discounted_subtotal = new_subtotal - discount_amount
+        discounted_subtotal = subtotal - discount_amount
 
-    # Tax calculation (on discounted subtotal)
-    tax_rate_id = request.data.get("tax_rate_id")
-    tax_rate_obj = None
-    tax_amount = Decimal("0")
-    if tax_rate_id:
+        tax_rate_id = item.get("tax_rate_id")
+        tax_rate_obj = None
+        tax_amount = Decimal("0")
+        if tax_rate_id:
+            try:
+                tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
+                tax_amount = (discounted_subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
+            except TaxRate.DoesNotExist:
+                return bad_request_response(f"Item {idx + 1}: tax rate not found or inactive")
+
+        line_total = discounted_subtotal + tax_amount
+
+        validated_items.append({
+            "id": item.get("id"),
+            "product": product,
+            "prod_price": prod_price,
+            "quantity": quantity,
+            "discount_type": discount_type,
+            "discount_value": discount_value,
+            "discount_amount": discount_amount,
+            "tax_rate_obj": tax_rate_obj,
+            "tax_amount": tax_amount,
+            "line_total": line_total,
+        })
+
+    new_total = sum(v["line_total"] for v in validated_items)
+    new_item_ids = {v["id"] for v in validated_items if v["id"]}
+    removed_ids = set(old_sales.keys()) - new_item_ids
+
+    # Check inventory for new/changed items before committing
+    for v in validated_items:
+        old_sale = old_sales.get(v["id"])
+        if old_sale:
+            if old_sale.prod_id == v["product"].id:
+                extra_needed = v["quantity"] - old_sale.quantity
+                if extra_needed > 0 and not InventoryService.check_availability(v["product"], extra_needed):
+                    return bad_request_response(f"Insufficient inventory for {v['product'].name}")
+            else:
+                if not InventoryService.check_availability(v["product"], v["quantity"]):
+                    return bad_request_response(f"Insufficient inventory for {v['product'].name}")
+        else:
+            if not InventoryService.check_availability(v["product"], v["quantity"]):
+                return bad_request_response(f"Insufficient inventory for {v['product'].name}")
+
+    # Validate client_id before entering the atomic block
+    client_id = request.data.get("client_id")
+    if client_id:
         try:
-            tax_rate_obj = TaxRate.objects.get(id=tax_rate_id, is_active=True)
-            tax_amount = (discounted_subtotal * tax_rate_obj.rate / Decimal("100")).quantize(Decimal("0.01"))
-        except TaxRate.DoesNotExist:
-            return bad_request_response("Tax rate not found or inactive")
+            Client.objects.get(id=client_id, is_active=True)
+        except Client.DoesNotExist:
+            return bad_request_response("Client not found or inactive")
 
-    new_total_with_tax = discounted_subtotal + tax_amount
+    # Validate payment_terms_id before entering the atomic block so a failure
+    # doesn't leave preceding inventory/sales writes committed without saving the total.
+    payment_terms_id = request.data.get("payment_terms_id")
+    payment_terms = None
+    if payment_terms_id:
+        try:
+            payment_terms = PaymentTerms.objects.get(id=payment_terms_id, is_active=True)
+        except PaymentTerms.DoesNotExist:
+            return bad_request_response("Payment terms not found or inactive")
 
-    # Handle inventory changes
-    if new_prod_id != old_prod_id:
-        # Product changed: reverse old, add new
-        InventoryService.add_inventory(old_product, old_quantity)
-        if not InventoryService.check_availability(new_product, new_quantity):
-            return bad_request_response(f"Not enough {new_product.name} in inventory")
-        InventoryService.reduce_inventory(new_product, new_quantity, allow_negative=True)
-    else:
-        # Same product, quantity changed
-        quantity_diff = new_quantity - old_quantity
-        if quantity_diff > 0:
-            # Need more inventory
-            if not InventoryService.check_availability(new_product, quantity_diff):
-                return bad_request_response(f"Not enough {new_product.name} in inventory")
-            InventoryService.reduce_inventory(new_product, quantity_diff, allow_negative=True)
-        elif quantity_diff < 0:
-            # Returning inventory
-            InventoryService.add_inventory(new_product, abs(quantity_diff))
-    
-    # Update sale record
-    sale.prod = new_product
-    sale.quantity = new_quantity
-    sale.prod_price = new_prod_price
-    sale.user_id = new_user_id
-    sale.tax_rate = tax_rate_obj
-    sale.tax_amount = tax_amount
-    sale.discount_type = discount_type
-    sale.discount_value = discount_value
-    sale.discount_amount = discount_amount
-    sale.save()
-    
-    # Update transaction details and status via PaymentService
+    try:
+        with db_transaction.atomic():
+            # Remove deleted items — restore inventory
+            for rid in removed_ids:
+                old = old_sales[rid]
+                InventoryService.add_inventory(old.prod, old.quantity)
+                old.delete()
+
+            # Update/create items
+            user_id = request.user.id
+            for v in validated_items:
+                old_sale = old_sales.get(v["id"])
+                if old_sale:
+                    # Reverse old inventory, then re-apply new
+                    InventoryService.add_inventory(old_sale.prod, old_sale.quantity)
+                    old_sale.prod = v["product"]
+                    old_sale.prod_price = v["prod_price"]
+                    old_sale.quantity = v["quantity"]
+                    old_sale.tax_rate = v["tax_rate_obj"]
+                    old_sale.tax_amount = v["tax_amount"]
+                    old_sale.discount_type = v["discount_type"]
+                    old_sale.discount_value = v["discount_value"]
+                    old_sale.discount_amount = v["discount_amount"]
+                    old_sale.save()
+                    # Fix 3: enforce inventory constraints (allow_negative=False)
+                    InventoryService.reduce_inventory(v["product"], v["quantity"], allow_negative=False)
+                else:
+                    Sales.objects.create(
+                        transaction=transaction,
+                        prod=v["product"],
+                        prod_price=v["prod_price"],
+                        user_id=user_id,
+                        quantity=v["quantity"],
+                        tax_rate=v["tax_rate_obj"],
+                        tax_amount=v["tax_amount"],
+                        discount_type=v["discount_type"],
+                        discount_value=v["discount_value"],
+                        discount_amount=v["discount_amount"],
+                    )
+                    # Fix 3: enforce inventory constraints (allow_negative=False)
+                    InventoryService.reduce_inventory(v["product"], v["quantity"], allow_negative=False)
+
+            # Update client if provided (already validated above)
+            if client_id:
+                transaction.client_id = client_id
+
+            # Update payment terms if provided (already validated above)
+            if payment_terms is not None:
+                transaction.payment_terms = payment_terms
+
+            transaction.total_amount = new_total
+            transaction.save()
+    except InventoryError as e:
+        return bad_request_response(str(e))
+
+    # Fix 1: Move PaymentService calls OUTSIDE the atomic block so a PaymentError
+    # does not leave the prior DB writes committed while returning an error response.
     try:
         PaymentService.update_transaction_status(
             transaction=transaction,
-            new_total_amount=new_total_with_tax,
-            transaction_currency=currency
+            new_total_amount=new_total,
+            transaction_currency=currency,
         )
-        # Recalculate total_paid for response after update
         total_paid = PaymentService.calculate_total_paid(transaction)
     except PaymentError as e:
         return bad_request_response(str(e))
-    
+
+    transaction.refresh_from_db()
+
     return Response({
         "message": "Sale updated successfully",
-        "sale_id": sale.id,
         "transaction_id": transaction.id,
         "transaction_status": transaction.status,
-        "total_amount": float(new_total_with_tax),
+        "total_amount": float(new_total),
         "total_paid": float(total_paid),
-        "remaining": float(new_total_with_tax - total_paid),
+        "remaining": float(new_total - total_paid),
     })
 
 
@@ -644,42 +711,38 @@ def updateSale(request, pk):
 @permission_classes([IsManagerOrAbove])
 @api_error_handler
 def deleteSale(request, pk):
-    """Delete a sale and reverse all its effects (payments, inventory)"""
+    """Delete a sale transaction and reverse all effects (payments, inventory)"""
     from django.db import transaction as db_transaction
 
     from erp.services.inventory_service import InventoryService
     from erp.services.payment_service import PaymentService
-    
+
     try:
-        sale = Sales.objects.select_related('transaction', 'prod').get(id=pk)
-    except Sales.DoesNotExist:
-        return not_found_response("Sale")
-    
-    transaction = sale.transaction
-    product = sale.prod
-    quantity = sale.quantity
-    
-    # Wrap entire delete operation in atomic transaction for consistency
+        transaction = Transaction.objects.get(id=pk, transaction_type=TransactionType.SALE)
+    except Transaction.DoesNotExist:
+        return not_found_response("Sale transaction")
+
+    # Fix 4: evaluate eagerly so the queryset isn't re-run after transaction.delete()
+    sale_lines = list(Sales.objects.filter(transaction=transaction).select_related("prod"))
+    inventory_restored = []
+
     with db_transaction.atomic():
-        # CRITICAL: Reverse all payments FIRST (before deleting)
         reversal_result = PaymentService.reverse_all_payments(transaction)
-        
-        # Reverse inventory (add back the sold quantity)
-        InventoryService.add_inventory(product, quantity)
-        
-        # Store info for response
-        sale_id = sale.id
+
+        for sale in sale_lines:
+            InventoryService.add_inventory(sale.prod, sale.quantity)
+            inventory_restored.append({
+                "product_name": sale.prod.name,
+                "quantity": float(sale.quantity),
+            })
+
         transaction_id = transaction.id
-        
-        # Delete the transaction (CASCADE will delete Sale and Payments)
         transaction.delete()
-    
+
     return Response({
         "message": "Sale deleted successfully",
-        "sale_id": sale_id,
         "transaction_id": transaction_id,
-        "inventory_restored": float(quantity),
-        "product_name": product.name,
+        "inventory_restored": inventory_restored,
         "payments_reversed": reversal_result["payment_count"],
         "total_reversed": reversal_result["total_reversed"],
         "accounts_affected": reversal_result["accounts_affected"],
