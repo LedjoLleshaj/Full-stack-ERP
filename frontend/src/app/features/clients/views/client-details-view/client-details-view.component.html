@@ -198,10 +198,11 @@
     <mat-card-content>
 
     <!-- Product Selection with Autocomplete -->
+    <ng-container *ngIf="state.items[0] as item">
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width no-outline-gap">
         <mat-label>Kerko dhe Zgjidh Produktin .</mat-label>
-        <input type="text" matInput [(ngModel)]="state.productSearchText" [matAutocomplete]="auto" placeholder="Shkruaj produktin" />
+        <input type="text" matInput [(ngModel)]="item.productSearchText" [matAutocomplete]="auto" placeholder="Shkruaj produktin" />
         <mat-icon matSuffix>search</mat-icon>
         <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onProductSelect($event)">
           <mat-option *ngFor="let product of filteredProducts()" [value]="product">
@@ -217,12 +218,12 @@
     </div>
 
     <!-- Selected Product Details -->
-    <div class="selected-product-card" *ngIf="state.selectedProduct">
+    <div class="selected-product-card" *ngIf="item.selectedProduct">
       <div class="product-details">
-        <h3>{{ state.selectedProduct.name }}</h3>
-        <p class="stock-info">Sasia ne Inventar: {{ state.selectedProduct.disponibility }}</p>
-        <p class="price-info">Çmimi aktual: {{ state.salePrice | currency:state.currency }}</p>
-        <p class="price-info" *ngIf="state.lastSoldPrice !== null && state.lastSoldCurrency !== null">Cmimi i fundit: {{ state.lastSoldPrice | currency:state.lastSoldCurrency! }}</p>
+        <h3>{{ item.selectedProduct.name }}</h3>
+        <p class="stock-info">Sasia ne Inventar: {{ item.selectedProduct.disponibility }}</p>
+        <p class="price-info">Çmimi aktual: {{ item.price | currency:state.currency }}</p>
+        <p class="price-info" *ngIf="item.lastSoldPrice !== null && item.lastSoldCurrency !== null">Cmimi i fundit: {{ item.lastSoldPrice | currency:item.lastSoldCurrency! }}</p>
       </div>
 
       <mat-divider></mat-divider>
@@ -236,17 +237,17 @@
               matInput
               type="number"
               min="1"
-              [max]="state.selectedProduct.disponibility"
-              [(ngModel)]="state.saleQuantity"
+              [max]="item.selectedProduct.disponibility"
+              [(ngModel)]="item.quantity"
               placeholder="0"
               (input)="enforceMax($event)"
             />
-            <mat-hint>Max: {{ state.selectedProduct.disponibility }}</mat-hint>
+            <mat-hint>Max: {{ item.selectedProduct.disponibility }}</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Çmimi per Copë</mat-label>
-            <input matInput type="number" min="0" step="1" [(ngModel)]="state.salePrice" placeholder="0.00" />
+            <input matInput type="number" min="0" step="1" [(ngModel)]="item.price" placeholder="0.00" />
             <mat-hint>Modifiko per zbritje/rritje</mat-hint>
           </mat-form-field>
         </div>
@@ -303,10 +304,11 @@
     </div>
 
     <!-- Empty State -->
-    <div class="empty-state" *ngIf="!state.selectedProduct">
+    <div class="empty-state" *ngIf="!item.selectedProduct">
       <mat-icon>shopping_cart</mat-icon>
       <p>Zgjidh nje produkt per te filluar shitjen</p>
     </div>
+    </ng-container>
     </mat-card-content>
   </mat-card>
 </div>

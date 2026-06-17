@@ -20,8 +20,8 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
   client: Client | undefined;
   clientId!: number;
 
-  // Sale form state managed by service
-  state: SaleFormState;
+  // Sale form state — delegate to service's internal state
+  get state(): SaleFormState { return this.saleFormService.state; }
 
   // Expose service constants to template
   get paymentMethods(): string[] { return this.saleFormService.paymentMethods; }
@@ -49,9 +49,7 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
     private router: Router,
     private excelExport: ExcelExportService,
     public authService: AuthApiService
-  ) {
-    this.state = this.saleFormService.getInitialState();
-  }
+  ) {}
 
   ngOnInit() {
     this.clientId = Number(this.route.snapshot.paramMap.get("id"));
@@ -65,8 +63,11 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
       // Trigger change detection if needed
     });
 
-    this.saleFormService.loadProducts(this.state);
-    this.saleFormService.loadPaymentTerms(this.state);
+    this.saleFormService.loadProducts();
+    this.saleFormService.loadPaymentTerms();
+
+    // Pre-set the client on the service so sale creation works correctly
+    this.saleFormService.resetForm();
   }
 
   ngOnDestroy() {
@@ -78,6 +79,8 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
     this.clientService.getClientById(clientId).subscribe({
       next: (data: Client) => {
         this.client = data;
+        // Inject the current client into the service state so canCreateSale() works
+        this.saleFormService.state.selectedClient = data;
       },
       error: (err) => {
         console.error("Failed to load client:", err);
@@ -105,12 +108,12 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
 
   // ========= PRODUCT/SALE METHODS (Delegated to Service) =========
   filteredProducts(): Product[] {
-    return this.saleFormService.filteredProducts(this.state);
+    return this.saleFormService.filteredProductsForItem(0);
   }
 
   onProductSelect(event: any): void {
     const product = event.option.value;
-    this.saleFormService.onProductSelect(this.state, product, this.clientId);
+    this.saleFormService.onItemProductSelect(0, product);
   }
 
   displayProduct(product: Product | null): string {
@@ -119,37 +122,51 @@ export class ClientDetailsViewComponent implements OnInit, OnDestroy {
 
   enforceMax(event: any): void {
     const input = event.target as HTMLInputElement;
-    const value = this.saleFormService.enforceMaxQuantity(this.state, input.value);
-    input.value = String(value);
+    const item = this.saleFormService.state.items[0];
+    if (!item) return;
+    const max = item.selectedProduct?.disponibility ?? Infinity;
+    const val = Math.min(Number(input.value), max);
+    input.value = String(val);
+    this.saleFormService.updateItemField(0, 'quantity', val);
   }
 
   onCurrencyChange(): void {
-    this.saleFormService.onCurrencyChange(this.state);
+    this.saleFormService.onCurrencyChange(this.saleFormService.state.currency);
   }
 
   getTotal(): number {
-    return this.saleFormService.getTotal(this.state);
+    return this.saleFormService.getGrandTotal();
   }
 
   canCreateSale(): boolean {
-    return this.saleFormService.canCreateSale(this.state, this.clientId);
+    return this.saleFormService.canCreateSale();
   }
 
   createSale(): void {
-    this.saleFormService.createSale(this.state, this.clientId, false).subscribe({
-      next: (success) => {
-        if (success) {
-          this.saleFormService.clearSelection(this.state);
-          this.saleFormService.loadProducts(this.state);
-          this.loadClient(this.clientId);
-          this.loadClientSales(this.clientId);
+    this.saleFormService.createSale().subscribe({
+      next: () => {
+        this.saleFormService.resetForm();
+        // Re-inject client after reset
+        if (this.client) {
+          this.saleFormService.state.selectedClient = this.client;
         }
+        this.saleFormService.loadProducts();
+        this.loadClient(this.clientId);
+        this.loadClientSales(this.clientId);
+      },
+      error: (err) => {
+        console.error('Failed to create sale:', err);
+        this.snackBar.open('Gabim në krijimin e shitjes', 'Mbyll', { duration: 3000 });
       }
     });
   }
 
   clearSelection(): void {
-    this.saleFormService.clearSelection(this.state);
+    this.saleFormService.resetForm();
+    // Re-inject client after reset
+    if (this.client) {
+      this.saleFormService.state.selectedClient = this.client;
+    }
   }
 
   // ========= SALES TABLE HELPERS =========
