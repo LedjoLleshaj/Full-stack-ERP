@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from erp.constants import TransactionStatus, TransactionType
-from erp.models import Inventory, Payment, Sales, Transaction
+from erp.models import Inventory, Payment, Transaction
 from erp.tests.base import ErpTestCase
 
 
@@ -310,7 +310,7 @@ class TestMultiItemUpdate(ErpTestCase):
         resp = self.api.put(f"/erp/update-sale/{tx_id}", update_payload, format="json")
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(float(resp.data["total_amount"]), 75.00)
-        from erp.models import Transaction, Inventory
+        from erp.models import Inventory, Transaction
         self.assertEqual(Transaction.objects.get(id=tx_id).sales.count(), 1)
         inv_b = Inventory.objects.get(prod=self.product_b)
         self.assertEqual(inv_b.quantity, 50)  # restored
@@ -371,7 +371,7 @@ class TestMultiItemDelete(ErpTestCase):
         del_resp = self.api.delete(f"/erp/delete-sale/{tx_id}")
         self.assertEqual(del_resp.status_code, 200)
 
-        from erp.models import Transaction, Inventory
+        from erp.models import Inventory, Transaction
         self.assertFalse(Transaction.objects.filter(id=tx_id).exists())
         inv_a = Inventory.objects.get(prod=self.product)
         inv_b = Inventory.objects.get(prod=self.product_b)

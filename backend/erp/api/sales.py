@@ -1,6 +1,5 @@
 from decimal import Decimal
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Sum
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -11,9 +10,8 @@ from erp.constants import DiscountType, TransactionStatus, TransactionType
 from erp.permissions import IsManagerOrAbove, IsStaffOrAbove
 from erp.utils.responses import api_error_handler, bad_request_response, not_found_response
 
-from ..models import Client, Payment, PaymentTerms, Product, Sales, TaxRate, Transaction, User
+from ..models import Client, Payment, PaymentTerms, Product, Sales, TaxRate, Transaction
 from ..serializers import (
-    ClientSerializer,
     PaymentSerializer,
     ProductSerializer,
     SalesSerializer,
@@ -204,7 +202,7 @@ def createSale(request):
     if not client_id:
         return bad_request_response("Missing required field: client_id")
     try:
-        client = Client.objects.get(id=client_id, is_active=True)
+        Client.objects.get(id=client_id, is_active=True)
     except Client.DoesNotExist:
         return bad_request_response("Client not found or inactive")
     if not items:

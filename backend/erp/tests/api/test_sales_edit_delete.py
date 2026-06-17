@@ -201,7 +201,7 @@ class SaleUpdateDeleteTestCase(TestCase):
             currency="EUR",
             status=TransactionStatus.COMPLETED
         )
-        sale = Sales.objects.create(
+        Sales.objects.create(
             transaction=transaction,
             prod=self.product_a,
             prod_price=Decimal("10.00"),

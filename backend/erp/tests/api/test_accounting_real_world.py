@@ -313,7 +313,7 @@ class MultiPaymentAccountingTests(TestCase):
             currency="EUR",
             status=TransactionStatus.PENDING
         )
-        sale = Sales.objects.create(
+        Sales.objects.create(
             transaction=transaction,
             prod=self.product,
             prod_price=Decimal("100.00"),
@@ -522,7 +522,7 @@ class FullWorkflowBalanceTests(TestCase):
             currency="EUR",
             status=TransactionStatus.PENDING
         )
-        sale = Sales.objects.create(
+        Sales.objects.create(
             transaction=sale_tx,
             prod=self.product,
             prod_price=Decimal("30.00"),
