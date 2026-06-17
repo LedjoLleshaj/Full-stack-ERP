@@ -1,113 +1,152 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Subscription } from "rxjs";
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { Subscription } from 'rxjs';
 
-import { Client } from "../../../../models/client.model";
-import { Product } from "../../../../models/product.model";
-import { SaleFormService, SaleFormState } from "src/app/shared/services/sale-form/sale-form.service";
+import { SaleFormService } from 'src/app/shared/services/sale-form/sale-form.service';
+import { Client } from '../../../../models/client.model';
+import { Product } from '../../../../models/product.model';
 
 @Component({
-  selector: "app-add-sale-view",
-  templateUrl: "./add-sale-view.component.html",
-  styleUrls: ["./add-sale-view.component.scss"],
+  selector: 'app-add-sale-view',
+  templateUrl: './add-sale-view.component.html',
+  styleUrls: ['./add-sale-view.component.scss'],
 })
 export class AddSaleViewComponent implements OnInit, OnDestroy {
-  // Form state managed by service
-  state: SaleFormState;
-
-  // Expose service constants to template
-  get paymentMethods(): string[] { return this.saleFormService.paymentMethods; }
-  get currencies(): string[] { return this.saleFormService.currencies; }
-
   private stateChangeSub?: Subscription;
 
-  constructor(private saleFormService: SaleFormService) {
-    this.state = this.saleFormService.getInitialState();
-  }
+  constructor(
+    public saleFormService: SaleFormService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar
+  ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
+    this.saleFormService.resetForm();
+    this.saleFormService.loadClients();
+    this.saleFormService.loadProducts();
+    this.saleFormService.loadTaxRates();
+    this.saleFormService.loadPaymentTerms();
+
     // Subscribe to state changes for change detection
     this.stateChangeSub = this.saleFormService.onStateChange.subscribe(() => {
-      // Trigger change detection if needed
+      // trigger Angular change detection
     });
 
-    this.saleFormService.loadClients(this.state);
-    this.saleFormService.loadProducts(this.state);
-    this.saleFormService.loadTaxRates(this.state);
-    this.saleFormService.loadPaymentTerms(this.state);
+    // Check for edit mode via route param :transactionId (wired in Task 10)
+    const transactionId = this.route.snapshot.paramMap.get('transactionId');
+    if (transactionId) {
+      this.loadForEdit(parseInt(transactionId, 10));
+    }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.stateChangeSub?.unsubscribe();
   }
 
-  // ========= CLIENT METHODS =========
-  filteredClients(): Client[] {
-    return this.saleFormService.filteredClients(this.state);
+  get state() {
+    return this.saleFormService.state;
   }
 
-  onClientSelect(event: any): void {
-    const client = event.option.value;
-    this.saleFormService.onClientSelect(this.state, client);
+  // ======== Item management ========
+
+  addItem(): void {
+    this.saleFormService.addItem();
+  }
+
+  removeItem(index: number): void {
+    this.saleFormService.removeItem(index);
+  }
+
+  // ======== Autocomplete handlers ========
+
+  onProductSelect(index: number, event: MatAutocompleteSelectedEvent): void {
+    this.saleFormService.onItemProductSelect(index, event.option.value as Product);
+  }
+
+  onClientSelect(event: MatAutocompleteSelectedEvent): void {
+    this.saleFormService.onClientSelect(event.option.value as Client);
+  }
+
+  onCurrencyChange(currency: string): void {
+    this.saleFormService.onCurrencyChange(currency);
+  }
+
+  // ======== Display helpers ========
+
+  displayProduct(product: Product | null): string {
+    return product ? product.name : '';
   }
 
   displayClient(client: Client | null): string {
-    return this.saleFormService.displayClient(client);
+    return client ? `${client.firstname} ${client.lastname}` : '';
   }
 
-  // ========= PRODUCT METHODS =========
-  filteredProducts(): Product[] {
-    return this.saleFormService.filteredProducts(this.state);
+  // ======== Filtered lists ========
+
+  filteredClients(): Client[] {
+    return this.saleFormService.filteredClients();
   }
 
-  onProductSelect(event: any): void {
-    const product = event.option.value;
-    this.saleFormService.onProductSelect(this.state, product);
+  filteredProductsForItem(index: number): Product[] {
+    return this.saleFormService.filteredProductsForItem(index);
   }
 
-  displayProduct(product: Product | null): string {
-    return this.saleFormService.displayProduct(product);
+  // ======== Calculations ========
+
+  getItemLineTotal(index: number): number {
+    return this.saleFormService.getItemLineTotal(index);
   }
 
-  // ========= SALE METHODS =========
-  enforceMax(event: any): void {
-    const input = event.target as HTMLInputElement;
-    const value = this.saleFormService.enforceMaxQuantity(this.state, input.value);
-    input.value = String(value);
+  getGrandSubtotal(): number {
+    return this.saleFormService.getGrandSubtotal();
   }
 
-  onCurrencyChange(): void {
-    this.saleFormService.onCurrencyChange(this.state);
+  getGrandDiscount(): number {
+    return this.saleFormService.getGrandDiscount();
   }
 
-  getTotal(): number {
-    return this.saleFormService.getTotal(this.state);
+  getGrandTax(): number {
+    return this.saleFormService.getGrandTax();
   }
 
-  getTaxAmount(): number {
-    return this.saleFormService.getTaxAmount(this.state);
+  getGrandTotal(): number {
+    return this.saleFormService.getGrandTotal();
   }
 
-  getDiscountAmount(): number {
-    return this.saleFormService.getDiscountAmount(this.state);
-  }
-
-  getDiscountedSubtotal(): number {
-    return this.saleFormService.getDiscountedSubtotal(this.state);
-  }
-
-  getTotalWithTax(): number {
-    return this.saleFormService.getTotalWithTax(this.state);
-  }
-
-  canCreateSale(): boolean {
-    return this.saleFormService.canCreateSale(this.state);
-  }
+  // ======== Submission ========
 
   createSale(): void {
-    this.saleFormService.createSale(this.state, undefined, true).subscribe();
+    if (!this.saleFormService.canCreateSale()) return;
+    this.state.isSubmitting = true;
+    this.saleFormService.createSale().subscribe({
+      next: (resp) => {
+        this.state.isSubmitting = false;
+        this.snackBar.open('Shitja u krijua me sukses!', 'OK', { duration: 3000 });
+        this.router.navigate(['/sales', resp.transaction_id]);
+      },
+      error: (err) => {
+        this.state.isSubmitting = false;
+        this.snackBar.open(
+          err?.error?.error || 'Gabim gjatë krijimit të shitjes',
+          'OK',
+          { duration: 4000 }
+        );
+      },
+    });
   }
 
-  clearSelection(): void {
-    this.saleFormService.clearSelection(this.state);
+  // ======== Edit mode (wired in Task 10) ========
+
+  private loadForEdit(_transactionId: number): void {
+    // Will be connected in Task 10 when the details view is done
+  }
+
+  // ======== Track by ========
+
+  trackByIndex(index: number): number {
+    return index;
   }
 }

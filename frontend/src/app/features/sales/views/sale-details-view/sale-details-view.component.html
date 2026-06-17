@@ -20,7 +20,7 @@
         <mat-icon>arrow_back</mat-icon>
       </button>
       <div class="header-info">
-        <h1>Shitja #{{ saleDetails.id }}</h1>
+        <h1>Shitja #{{ saleDetails?.transaction?.id }}</h1>
         <span class="status-badge" [ngClass]="(saleDetails.transaction?.status || 'PENDING') | paymentStatus:'class'">
           {{ (saleDetails.transaction?.status || 'PENDING') | paymentStatus }}
         </span>
@@ -43,43 +43,67 @@
           Fshi
         </button>
       </div>
-      <span class="sale-date">{{ saleDetails.sale_date | albanianDate:'datetime' }}</span>
+      <span class="sale-date">{{ saleDetails.transaction?.created_date | albanianDate:'datetime' }}</span>
     </div>
 
     <!-- Main grid -->
     <div class="details-grid">
-      <!-- Product Info Card -->
-      <mat-card class="info-card product-card">
+      <!-- Line Items Card -->
+      <mat-card class="info-card items-card" style="grid-column: 1 / -1;">
         <mat-card-header>
           <mat-icon mat-card-avatar>inventory_2</mat-icon>
-          <mat-card-title>Produkti</mat-card-title>
+          <mat-card-title>Produktet ({{ saleDetails.items?.length || 0 }})</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <div class="info-row">
-            <span class="label">Emri:</span>
-            <span class="value">{{ saleDetails.product.name }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Kategoria:</span>
-            <span class="value">{{ saleDetails.product.category }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Sasia:</span>
-            <span class="value highlight">{{ saleDetails.quantity }} kg</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Çmimi/kg:</span>
-            <span class="value">{{
-              formatCurrency(saleDetails.prod_price, saleDetails.transaction?.currency || "LEK")
-            }}</span>
-          </div>
-          <div class="info-row" *ngIf="saleDetails.discount_amount > 0">
-            <span class="label">Zbritja:</span>
-            <span class="value discount">
-              -{{ formatCurrency(saleDetails.discount_amount, saleDetails.transaction?.currency || "LEK") }}
-              <span *ngIf="saleDetails.discount_type === 'PERCENT'">({{ saleDetails.discount_value }}%)</span>
-            </span>
-          </div>
+          <table mat-table [dataSource]="saleDetails.items" class="items-table">
+            <!-- Product column -->
+            <ng-container matColumnDef="product">
+              <th mat-header-cell *matHeaderCellDef>Produkti</th>
+              <td mat-cell *matCellDef="let item">{{ item.product?.name }}</td>
+            </ng-container>
+
+            <!-- Quantity column -->
+            <ng-container matColumnDef="quantity">
+              <th mat-header-cell *matHeaderCellDef>Sasia</th>
+              <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+            </ng-container>
+
+            <!-- Price column -->
+            <ng-container matColumnDef="prod_price">
+              <th mat-header-cell *matHeaderCellDef>Çmimi/Cope</th>
+              <td mat-cell *matCellDef="let item">{{ item.prod_price | number:'1.2-2' }}</td>
+            </ng-container>
+
+            <!-- Discount column -->
+            <ng-container matColumnDef="discount">
+              <th mat-header-cell *matHeaderCellDef>Zbritje</th>
+              <td mat-cell *matCellDef="let item">
+                <span *ngIf="item.discount_amount > 0">
+                  -{{ item.discount_amount | number:'1.2-2' }}
+                  ({{ item.discount_type === 'PERCENT' ? item.discount_value + '%' : 'Fiks' }})
+                </span>
+                <span *ngIf="!item.discount_amount">—</span>
+              </td>
+            </ng-container>
+
+            <!-- Tax column -->
+            <ng-container matColumnDef="tax">
+              <th mat-header-cell *matHeaderCellDef>TVSH</th>
+              <td mat-cell *matCellDef="let item">
+                <span *ngIf="item.tax_amount > 0">{{ item.tax_amount | number:'1.2-2' }}</span>
+                <span *ngIf="!item.tax_amount">—</span>
+              </td>
+            </ng-container>
+
+            <!-- Line total column -->
+            <ng-container matColumnDef="line_total">
+              <th mat-header-cell *matHeaderCellDef>Totali</th>
+              <td mat-cell *matCellDef="let item">{{ item.line_total | number:'1.2-2' }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="itemColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: itemColumns;"></tr>
+          </table>
         </mat-card-content>
       </mat-card>
 
@@ -218,7 +242,7 @@
             <th mat-header-cell *matHeaderCellDef>Shënime</th>
             <td mat-cell *matCellDef="let payment">{{ payment.notes || "-" }}</td>
           </ng-container>
-          
+
           <!-- Actions Column -->
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef class="actions-header">Veprime</th>
@@ -301,9 +325,9 @@
                 Shuma tejkalon borxhin e mbetur
               </mat-error>
             </mat-form-field>
-            <button 
-              mat-stroked-button 
-              type="button" 
+            <button
+              mat-stroked-button
+              type="button"
               class="max-btn"
               (click)="setMaxPaymentAmount()"
               matTooltip="Vendos shumën maksimale">

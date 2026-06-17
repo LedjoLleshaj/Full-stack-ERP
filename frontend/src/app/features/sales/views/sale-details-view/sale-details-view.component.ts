@@ -5,12 +5,11 @@ import { MatSnackBar } from "@angular/material/snack-bar";
 
 import { SalesApiService } from "src/app/shared/services/sales-api/sales-api.service";
 import { CurrencyExchangeService } from "src/app/shared/services/currency-exchange/currency-exchange.service";
-import { ProductService } from "src/app/shared/services/product-api/product.service";
 import { MatDialog } from "@angular/material/dialog";
-import { SaleEditDialogComponent } from "src/app/shared/components/sale-edit-dialog/sale-edit-dialog.component";
 import { DeleteConfirmationDialogComponent } from "src/app/shared/components/delete-confirmation-dialog/delete-confirmation-dialog.component";
 import { SaleDetails, PaymentRequest, ReturnRequest } from "../../../../models/sale.model";
 import { ReturnDialogComponent, ReturnDialogData } from 'src/app/shared/components/return-dialog/return-dialog.component';
+import { SaleEditDialogComponent, SaleEditDialogData } from 'src/app/shared/components/sale-edit-dialog/sale-edit-dialog.component';
 import { PaymentApiService } from "src/app/shared/services/payment-api/payment-api.service";
 import { PaymentEditDialogComponent } from "src/app/shared/components/payment-edit-dialog/payment-edit-dialog.component";
 import { AuthApiService } from "src/app/shared/services/auth-api/auth-api.service";
@@ -22,13 +21,17 @@ import { InvoiceService } from "src/app/shared/services/invoice/invoice.service"
   styleUrls: ["./sale-details-view.component.scss"],
 })
 export class SaleDetailsViewComponent implements OnInit {
-  saleId!: number;
+  // Route param is still `:id`; Task 12 will rename it to `:transactionId`
+  transactionId!: number;
   saleDetails: SaleDetails | null = null;
   isLoading = true;
   errorMessage = "";
 
   // Table columns for payments
   displayedColumns: string[] = ["payment_date", "amount", "payment_method", "currency", "notes", "actions"];
+
+  // Table columns for line items
+  itemColumns: string[] = ['product', 'quantity', 'prod_price', 'discount', 'tax', 'line_total'];
 
   // Payment form fields
   showPaymentForm = false;
@@ -52,7 +55,6 @@ export class SaleDetailsViewComponent implements OnInit {
     private router: Router,
     private salesService: SalesApiService,
     private currencyService: CurrencyExchangeService,
-    private productService: ProductService,
     private paymentService: PaymentApiService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
@@ -61,8 +63,8 @@ export class SaleDetailsViewComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.saleId = Number(this.route.snapshot.paramMap.get("id"));
-    if (this.saleId) {
+    this.transactionId = Number(this.route.snapshot.paramMap.get("transactionId"));
+    if (this.transactionId) {
       this.loadSaleDetails();
     } else {
       this.errorMessage = "ID e shitjes nuk u gjet";
@@ -72,7 +74,7 @@ export class SaleDetailsViewComponent implements OnInit {
 
   loadSaleDetails(): void {
     this.isLoading = true;
-    this.salesService.getSaleDetails(this.saleId).subscribe({
+    this.salesService.getSaleDetails(this.transactionId).subscribe({
       next: (data) => {
         this.saleDetails = data;
         this.isLoading = false;
@@ -109,9 +111,6 @@ export class SaleDetailsViewComponent implements OnInit {
 
   /**
    * Called when payment currency changes - fetches new exchange rate and updates amount
-   * We need two rates:
-   * - transactionToPayment: to convert remaining balance to payment currency (for max amount)
-   * - paymentToTransaction: to convert payment amount back to transaction currency
    */
   onCurrencyChange(): void {
     if (this.paymentCurrency === this.transactionCurrency) {
@@ -122,13 +121,9 @@ export class SaleDetailsViewComponent implements OnInit {
     }
 
     this.isLoadingRate = true;
-    
-    // Fetch rate: transaction currency → payment currency
-    // E.g., if sale is EUR and paying in LEK, get EUR→LEK rate (≈96)
+
     this.currencyService.getExchangeRate(this.transactionCurrency, this.paymentCurrency).subscribe({
       next: (rate) => {
-        // This rate tells us: 1 EUR = X LEK
-        // So to convert payment amount back to transaction currency: paymentAmount / rate
         this.exchangeRate = rate;
         this.setMaxPaymentAmount();
         this.updateConvertedAmount();
@@ -142,41 +137,24 @@ export class SaleDetailsViewComponent implements OnInit {
     });
   }
 
-  /**
-   * Set payment amount to the maximum remaining balance in the selected currency
-   */
   setMaxPaymentAmount(): void {
     const remaining = this.saleDetails?.payment_summary?.remaining || 0;
-    // remaining is in transaction currency, multiply by rate to get payment currency
-    // E.g., 100 EUR * 96 = 9600 LEK
     this.paymentAmount = Math.round(remaining * this.exchangeRate * 100) / 100;
-    this.isPayingFullRemaining = true; // User wants to pay the full remaining balance
+    this.isPayingFullRemaining = true;
     this.updateConvertedAmount();
   }
 
-  /**
-   * Get maximum payment amount in the selected payment currency
-   */
   getMaxPaymentAmount(): number {
     const remaining = this.saleDetails?.payment_summary?.remaining || 0;
-    // remaining is in transaction currency, multiply by rate to get payment currency
     return Math.round(remaining * this.exchangeRate * 100) / 100;
   }
 
-  /**
-   * Called when payment amount changes
-   */
   onAmountChange(): void {
-    this.isPayingFullRemaining = false; // User manually changed amount, no longer full remaining
+    this.isPayingFullRemaining = false;
     this.updateConvertedAmount();
   }
 
-  /**
-   * Calculate the converted amount in transaction currency
-   */
   private updateConvertedAmount(): void {
-    // Payment amount is in payment currency, divide by rate to get transaction currency
-    // E.g., 9600 LEK / 96 = 100 EUR
     if (this.exchangeRate > 0) {
       this.convertedAmount = this.paymentAmount / this.exchangeRate;
     } else {
@@ -184,16 +162,10 @@ export class SaleDetailsViewComponent implements OnInit {
     }
   }
 
-  /**
-   * Check if payment in different currency
-   */
   isDifferentCurrency(): boolean {
     return this.paymentCurrency !== this.transactionCurrency;
   }
 
-  /**
-   * Get remaining balance in the selected payment currency
-   */
   getRemainingInPaymentCurrency(): number {
     const remaining = this.saleDetails?.payment_summary?.remaining || 0;
     if (this.exchangeRate === 0) return remaining;
@@ -204,7 +176,7 @@ export class SaleDetailsViewComponent implements OnInit {
     const remaining = this.saleDetails?.payment_summary?.remaining || 0;
     return (
       this.paymentAmount > 0 &&
-      this.convertedAmount <= remaining + 0.01 && // Allow small rounding tolerance
+      this.convertedAmount <= remaining + 0.01 &&
       this.paymentMethod !== "" &&
       this.paymentCurrency !== "" &&
       !this.isLoadingRate
@@ -219,25 +191,23 @@ export class SaleDetailsViewComponent implements OnInit {
     this.isSubmittingPayment = true;
 
     const payment: any = {
-      account_id: 0, // Will be auto-selected by backend based on payment method and currency
+      account_id: 0,
       amount: this.paymentAmount,
       currency: this.paymentCurrency,
       payment_method: this.paymentMethod,
-      notes: this.paymentNotes || "", // Empty note lets backend generate a meaningful default
+      notes: this.paymentNotes || "",
     };
-    
-    // If user clicked MAX, tell backend to pay exact remaining balance
+
     if (this.isPayingFullRemaining) {
       payment.pay_remaining = true;
     }
 
-    this.salesService.paySale(this.saleId, payment).subscribe({
+    this.salesService.paySale(this.transactionId, payment).subscribe({
       next: (response) => {
         this.snackBar.open("Pagesa u regjistrua me sukses!", "Mbyll", { duration: 3000 });
         this.isSubmittingPayment = false;
         this.showPaymentForm = false;
         this.paymentNotes = "";
-        // Reload sale details to show updated payment info
         this.loadSaleDetails();
       },
       error: (err) => {
@@ -252,8 +222,6 @@ export class SaleDetailsViewComponent implements OnInit {
   hasRemainingBalance(): boolean {
     return (this.saleDetails?.payment_summary?.remaining || 0) > 0;
   }
-
-  // Note: getStatusClass and getStatusLabel replaced by paymentStatus pipe
 
   getPaymentMethodLabel(method: string): string {
     return method === "CASH" ? "Cash" : "Kartë";
@@ -300,57 +268,35 @@ export class SaleDetailsViewComponent implements OnInit {
 
   onEdit(): void {
     if (!this.saleDetails) return;
-
-    this.productService.getProducts().subscribe({
-      next: (products) => {
-        const dialogRef = this.dialog.open(SaleEditDialogComponent, {
-          width: '600px',
-          data: {
-            sale: {
-              ...this.saleDetails,
-              prod: this.saleDetails?.product?.id,
-              id: this.saleDetails?.id,
-              product: this.saleDetails?.product,
-              client: this.saleDetails?.client,
-              quantity: this.saleDetails?.quantity,
-              prod_price: this.saleDetails?.prod_price,
-              payment_status: this.saleDetails?.transaction?.status,
-              currency: this.saleDetails?.transaction?.currency,
-              user: this.saleDetails?.user?.id || 1,
-              sale_date: this.saleDetails?.sale_date
-            },
-            products: products,
-            totalPaid: this.saleDetails?.payment_summary?.total_paid || 0,
-            discountType: this.saleDetails?.discount_type,
-            discountValue: this.saleDetails?.discount_value || 0
-          }
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-          if (result) {
-            this.updateSale(result);
-          }
-        });
-      },
-      error: (err) => {
-        console.error("Error loading products", err);
-        this.snackBar.open("Gabim gjatë ngarkimit të produkteve", "OK", { duration: 3000 });
-      }
+    const dialogRef = this.dialog.open(SaleEditDialogComponent, {
+      data: { transactionId: this.transactionId, saleDetails: this.saleDetails } as SaleEditDialogData,
+      width: '900px',
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) this.loadSaleDetails();
     });
   }
 
   onDelete(): void {
     if (!this.saleDetails) return;
 
+    const firstItem = this.saleDetails.items?.[0];
+    const itemCount = this.saleDetails.items?.length || 0;
+    const title = itemCount === 1
+      ? (firstItem?.product?.name || 'produkt i panjohur')
+      : `${itemCount} produkte`;
+
     const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
       width: '500px',
       data: {
         title: 'Fshi Shitjen?',
-        message: `Je i sigurt që dëshiron të fshish shitjen për ${this.saleDetails.product.name}?`,
+        message: `Je i sigurt që dëshiron të fshish shitjen për ${title}?`,
         itemDetails: {
-          'Produkti': this.saleDetails.product.name,
-          'Sasia': `${this.saleDetails.quantity} kg`,
-          'Çmimi': this.formatCurrency(this.saleDetails.prod_price, this.saleDetails.transaction?.currency || 'EUR'),
+          'Produktet': title,
+          'Totali': this.formatCurrency(
+            this.saleDetails.payment_summary?.total_amount || 0,
+            this.saleDetails.transaction?.currency || 'EUR'
+          ),
           'Klienti': this.saleDetails.client?.name || 'Unknown'
         },
         hasPayments: (this.saleDetails.payment_summary?.total_paid || 0) > 0
@@ -364,27 +310,9 @@ export class SaleDetailsViewComponent implements OnInit {
     });
   }
 
-  private updateSale(data: any): void {
-    this.isLoading = true;
-    this.salesService.updateSale(this.saleId, data).subscribe({
-      next: (response) => {
-        this.snackBar.open('Shitja u përditësua me sukses!', 'OK', { duration: 3000 });
-        this.loadSaleDetails();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.snackBar.open(
-          error.error?.message || 'Gabim gjatë përditësimit të shitjes',
-          'OK',
-          { duration: 5000 }
-        );
-      }
-    });
-  }
-
   private deleteSale(): void {
     this.isLoading = true;
-    this.salesService.deleteSale(this.saleId).subscribe({
+    this.salesService.deleteSale(this.transactionId).subscribe({
       next: (response) => {
         this.snackBar.open(
           `Shitja u fshi! ${response.payments_reversed} pagesa u kthyen.`,
@@ -475,15 +403,15 @@ export class SaleDetailsViewComponent implements OnInit {
     const alreadyReturned = this.saleDetails.already_returned || {};
 
     const dialogData: ReturnDialogData = {
-      saleId: this.saleDetails.id,
-      items: [{
-        sale_line_id: this.saleDetails.id,
-        product_name: this.saleDetails.product.name,
-        original_quantity: this.saleDetails.quantity,
-        already_returned: alreadyReturned[String(this.saleDetails.product.id)] || 0,
-        unit_price: this.saleDetails.prod_price,
-        currency: this.saleDetails.transaction?.currency || 'EUR',
-      }],
+      saleId: this.transactionId,
+      items: (this.saleDetails.items || []).map(item => ({
+        sale_line_id: item.id,
+        product_name: item.product?.name || '',
+        original_quantity: item.quantity,
+        already_returned: alreadyReturned[String(item.product?.id)] || 0,
+        unit_price: item.prod_price,
+        currency: this.saleDetails!.transaction?.currency || 'EUR',
+      })),
       transactionCurrency: this.saleDetails.transaction?.currency || 'EUR',
       totalPaid: this.saleDetails.payment_summary?.total_paid || 0,
       totalAmount: this.saleDetails.payment_summary?.total_amount || 0,
@@ -503,7 +431,7 @@ export class SaleDetailsViewComponent implements OnInit {
 
   private processReturn(returnRequest: ReturnRequest): void {
     this.isLoading = true;
-    this.salesService.createReturn(this.saleId, returnRequest).subscribe({
+    this.salesService.createReturn(this.transactionId, returnRequest).subscribe({
       next: (response) => {
         const refundMsg = response.refund_amount > 0
           ? ` Rimbursim: ${response.refund_amount.toFixed(2)} ${this.saleDetails?.transaction?.currency || 'EUR'}`
@@ -526,4 +454,3 @@ export class SaleDetailsViewComponent implements OnInit {
     });
   }
 }
-

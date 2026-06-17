@@ -41,7 +41,8 @@ import { PaymentStatusPipe, AlbanianCurrencyPipe, AlbanianDatePipe } from '../..
 const routes: Routes = [
   { path: '', component: SalesViewComponent, title: 'Sale History' },
   { path: 'add', component: AddSaleViewComponent, title: 'Add Sale' },
-  { path: ':id', component: SaleDetailsViewComponent, title: 'Sale Details' },
+  { path: ':transactionId', component: SaleDetailsViewComponent, title: 'Sale Details' },
+  { path: ':transactionId/edit', component: AddSaleViewComponent, title: 'Edit Sale' },
 ];
 
 @NgModule({

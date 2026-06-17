@@ -1,166 +1,77 @@
-<h2 mat-dialog-title>Modifiko Shitjen</h2>
+<h2 mat-dialog-title>Redakto Shitjen</h2>
+<mat-dialog-content>
+  <!-- Line items table -->
+  <table class="edit-items-table">
+    <thead>
+      <tr>
+        <th>Produkti</th>
+        <th>Sasia</th>
+        <th>Çmimi</th>
+        <th>TVSH</th>
+        <th>Nëntotali</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of state.items; let i = index; trackBy: trackByIndex">
+        <td>
+          <mat-form-field>
+            <input matInput
+                   [(ngModel)]="state.items[i].productSearchText"
+                   [matAutocomplete]="productAuto"
+                   placeholder="Kërko produkt...">
+            <mat-autocomplete #productAuto="matAutocomplete"
+                              [displayWith]="displayProduct"
+                              (optionSelected)="onProductSelect(i, $event)">
+              <mat-option *ngFor="let p of filterProducts(i, state.items[i].productSearchText)" [value]="p">
+                {{ p.name }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </td>
+        <td>
+          <mat-form-field class="small-field">
+            <input matInput type="number" min="1"
+                   [(ngModel)]="state.items[i].quantity"
+                   (ngModelChange)="saleFormService.updateItemField(i, 'quantity', $event)">
+          </mat-form-field>
+        </td>
+        <td>
+          <mat-form-field class="small-field">
+            <input matInput type="number" min="0"
+                   [(ngModel)]="state.items[i].price"
+                   (ngModelChange)="saleFormService.updateItemField(i, 'price', $event)">
+          </mat-form-field>
+        </td>
+        <td>
+          <mat-select [(ngModel)]="state.items[i].taxRateId"
+                      (ngModelChange)="saleFormService.updateItemField(i, 'taxRateId', $event)">
+            <mat-option [value]="null">—</mat-option>
+            <mat-option *ngFor="let tr of state.availableTaxRates" [value]="tr.id">{{ tr.name }}</mat-option>
+          </mat-select>
+        </td>
+        <td>{{ getItemLineTotal(i) | number:'1.2-2' }} {{ state.currency }}</td>
+        <td>
+          <button mat-icon-button color="warn" (click)="removeItem(i)" [disabled]="state.items.length <= 1">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-<mat-dialog-content class="dialog-content">
-  <form [formGroup]="editForm" class="edit-form">
-    
-    <!-- Product Autocomplete -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Produkti</mat-label>
-      <input type="text"
-             matInput
-             formControlName="product"
-             [matAutocomplete]="auto"
-             placeholder="Zgjidh produktin">
-      <mat-icon matSuffix>search</mat-icon>
-      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayProduct">
-        <mat-option *ngFor="let product of filteredProducts | async" [value]="product">
-          {{ product.name }} - {{ product.category }}
-        </mat-option>
-      </mat-autocomplete>
-      <mat-error *ngIf="editForm.get('product')?.hasError('required')">
-        Produkti është i detyrueshëm
-      </mat-error>
-    </mat-form-field>
+  <button mat-stroked-button (click)="addItem()">
+    <mat-icon>add</mat-icon> Shto Produkt
+  </button>
 
-    <!-- Quantity -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Sasia</mat-label>
-      <input matInput
-             type="number"
-             formControlName="quantity"
-             placeholder="Vendos sasinë"
-             min="0"
-             step="1">
-      <mat-icon matSuffix>inventory</mat-icon>
-      <mat-error *ngIf="editForm.get('quantity')?.hasError('required')">
-        Sasia është e detyrueshme
-      </mat-error>
-      <mat-error *ngIf="editForm.get('quantity')?.hasError('min')">
-        Sasia duhet të jetë më e madhe se 0
-      </mat-error>
-    </mat-form-field>
-
-    <!-- Product Price -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Çmimi për njësi</mat-label>
-      <input matInput
-             type="number"
-             formControlName="prod_price"
-             placeholder="Vendos çmimin"
-             min="0"
-             step="1">
-      <mat-icon matSuffix>euro</mat-icon>
-      <mat-error *ngIf="editForm.get('prod_price')?.hasError('required')">
-        Çmimi është i detyrueshëm
-      </mat-error>
-      <mat-error *ngIf="editForm.get('prod_price')?.hasError('min')">
-        Çmimi duhet të jetë më i madh ose i barabartë me 0
-      </mat-error>
-    </mat-form-field>
-
-    <!-- Currency -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Monedha</mat-label>
-      <mat-select formControlName="currency">
-        <mat-option *ngFor="let currency of currencies" [value]="currency">
-          {{ currency }}
-        </mat-option>
-      </mat-select>
-      <mat-icon matSuffix *ngIf="!isLoadingRate">attach_money</mat-icon>
-      <mat-spinner matSuffix *ngIf="isLoadingRate" [diameter]="20"></mat-spinner>
-    </mat-form-field>
-
-    <!-- Tax Rate -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>TVSH</mat-label>
-      <mat-select [(ngModel)]="selectedTaxRateId" [ngModelOptions]="{standalone: true}">
-        <mat-option [value]="null">Pa TVSH</mat-option>
-        <mat-option *ngFor="let rate of taxRates" [value]="rate.id">
-          {{ rate.name }}
-        </mat-option>
-      </mat-select>
-      <mat-icon matSuffix>receipt_long</mat-icon>
-    </mat-form-field>
-
-    <!-- Discount -->
-    <div class="discount-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Lloji i Zbritjes</mat-label>
-        <mat-select [(ngModel)]="discountType" [ngModelOptions]="{standalone: true}">
-          <mat-option [value]="null">Pa zbritje</mat-option>
-          <mat-option value="PERCENT">Përqindje (%)</mat-option>
-          <mat-option value="FIXED">Vlerë fikse</mat-option>
-        </mat-select>
-        <mat-icon matSuffix>discount</mat-icon>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width" *ngIf="discountType">
-        <mat-label>{{ discountType === 'PERCENT' ? 'Përqindja (%)' : 'Vlera e zbritjes' }}</mat-label>
-        <input matInput
-               type="number"
-               [(ngModel)]="discountValue"
-               [ngModelOptions]="{standalone: true}"
-               min="0"
-               [max]="discountType === 'PERCENT' ? 100 : calculateTotal()"
-               step="1">
-        <span matTextSuffix>{{ discountType === 'PERCENT' ? '%' : editForm.get('currency')?.value }}</span>
-      </mat-form-field>
-    </div>
-
-    <!-- Subtotal -->
-    <div class="total-display">
-      <span class="total-label">Nëntotali:</span>
-      <span class="total-value">
-        {{ calculateTotal() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
-      </span>
-    </div>
-
-    <!-- Discount Amount -->
-    <div class="total-display" *ngIf="getDiscountAmount() > 0">
-      <span class="total-label">Zbritja:</span>
-      <span class="total-value discount">
-        -{{ getDiscountAmount() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
-      </span>
-    </div>
-
-    <!-- Tax Amount -->
-    <div class="total-display" *ngIf="getTaxAmount() > 0">
-      <span class="total-label">TVSH:</span>
-      <span class="total-value">
-        {{ getTaxAmount() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
-      </span>
-    </div>
-
-    <!-- Total with Tax -->
-    <div class="total-display">
-      <span class="total-label">Totali:</span>
-      <span class="total-value">
-        {{ getTotalWithTax() | number:'1.2-2' }} {{ editForm.get('currency')?.value }}
-      </span>
-    </div>
-
-    <!-- Payment Warning -->
-    <div class="info-message" *ngIf="hasPayments">
-      <mat-icon color="accent">info</mat-icon>
-      <span *ngIf="!isTotalInvalid()">Kjo shitje ka pagesa të regjistruara (Paguar: {{ totalPaid | number:'1.2-2' }} {{ editForm.get('currency')?.value }}). Sigurohuni që totali i ri të mos jetë më i vogël se shuma e paguar.</span>
-      <span *ngIf="isTotalInvalid()" color="warn" class="error-text">
-        <strong>Vini re:</strong> Totali i ri ({{ getTotalWithTax() | number:'1.2-2' }}) është më i vogël se shuma e paguar tashmë ({{ totalPaid | number:'1.2-2' }}). Ju lutem rritni sasinë ose çmimin.
-      </span>
-    </div>
-
-  </form>
+  <div class="edit-total">
+    <strong>Totali: {{ getGrandTotal() | number:'1.2-2' }} {{ state.currency }}</strong>
+  </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()" [disabled]="isSaving">
-    Anullo
-  </button>
-  <button mat-raised-button 
-          color="primary" 
-          (click)="onSave()"
-          [disabled]="!editForm.valid || isSaving || isTotalInvalid()">
-    <mat-spinner *ngIf="isSaving" diameter="20" class="button-spinner"></mat-spinner>
-    <mat-icon *ngIf="!isSaving">save</mat-icon>
-    <span *ngIf="!isSaving">Ruaj</span>
+  <button mat-button (click)="onCancel()">Anulo</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!saleFormService.canCreateSale()">
+    Ruaj
   </button>
 </mat-dialog-actions>

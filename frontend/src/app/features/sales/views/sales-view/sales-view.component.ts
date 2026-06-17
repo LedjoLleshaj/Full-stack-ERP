@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { Sale, SaleResponse } from "../../../../models/sale.model";
+import { SaleListRow } from "../../../../models/sale.model";
 import { SalesApiService } from "../../../../shared/services/sales-api/sales-api.service";
 import { ExcelExportService } from "../../../../shared/services/excel-export/excel-export.service";
 
@@ -9,7 +9,7 @@ import { ExcelExportService } from "../../../../shared/services/excel-export/exc
   templateUrl: "./sales-view.component.html",
 })
 export class SalesViewComponent implements OnInit, OnDestroy {
-  data: SaleResponse[] = [];
+  data: SaleListRow[] = [];
   total: number = 0;
   periodicUpdate: any;
   
