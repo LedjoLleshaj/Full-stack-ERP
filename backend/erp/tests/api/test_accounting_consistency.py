@@ -87,8 +87,8 @@ class AccountingConsistencyTest(APITestCase):
         inv.refresh_from_db()
         self.assertEqual(inv.quantity, 90) # 100 - 10
         
-        # 3. Call Delete Endpoint
-        response = self.client.delete(f'/erp/delete-sale/{sale.id}')
+        # 3. Call Delete Endpoint (using transaction ID)
+        response = self.client.delete(f'/erp/delete-sale/{transaction.id}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # 4. Verify Reversals
@@ -134,34 +134,42 @@ class AccountingConsistencyTest(APITestCase):
         # 2. Update to LEK (Higher Value)
         # 10000 LEK > 50 (Nominal). Allow.
         update_data = {
-            "prod": self.product.id,
-            "quantity": 10.0,
-            "prod_price": 1000.0, # 1000 * 10 = 10000 Total
-            "currency": "LEK"
+            "client_id": self.client_obj.id,
+            "currency": "LEK",
+            "items": [{
+                "id": sale.id,
+                "prod": self.product.id,
+                "quantity": 10.0,
+                "prod_price": 1000.0,  # 1000 * 10 = 10000 Total
+            }],
         }
-        
-        response = self.client.put(f'/erp/update-sale/{sale.id}', update_data)
+
+        response = self.client.put(f'/erp/update-sale/{transaction.id}', update_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # Verify Transaction Updated
         transaction.refresh_from_db()
         self.assertEqual(transaction.currency, "LEK")
         self.assertEqual(transaction.total_amount, Decimal("10000.00"))
         self.assertEqual(transaction.status, TransactionStatus.PARTIAL) # 10000 > 50
-        
+
         # Verify Payment converted to new currency (LEK)
         payment.refresh_from_db()
         self.assertEqual(payment.currency, "LEK")
-        
+
         # 3. Update to LOWER value (Fail case)
         # Try to update to 40 EUR. 40 < 50. Should FAIL.
         error_data = {
-            "prod": self.product.id,
-            "quantity": 4.0,
-            "prod_price": 10.0, # 40 Total
-            "currency": "EUR"
+            "client_id": self.client_obj.id,
+            "currency": "EUR",
+            "items": [{
+                "id": sale.id,
+                "prod": self.product.id,
+                "quantity": 4.0,
+                "prod_price": 10.0,  # 40 Total
+            }],
         }
-        response = self.client.put(f'/erp/update-sale/{sale.id}', error_data)
+        response = self.client.put(f'/erp/update-sale/{transaction.id}', error_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Already paid", response.data['error'])
 

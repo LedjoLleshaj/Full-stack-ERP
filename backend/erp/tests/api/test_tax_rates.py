@@ -77,43 +77,46 @@ class TestSaleWithTax(ErpTestCase):
     def test_create_sale_with_tax(self):
         resp = self.api_client.post("/erp/create-sale", {
             "client_id": self.client_obj.id,
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 2,
-            "user": self.user.id,
             "currency": "EUR",
-            "tax_rate_id": self.tax_rate.id,
-        })
+            "items": [{
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 2,
+                "tax_rate_id": self.tax_rate.id,
+            }],
+        }, format="json")
         assert resp.status_code == 201
         assert resp.data["total_amount"] == 240.0  # 200 + 20% tax = 240
-        assert resp.data["tax_amount"] == 40.0
+        assert resp.data["items"][0]["tax_amount"] == 40.0
 
     def test_create_sale_without_tax(self):
         resp = self.api_client.post("/erp/create-sale", {
             "client_id": self.client_obj.id,
-            "prod": self.product.id,
-            "prod_price": "50.00",
-            "quantity": 3,
-            "user": self.user.id,
             "currency": "EUR",
-        })
+            "items": [{
+                "prod": self.product.id,
+                "prod_price": "50.00",
+                "quantity": 3,
+            }],
+        }, format="json")
         assert resp.status_code == 201
         assert resp.data["total_amount"] == 150.0
-        assert resp.data["tax_amount"] == 0.0
+        assert resp.data["items"][0]["tax_amount"] == 0.0
 
     def test_create_sale_with_zero_tax(self):
         resp = self.api_client.post("/erp/create-sale", {
             "client_id": self.client_obj.id,
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 1,
-            "user": self.user.id,
             "currency": "EUR",
-            "tax_rate_id": self.tax_rate_zero.id,
-        })
+            "items": [{
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 1,
+                "tax_rate_id": self.tax_rate_zero.id,
+            }],
+        }, format="json")
         assert resp.status_code == 201
         assert resp.data["total_amount"] == 100.0
-        assert resp.data["tax_amount"] == 0.0
+        assert resp.data["items"][0]["tax_amount"] == 0.0
 
 
 class TestSaleUpdateWithTax(ErpTestCase):
@@ -126,44 +129,56 @@ class TestSaleUpdateWithTax(ErpTestCase):
     def test_update_sale_add_tax(self):
         resp = self.api_client.post("/erp/create-sale", {
             "client_id": self.client_obj.id,
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 2,
-            "user": self.user.id,
             "currency": "EUR",
-        })
-        sale_id = resp.data["sale_id"]
+            "items": [{
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 2,
+            }],
+        }, format="json")
+        assert resp.status_code == 201
+        tx_id = resp.data["transaction_id"]
+        sale_id = resp.data["items"][0]["sale_id"]
 
-        resp = self.api_client.put(f"/erp/update-sale/{sale_id}", {
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 2,
-            "user": self.user.id,
+        resp = self.api_client.put(f"/erp/update-sale/{tx_id}", {
+            "client_id": self.client_obj.id,
             "currency": "EUR",
-            "tax_rate_id": self.tax_rate.id,
-        })
+            "items": [{
+                "id": sale_id,
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 2,
+                "tax_rate_id": self.tax_rate.id,
+            }],
+        }, format="json")
         assert resp.status_code == 200
         assert resp.data["total_amount"] == 240.0
 
     def test_update_sale_remove_tax(self):
         resp = self.api_client.post("/erp/create-sale", {
             "client_id": self.client_obj.id,
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 1,
-            "user": self.user.id,
             "currency": "EUR",
-            "tax_rate_id": self.tax_rate.id,
-        })
-        sale_id = resp.data["sale_id"]
+            "items": [{
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 1,
+                "tax_rate_id": self.tax_rate.id,
+            }],
+        }, format="json")
+        assert resp.status_code == 201
+        tx_id = resp.data["transaction_id"]
+        sale_id = resp.data["items"][0]["sale_id"]
 
-        resp = self.api_client.put(f"/erp/update-sale/{sale_id}", {
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 1,
-            "user": self.user.id,
+        resp = self.api_client.put(f"/erp/update-sale/{tx_id}", {
+            "client_id": self.client_obj.id,
             "currency": "EUR",
-        })
+            "items": [{
+                "id": sale_id,
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 1,
+            }],
+        }, format="json")
         assert resp.status_code == 200
         assert resp.data["total_amount"] == 100.0
 
@@ -178,20 +193,23 @@ class TestSaleDetailsWithTax(ErpTestCase):
     def test_sale_details_include_tax(self):
         resp = self.api_client.post("/erp/create-sale", {
             "client_id": self.client_obj.id,
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 2,
-            "user": self.user.id,
             "currency": "EUR",
-            "tax_rate_id": self.tax_rate.id,
-        })
-        sale_id = resp.data["sale_id"]
+            "items": [{
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 2,
+                "tax_rate_id": self.tax_rate.id,
+            }],
+        }, format="json")
+        assert resp.status_code == 201
+        tx_id = resp.data["transaction_id"]
 
-        resp = self.api_client.get(f"/erp/sale-details/{sale_id}")
+        resp = self.api_client.get(f"/erp/sale-details/{tx_id}")
         assert resp.status_code == 200
-        assert resp.data["tax_amount"] == 40.0
-        assert resp.data["tax_rate_name"] == "VAT 20%"
-        assert resp.data["tax_rate_percent"] == 20.0
+        item = resp.data["items"][0]
+        assert float(item["tax_amount"]) == 40.0
+        assert item["tax_rate_name"] == "VAT 20%"
+        assert float(item["tax_rate_percent"]) == 20.0
 
 
 class TestRestockWithTax(ErpTestCase):
@@ -258,13 +276,14 @@ class TestSalesReportWithTax(ErpTestCase):
     def test_sales_report_includes_tax(self):
         self.api_client.post("/erp/create-sale", {
             "client_id": self.client_obj.id,
-            "prod": self.product.id,
-            "prod_price": "100.00",
-            "quantity": 2,
-            "user": self.user.id,
             "currency": "EUR",
-            "tax_rate_id": self.tax_rate.id,
-        })
+            "items": [{
+                "prod": self.product.id,
+                "prod_price": "100.00",
+                "quantity": 2,
+                "tax_rate_id": self.tax_rate.id,
+            }],
+        }, format="json")
 
         resp = self.api_client.get("/erp/report/sales/")
         assert resp.status_code == 200

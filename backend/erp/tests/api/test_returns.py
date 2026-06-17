@@ -564,7 +564,5 @@ class SaleDetailsReturnInfoTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Only the original sale should appear, not the return
         for s in response.data:
-            sale_obj = Sales.objects.get(id=s["id"])
-            self.assertNotEqual(
-                sale_obj.transaction.transaction_type, TransactionType.RETURN
-            )
+            tx = Transaction.objects.get(id=s["transaction_id"])
+            self.assertNotEqual(tx.transaction_type, TransactionType.RETURN)

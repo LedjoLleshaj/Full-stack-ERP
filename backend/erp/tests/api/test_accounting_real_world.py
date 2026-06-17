@@ -345,8 +345,8 @@ class MultiPaymentAccountingTests(TestCase):
         self.assertEqual(self.cash_eur.current_balance, initial_cash_eur + Decimal("100.00"))
         self.assertEqual(self.bank_eur.current_balance, initial_bank_eur + Decimal("100.00"))
         
-        # Delete sale via API
-        response = self.client.delete(f'/erp/delete-sale/{sale.id}')
+        # Delete sale via API (using transaction ID)
+        response = self.client.delete(f'/erp/delete-sale/{transaction.id}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['payments_reversed'], 2)
         
@@ -554,8 +554,8 @@ class FullWorkflowBalanceTests(TestCase):
         self.assertEqual(self.bank_eur.current_balance, Decimal("300.00"),
             "Bank: 0 + 300 = 300")
         
-        # 3. Delete sale
-        response = self.client.delete(f'/erp/delete-sale/{sale.id}')
+        # 3. Delete sale (using transaction ID)
+        response = self.client.delete(f'/erp/delete-sale/{sale_tx.id}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # 4. Final balance validation

@@ -87,27 +87,31 @@ class SaleUpdateDeleteTestCase(TestCase):
             user=self.user,
             quantity=Decimal("10")
         )
-        
-        # Update to 15 quantity
+
+        # Update to 15 quantity using transaction ID + items[] format
         response = self.client_api.put(
-            f'/erp/update-sale/{sale.id}',
+            f'/erp/update-sale/{transaction.id}',
             {
-                'prod': self.product_a.id,
-                'quantity': 15,
-                'prod_price': '10.00',
-                'user': self.user.id,
-                'currency': 'EUR'
-            }
+                'client_id': self.test_client.id,
+                'currency': 'EUR',
+                'items': [{
+                    'id': sale.id,
+                    'prod': self.product_a.id,
+                    'quantity': 15,
+                    'prod_price': '10.00',
+                }],
+            },
+            format='json',
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['total_amount'], 150.00)
-        
+
         # Verify inventory
         inventory = Inventory.objects.filter(prod=self.product_a).first()
         # Initial: 100, update adds 5 more sold = 95 remaining
         self.assertEqual(inventory.quantity, 95)
-    
+
     def test_update_sale_overpayment_blocked(self):
         """Test that reducing total below paid amount is blocked"""
         # Create sale with payment
@@ -132,19 +136,23 @@ class SaleUpdateDeleteTestCase(TestCase):
             currency="EUR",
             payment_method="CASH"
         )
-        
+
         # Try to reduce quantity (would make total < paid)
         response = self.client_api.put(
-            f'/erp/update-sale/{sale.id}',
+            f'/erp/update-sale/{transaction.id}',
             {
-                'prod': self.product_a.id,
-                'quantity': 5,  # Would make total = 50, but paid = 100
-                'prod_price': '10.00',
-                'user': self.user.id,
-                'currency': 'EUR'
-            }
+                'client_id': self.test_client.id,
+                'currency': 'EUR',
+                'items': [{
+                    'id': sale.id,
+                    'prod': self.product_a.id,
+                    'quantity': 5,  # Would make total = 50, but paid = 100
+                    'prod_price': '10.00',
+                }],
+            },
+            format='json',
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Cannot reduce total", response.data['error'])
     
@@ -165,24 +173,24 @@ class SaleUpdateDeleteTestCase(TestCase):
             user=self.user,
             quantity=Decimal("10")
         )
-        
+
         # Get initial inventory
         initial_inventory = Inventory.objects.filter(prod=self.product_a).first().quantity
-        
-        # Delete sale
-        response = self.client_api.delete(f'/erp/delete-sale/{sale.id}')
-        
+
+        # Delete sale using transaction ID
+        response = self.client_api.delete(f'/erp/delete-sale/{transaction.id}')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['payments_reversed'], 0)
-        
+
         # Verify inventory restored
         final_inventory = Inventory.objects.filter(prod=self.product_a).first().quantity
         self.assertEqual(final_inventory, initial_inventory + 10)
-        
+
         # Verify sale and transaction deleted
         self.assertFalse(Sales.objects.filter(id=sale.id).exists())
         self.assertFalse(Transaction.objects.filter(id=transaction.id).exists())
-    
+
     def test_delete_sale_with_payment(self):
         """Test deleting a paid sale reverses payment"""
         # Create sale with payment
@@ -207,20 +215,20 @@ class SaleUpdateDeleteTestCase(TestCase):
             currency="EUR",
             payment_method="CASH"
         )
-        
+
         # Account should have +100
         self.cash_eur.current_balance += Decimal("100.00")
         self.cash_eur.save()
         self.cash_eur.refresh_from_db()
         self.assertEqual(self.cash_eur.current_balance, Decimal("100.00"))
-        
-        # Delete sale
-        response = self.client_api.delete(f'/erp/delete-sale/{sale.id}')
-        
+
+        # Delete sale using transaction ID
+        response = self.client_api.delete(f'/erp/delete-sale/{transaction.id}')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['payments_reversed'], 1)
         self.assertEqual(response.data['total_reversed'], 100.00)
-        
+
         # Verify account balance reversed
         self.cash_eur.refresh_from_db()
         self.assertEqual(self.cash_eur.current_balance, Decimal("0.00"))
@@ -242,29 +250,33 @@ class SaleUpdateDeleteTestCase(TestCase):
             user=self.user,
             quantity=Decimal("10")
         )
-        
+
         # Get initial inventories
         inv_a_before = Inventory.objects.filter(prod=self.product_a).first().quantity
         inv_b_before = Inventory.objects.filter(prod=self.product_b).first().quantity
-        
-        # Change product from A to B
+
+        # Change product from A to B using transaction ID + items[] format
         response = self.client_api.put(
-            f'/erp/update-sale/{sale.id}',
+            f'/erp/update-sale/{transaction.id}',
             {
-                'prod': self.product_b.id,
-                'quantity': 10,
-                'prod_price': '15.00',
-                'user': self.user.id,
-                'currency': 'EUR'
-            }
+                'client_id': self.test_client.id,
+                'currency': 'EUR',
+                'items': [{
+                    'id': sale.id,
+                    'prod': self.product_b.id,
+                    'quantity': 10,
+                    'prod_price': '15.00',
+                }],
+            },
+            format='json',
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # Verify product A inventory restored
         inv_a_after = Inventory.objects.filter(prod=self.product_a).first().quantity
         self.assertEqual(inv_a_after, inv_a_before + 10)
-        
+
         # Verify product B inventory reduced
         inv_b_after = Inventory.objects.filter(prod=self.product_b).first().quantity
         self.assertEqual(inv_b_after, inv_b_before - 10)
