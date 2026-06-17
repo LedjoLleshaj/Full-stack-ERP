@@ -1,77 +1,117 @@
 import { Product } from "./product.model";
 
-export interface SaleResponse {
-  id: number;
-  quantity: number;
-  sale_date: string;
+// ======== Multi-item sale creation ========
+
+export interface SaleLineItem {
+  id?: number;
   prod: number;
   prod_price: number;
-  user: number;
-  transaction: number;
-  client: {
-    id: number;
-    name: string;
-    phone: string;
-    address: string;
-  };
-  product: Product;
-  payment_status: string; // PENDING, PARTIAL, COMPLETED
-  currency?: string;
-  tax_amount?: number;
-  tax_rate_name?: string;
+  quantity: number;
+  tax_rate_id?: number | null;
   discount_type?: string | null;
   discount_value?: number;
-  discount_amount?: number;
 }
 
-export interface Sale {
-  prod: number;
-  prod_price: number;
-  user: number;
-  client_id: number; // Changed from 'client'
-  quantity: number;
-  currency?: string;
-  tax_rate_id?: number;
-  discount_type?: string;
-  discount_value?: number;
-  payment?: PaymentData; // Optional payment info
+export interface CreateSaleRequest {
+  client_id: number;
+  currency: string;
+  payment_terms_id?: number | null;
+  items: SaleLineItem[];
+  payment?: PaymentData;
+}
+
+export interface UpdateSaleRequest {
+  client_id: number;
+  currency: string;
+  payment_terms_id?: number | null;
+  items: SaleLineItem[];
 }
 
 export interface PaymentData {
-  account_id: number;
   amount: number;
   currency: string;
   payment_method: 'CASH' | 'CARD';
   notes?: string;
 }
+
+// ======== API responses ========
 
 export interface SaleCreateResponse {
   message: string;
-  sale_id: number;
   transaction_id: number;
   transaction_status: string;
   total_amount: number;
-  tax_amount: number;
-  discount_amount: number;
+  payment_warning?: string | null;
+  items: {
+    sale_id: number;
+    product_id: number;
+    product_name: string;
+    quantity: number;
+    prod_price: number;
+    tax_amount: number;
+    discount_amount: number;
+    line_total: number;
+  }[];
 }
 
-export interface PaymentRequest {
-  account_id: number;
-  amount: number;
-  currency: string;
-  payment_method: 'CASH' | 'CARD';
-  notes?: string;
-}
-
-export interface PaymentResponse {
+export interface SaleUpdateResponse {
   message: string;
-  payment_id: number;
+  transaction_id: number;
   transaction_status: string;
+  total_amount: number;
   total_paid: number;
   remaining: number;
 }
 
-// Detailed sale view interfaces
+export interface SaleDeleteResponse {
+  message: string;
+  transaction_id: number;
+  inventory_restored: { product_name: string; quantity: number }[];
+  payments_reversed: number;
+  total_reversed: number;
+  accounts_affected: number[];
+}
+
+// ======== Sales list (transaction-grouped) ========
+
+export interface SaleListRow {
+  transaction_id: number;
+  products: string;
+  item_count: number;
+  total_amount: number;
+  currency: string;
+  sale_date: string;
+  payment_status: string;
+  client: {
+    id?: number;
+    name: string;
+    phone: string;
+    address: string;
+  };
+}
+
+// ======== Sale details ========
+
+export interface SaleLineItemDetail {
+  id: number;
+  product: {
+    id: number;
+    name: string;
+    category: string;
+    price: string;
+    description: string;
+  };
+  quantity: number;
+  prod_price: number;
+  tax_rate_name: string | null;
+  tax_rate_percent: number | null;
+  tax_amount: number;
+  discount_type: string | null;
+  discount_value: number;
+  discount_amount: number;
+  line_total: number;
+}
+
 export interface TransactionInfo {
   id: number;
   transaction_type: string;
@@ -97,6 +137,8 @@ export interface PaymentInfo {
   account: number;
   amount: string;
   currency: string;
+  original_amount?: string;
+  original_currency?: string;
   payment_method: string;
   payment_date: string;
   notes?: string;
@@ -119,59 +161,33 @@ export interface ClientInfo {
   city: string;
 }
 
-export interface UserInfo {
-  id: number;
-  firstname: string;
-  lastname: string;
-}
-
 export interface SaleDetails {
-  id: number;
-  quantity: number;
-  sale_date: string;
-  prod_price: number;
-  tax_amount: number;
-  tax_rate_name: string | null;
-  tax_rate_percent: number | null;
-  discount_type: string | null;
-  discount_value: number;
-  discount_amount: number;
-  product: {
-    id: number;
-    name: string;
-    category: string;
-    price: string;
-    description: string;
-  };
-  user?: UserInfo;
+  transaction: TransactionInfo;
   client?: ClientInfo;
-  transaction?: TransactionInfo;
+  items: SaleLineItemDetail[];
   payments: PaymentInfo[];
-  payment_summary?: PaymentSummary;
+  payment_summary: PaymentSummary;
   returns?: ReturnInfo[];
   already_returned?: { [productId: string]: number };
 }
 
-export interface SaleUpdateResponse {
+export interface PaymentRequest {
+  account_id: number;
+  amount: number;
+  currency: string;
+  payment_method: 'CASH' | 'CARD';
+  notes?: string;
+}
+
+export interface PaymentResponse {
   message: string;
-  sale_id: number;
-  transaction_id: number;
+  payment_id: number;
   transaction_status: string;
-  total_amount: number;
   total_paid: number;
   remaining: number;
 }
 
-export interface SaleDeleteResponse {
-  message: string;
-  sale_id: number;
-  transaction_id: number;
-  inventory_restored: number;
-  product_name: string;
-  payments_reversed: number;
-  total_reversed: number;
-  accounts_affected: number[];
-}
+// ======== Returns ========
 
 export interface ReturnItem {
   sale_line_id: number;
@@ -201,4 +217,42 @@ export interface ReturnInfo {
   refund_amount: number;
   items: { product_name: string; quantity: number; unit_price: number }[];
   notes?: string;
+}
+
+// Legacy — kept for backward compatibility during migration
+export interface Sale {
+  prod: number;
+  prod_price: number;
+  user: number;
+  client_id: number;
+  quantity: number;
+  currency?: string;
+  tax_rate_id?: number;
+  discount_type?: string;
+  discount_value?: number;
+  payment?: PaymentData;
+}
+
+export interface SaleResponse {
+  id: number;
+  quantity: number;
+  sale_date: string;
+  prod: number;
+  prod_price: number;
+  user: number;
+  transaction: number;
+  client: {
+    id: number;
+    name: string;
+    phone: string;
+    address: string;
+  };
+  product: Product;
+  payment_status: string;
+  currency?: string;
+  tax_amount?: number;
+  tax_rate_name?: string;
+  discount_type?: string | null;
+  discount_value?: number;
+  discount_amount?: number;
 }

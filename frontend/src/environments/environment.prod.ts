@@ -31,6 +31,8 @@ export const environment = {
     invoice: '/transaction/',
     createReturn: '/create-return/',
     getSaleReturns: '/sale-returns/',
+    updateSale: '/update-sale/',
+    deleteSale: '/delete-sale/',
   },
   clients: {
     getAll: '/clients',
@@ -71,4 +73,6 @@ export const environment = {
   invoice: '/transaction/',
   createReturn: '/create-return/',
   getSaleReturns: '/sale-returns/',
+  updateSale: '/update-sale/',
+  deleteSale: '/delete-sale/',
 };

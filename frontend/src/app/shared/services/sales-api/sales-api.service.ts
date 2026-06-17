@@ -2,7 +2,20 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
-import { Sale, SaleResponse, SaleCreateResponse, PaymentRequest, PaymentResponse, SaleDetails, SaleUpdateResponse, SaleDeleteResponse, ReturnRequest, ReturnResponse, ReturnInfo } from "src/app/models/sale.model";
+import {
+  CreateSaleRequest,
+  UpdateSaleRequest,
+  SaleCreateResponse,
+  SaleUpdateResponse,
+  SaleDeleteResponse,
+  SaleListRow,
+  SaleDetails,
+  PaymentRequest,
+  PaymentResponse,
+  ReturnRequest,
+  ReturnResponse,
+  ReturnInfo,
+} from "src/app/models/sale.model";
 import { BaseApiService } from "../base-api.service";
 
 @Injectable({
@@ -13,41 +26,41 @@ export class SalesApiService extends BaseApiService {
     super(http);
   }
 
-  getSales(): Observable<SaleResponse[]> {
-    return this.http.get<SaleResponse[]>(`${this.apiUrl}${environment.getSales}`);
+  getSales(): Observable<SaleListRow[]> {
+    return this.http.get<SaleListRow[]>(`${this.apiUrl}${environment.getSales}`);
   }
 
-  /**
-   * Add a payment to a sale's transaction
-   * @param saleId - ID of the sale
-   * @param payment - Payment details
-   */
-  paySale(saleId: number, payment: PaymentRequest): Observable<PaymentResponse> {
-    return this.http.post<PaymentResponse>(
-      `${this.apiUrl}${environment.paySale}${saleId}`,
-      payment
+  createSale(sale: CreateSaleRequest): Observable<SaleCreateResponse> {
+    return this.http.post<SaleCreateResponse>(
+      `${this.apiUrl}${environment.createSale}`,
+      sale
     );
   }
 
-  checkdisponibility(productId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}${environment.checkdisponibility}${productId}`);
+  updateSale(transactionId: number, data: UpdateSaleRequest): Observable<SaleUpdateResponse> {
+    return this.http.put<SaleUpdateResponse>(
+      `${this.apiUrl}${environment.updateSale}${transactionId}`,
+      data
+    );
   }
 
-  /**
-   * Create a new sale with optional payment
-   * @param sale - Sale data including client_id and optional payment
-   */
-  createSale(sale: Sale): Observable<SaleCreateResponse> {
-    // make sure there is enough stock
-    this.checkdisponibility(sale.prod).subscribe((response) => {
-      if (response.disponibility < sale.quantity) {
-        console.error("Not enough stock available");
-        return;
-      }
-    });
-    // Proceed to create the sale
-    console.log("Creating sale", sale);
-    return this.http.post<SaleCreateResponse>(`${this.apiUrl}${environment.createSale}`, sale);
+  deleteSale(transactionId: number): Observable<SaleDeleteResponse> {
+    return this.http.delete<SaleDeleteResponse>(
+      `${this.apiUrl}${environment.deleteSale}${transactionId}`
+    );
+  }
+
+  getSaleDetails(transactionId: number): Observable<SaleDetails> {
+    return this.http.get<SaleDetails>(
+      `${this.apiUrl}${environment.getSaleDetails}${transactionId}`
+    );
+  }
+
+  paySale(transactionId: number, payment: PaymentRequest): Observable<PaymentResponse> {
+    return this.http.post<PaymentResponse>(
+      `${this.apiUrl}${environment.paySale}${transactionId}`,
+      payment
+    );
   }
 
   getLastSoldPrice(clientId: number, productId: number): Observable<{ price: number | null; currency: string | null }> {
@@ -63,58 +76,20 @@ export class SalesApiService extends BaseApiService {
     return this.http.get<any[]>(`${this.apiUrl}${environment.salesReport}`, { params });
   }
 
-  /**
-   * Get detailed sale information including transaction and payment history
-   * @param saleId - ID of the sale
-   */
-  getSaleDetails(saleId: number): Observable<SaleDetails> {
-    return this.http.get<SaleDetails>(
-      `${this.apiUrl}${environment.getSaleDetails}${saleId}`
-    );
-  }
-
-  /**
-   * Update an existing sale
-   * @param saleId - ID of the sale to update
-   * @param saleData - Updated sale data
-   */
-  updateSale(saleId: number, saleData: Partial<Sale>): Observable<SaleUpdateResponse> {
-    return this.http.put<SaleUpdateResponse>(
-      `${this.apiUrl}/update-sale/${saleId}`,
-      saleData
-    );
-  }
-
-  /**
-   * Delete a sale
-   * @param saleId - ID of the sale to delete
-   */
-  deleteSale(saleId: number): Observable<SaleDeleteResponse> {
-    return this.http.delete<SaleDeleteResponse>(
-      `${this.apiUrl}/delete-sale/${saleId}`
-    );
-  }
-
-  /**
-   * Create a return for a sale
-   * @param saleId - ID of the sale to return
-   * @param data - Return request data
-   */
-  createReturn(saleId: number, data: ReturnRequest): Observable<ReturnResponse> {
+  createReturn(transactionId: number, data: ReturnRequest): Observable<ReturnResponse> {
     return this.http.post<ReturnResponse>(
-      `${this.apiUrl}${environment.createReturn}${saleId}`,
+      `${this.apiUrl}${environment.createReturn}${transactionId}`,
       data
     );
   }
 
-  /**
-   * Get returns for a sale
-   * @param saleId - ID of the sale
-   */
-  getSaleReturns(saleId: number): Observable<ReturnInfo[]> {
+  getSaleReturns(transactionId: number): Observable<ReturnInfo[]> {
     return this.http.get<ReturnInfo[]>(
-      `${this.apiUrl}${environment.getSaleReturns}${saleId}`
+      `${this.apiUrl}${environment.getSaleReturns}${transactionId}`
     );
   }
 
+  checkdisponibility(productId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}${environment.checkdisponibility}${productId}`);
+  }
 }

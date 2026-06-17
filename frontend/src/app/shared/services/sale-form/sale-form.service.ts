@@ -2,53 +2,61 @@ import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 import { Client } from 'src/app/models/client.model';
 import { Product } from 'src/app/models/product.model';
+import { PaymentTerms } from 'src/app/models/payment-terms.model';
+import { TaxRate } from 'src/app/models/tax-rate.model';
 import { ClientService } from '../clients-api/client.service';
 import { ProductService } from '../product-api/product.service';
 import { SalesApiService } from '../sales-api/sales-api.service';
 import { CurrencyExchangeService } from '../currency-exchange/currency-exchange.service';
 import { PaymentTermsApiService } from '../payment-terms-api/payment-terms-api.service';
 import { TaxRateApiService } from '../tax-rate-api/tax-rate-api.service';
-import { AuthApiService } from '../auth-api/auth-api.service';
-import { PaymentTerms } from '../../../models/payment-terms.model';
-import { TaxRate } from '../../../models/tax-rate.model';
+import {
+  CreateSaleRequest,
+  UpdateSaleRequest,
+  SaleCreateResponse,
+  SaleUpdateResponse,
+  SaleDetails,
+} from 'src/app/models/sale.model';
 
-/**
- * Shared state for sale form across multiple components.
- * This interface represents all the data needed to create a sale.
- */
+// ======== State interfaces ========
+
+export interface SaleLineItemFormState {
+  id?: number;
+  selectedProduct: Product | null;
+  productSearchText: string;
+  quantity: number;
+  price: number;
+  basePriceEUR: number;
+  taxRateId: number | null;
+  discountType: string | null;
+  discountValue: number;
+  lastSoldPrice: number | null;
+  lastSoldCurrency: string | null;
+}
+
 export interface SaleFormState {
   // Client selection
   availableClients: Client[];
   selectedClient: Client | null;
   clientSearchText: string;
 
-  // Product selection
+  // Products
   availableProducts: Product[];
-  selectedProduct: Product | null;
-  productSearchText: string;
 
-  // Sale details
-  saleQuantity: number;
-  salePrice: number;
-  basePriceEUR: number;
-  isPaid: boolean;
-  lastSoldPrice: number | null;
-  lastSoldCurrency: string | null;
-
-  // Discount
-  discountType: string | null;
-  discountValue: number;
+  // Line items (multi-product)
+  items: SaleLineItemFormState[];
 
   // Payment options
+  isPaid: boolean;
   paymentMethod: string;
   currency: string;
 
-  // Tax
+  // Tax rates
   availableTaxRates: TaxRate[];
-  selectedTaxRateId: number | null;
 
   // Payment terms
   availablePaymentTerms: PaymentTerms[];
@@ -58,17 +66,35 @@ export interface SaleFormState {
   isSubmitting: boolean;
 }
 
+// ======== Helpers ========
+
+const createEmptyItem = (): SaleLineItemFormState => ({
+  selectedProduct: null,
+  productSearchText: '',
+  quantity: 1,
+  price: 0,
+  basePriceEUR: 0,
+  taxRateId: null,
+  discountType: null,
+  discountValue: 0,
+  lastSoldPrice: null,
+  lastSoldCurrency: null,
+});
+
 /**
- * Service to centralize sale creation logic that was duplicated across
- * AddSaleViewComponent and ClientDetailsViewComponent.
+ * Service to centralize multi-item sale creation logic.
+ * Manages an items[] array instead of a single product.
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SaleFormService {
   // Constants
   readonly paymentMethods: string[] = ['CASH', 'CARD'];
   readonly currencies: string[] = ['EUR', 'USD', 'LEK'];
+
+  // Internal state
+  state: SaleFormState = this.getInitialState();
 
   // State change notification
   private stateChange$ = new Subject<void>();
@@ -77,171 +103,119 @@ export class SaleFormService {
   constructor(
     private clientService: ClientService,
     private productService: ProductService,
-    private saleService: SalesApiService,
+    private salesApiService: SalesApiService,
     private currencyExchange: CurrencyExchangeService,
     private paymentTermsService: PaymentTermsApiService,
     private taxRateService: TaxRateApiService,
-    private authService: AuthApiService,
     private snackBar: MatSnackBar,
     private router: Router
   ) {}
 
-  /**
-   * Creates a fresh/reset form state
-   */
+  // ======== State initialisation ========
+
   getInitialState(): SaleFormState {
     return {
       availableClients: [],
       selectedClient: null,
       clientSearchText: '',
       availableProducts: [],
-      selectedProduct: null,
-      productSearchText: '',
-      saleQuantity: 1,
-      salePrice: 0,
-      basePriceEUR: 0,
-      isPaid: true,
-      lastSoldPrice: null,
-      lastSoldCurrency: null,
-      discountType: null,
-      discountValue: 0,
-      availableTaxRates: [],
-      selectedTaxRateId: null,
-      availablePaymentTerms: [],
-      selectedPaymentTermsId: null,
+      items: [createEmptyItem()],
+      isPaid: false,
       paymentMethod: 'CASH',
       currency: 'EUR',
+      availableTaxRates: [],
+      availablePaymentTerms: [],
+      selectedPaymentTermsId: null,
       isSubmitting: false,
     };
   }
 
-  /**
-   * Loads available clients into the state
-   */
-  loadClients(state: SaleFormState): void {
-    this.clientService.getClients().subscribe({
-      next: (clients) => {
-        state.availableClients = clients;
-        this.stateChange$.next();
-      },
-      error: (err) => {
-        console.error('Failed to fetch clients:', err);
-        this.snackBar.open('Gabim ne ngarkimin e klienteve', 'Mbyll', { duration: 3000 });
-      },
-    });
-  }
-
-  /**
-   * Loads available products (with stock > 0) into the state
-   */
-  loadProducts(state: SaleFormState): void {
-    this.productService.getProducts().subscribe({
-      next: (products) => {
-        state.availableProducts = products.filter(p => p.disponibility > 0);
-        this.stateChange$.next();
-      },
-      error: (err) => {
-        console.error('Failed to fetch products:', err);
-        this.snackBar.open('Gabim ne ngarkimin e produkteve', 'Mbyll', { duration: 3000 });
-      },
-    });
-  }
-
-  /**
-   * Filters clients based on search text
-   */
-  filteredClients(state: SaleFormState): Client[] {
-    if (!state.clientSearchText) {
-      return state.availableClients;
-    }
-    const search = state.clientSearchText.toLowerCase();
-    return state.availableClients.filter(
-      c => c.firstname.toLowerCase().includes(search) || c.lastname.toLowerCase().includes(search)
-    );
-  }
-
-  /**
-   * Filters products based on search text
-   */
-  filteredProducts(state: SaleFormState): Product[] {
-    if (!state.productSearchText) {
-      return state.availableProducts;
-    }
-    return state.availableProducts.filter(p =>
-      p.name.toLowerCase().includes(state.productSearchText.toLowerCase())
-    );
-  }
-
-  /**
-   * Handles client selection from autocomplete
-   */
-  onClientSelect(state: SaleFormState, client: Client): void {
-    state.selectedClient = client;
-    state.clientSearchText = `${client.firstname} ${client.lastname}`;
-    state.lastSoldPrice = null;
-    state.lastSoldCurrency = null;
-
-    if (state.selectedProduct?.id && state.selectedClient?.id) {
-      this.fetchLastSoldPrice(state);
-    }
+  resetForm(): void {
+    this.state = this.getInitialState();
     this.stateChange$.next();
   }
 
-  /**
-   * Handles product selection from autocomplete
-   */
-  onProductSelect(state: SaleFormState, product: Product, clientId?: number): void {
-    state.selectedProduct = product;
-    state.salePrice = product.price;
-    state.basePriceEUR = product.price;
-    state.currency = 'EUR';
-    state.saleQuantity = 1;
-    state.productSearchText = product.name;
+  // ======== Item management ========
 
-    // Fetch last sold price if client is available
-    const targetClientId = clientId ?? state.selectedClient?.id;
-    if (targetClientId && product.id) {
-      this.fetchLastSoldPriceForClient(state, targetClientId, product.id);
-    }
+  addItem(): void {
+    this.state.items = [...this.state.items, createEmptyItem()];
     this.stateChange$.next();
   }
 
-  /**
-   * Fetches last sold price for a client/product combination
-   */
-  fetchLastSoldPrice(state: SaleFormState): void {
-    if (!state.selectedClient?.id || !state.selectedProduct?.id) return;
-    this.fetchLastSoldPriceForClient(state, state.selectedClient.id, state.selectedProduct.id);
+  removeItem(index: number): void {
+    if (this.state.items.length <= 1) return;
+    this.state.items = this.state.items.filter((_, i) => i !== index);
+    this.stateChange$.next();
   }
 
-  private fetchLastSoldPriceForClient(state: SaleFormState, clientId: number, productId: number): void {
-    this.saleService.getLastSoldPrice(clientId, productId).subscribe({
-      next: (response) => {
-        state.lastSoldPrice = response.price;
-        state.lastSoldCurrency = response.currency;
-        this.stateChange$.next();
-      },
-      error: (err) => {
-        console.error('Failed to fetch last sold price:', err);
-        state.lastSoldPrice = null;
-        state.lastSoldCurrency = null;
-      },
-    });
-  }
+  onItemProductSelect(index: number, product: Product): void {
+    if (!this.state.items[index]) return;
 
-  /**
-   * Handles currency change - converts price from EUR to selected currency
-   */
-  onCurrencyChange(state: SaleFormState): void {
-    if (!state.selectedProduct || state.basePriceEUR === 0) return;
-
-    if (state.currency === 'EUR') {
-      state.salePrice = state.basePriceEUR;
+    // Convert price to current currency
+    if (this.state.currency === 'EUR') {
+      this.state.items = this.state.items.map((it, i) =>
+        i === index
+          ? { ...it, selectedProduct: product, productSearchText: product.name, basePriceEUR: product.price, price: product.price }
+          : it
+      );
       this.stateChange$.next();
     } else {
-      this.currencyExchange.getExchangeRate('EUR', state.currency).subscribe({
+      this.currencyExchange.getExchangeRate('EUR', this.state.currency).pipe(take(1)).subscribe({
         next: (rate) => {
-          state.salePrice = Math.round(state.basePriceEUR * rate * 100) / 100;
+          this.state.items = this.state.items.map((it, i) =>
+            i === index
+              ? { ...it, selectedProduct: product, productSearchText: product.name, basePriceEUR: product.price, price: Math.round(product.price * rate * 100) / 100 }
+              : it
+          );
+          this.stateChange$.next();
+        },
+        error: () => {
+          this.state.items = this.state.items.map((it, i) =>
+            i === index
+              ? { ...it, selectedProduct: product, productSearchText: product.name, basePriceEUR: product.price, price: product.price }
+              : it
+          );
+          this.snackBar.open('Gabim në marrjen e kursit të këmbimit', 'Mbyll', { duration: 3000 });
+          this.stateChange$.next();
+        },
+      });
+    }
+
+    // Fetch last sold price if client is selected
+    if (this.state.selectedClient?.id && product.id) {
+      this.fetchLastSoldPrice(index);
+    }
+  }
+
+  updateItemField(index: number, field: string, value: any): void {
+    if (!this.state.items[index]) return;
+    this.state.items = this.state.items.map((it, i) =>
+      i === index ? { ...it, [field]: value } : it
+    );
+    this.stateChange$.next();
+  }
+
+  // ======== Currency handling ========
+
+  onCurrencyChange(currency: string): void {
+    this.state.currency = currency;
+
+    if (currency === 'EUR') {
+      // Reset all items to base EUR price
+      this.state.items = this.state.items.map(item => ({
+        ...item,
+        price: item.basePriceEUR > 0 ? item.basePriceEUR : item.price,
+      }));
+      this.stateChange$.next();
+    } else {
+      this.currencyExchange.getExchangeRate('EUR', currency).pipe(take(1)).subscribe({
+        next: (rate) => {
+          this.state.items = this.state.items.map(item => ({
+            ...item,
+            price: item.basePriceEUR > 0
+              ? Math.round(item.basePriceEUR * rate * 100) / 100
+              : item.price,
+          }));
           this.stateChange$.next();
         },
         error: () => {
@@ -251,50 +225,140 @@ export class SaleFormService {
     }
   }
 
-  /**
-   * Enforces maximum quantity based on product availability
-   */
-  enforceMaxQuantity(state: SaleFormState, inputValue: string): number {
-    const max = state.selectedProduct?.disponibility ?? 0;
-    let value = parseInt(inputValue, 10) || 0;
+  // ======== Client handling ========
 
-    if (value > max) {
-      value = max;
+  onClientSelect(client: Client): void {
+    this.state.selectedClient = client;
+    this.state.clientSearchText = `${client.firstname} ${client.lastname}`;
+    // Clear last-sold prices immutably, then re-fetch for items that have a product
+    this.state.items = this.state.items.map(item => ({
+      ...item,
+      lastSoldPrice: null,
+      lastSoldCurrency: null,
+    }));
+    this.state.items.forEach((item, idx) => {
+      if (item.selectedProduct?.id) {
+        this.fetchLastSoldPrice(idx);
+      }
+    });
+    this.stateChange$.next();
+  }
+
+  // ======== Last-sold price ========
+
+  fetchLastSoldPrice(index: number): void {
+    const item = this.state.items[index];
+    if (!item || !this.state.selectedClient?.id || !item.selectedProduct?.id) return;
+
+    this.salesApiService
+      .getLastSoldPrice(this.state.selectedClient.id, item.selectedProduct.id)
+      .pipe(take(1))
+      .subscribe({
+        next: (response) => {
+          this.state.items = this.state.items.map((it, i) =>
+            i === index
+              ? { ...it, lastSoldPrice: response.price, lastSoldCurrency: response.currency }
+              : it
+          );
+          this.stateChange$.next();
+        },
+        error: (err) => {
+          console.error('Failed to fetch last sold price:', err);
+          this.state.items = this.state.items.map((it, i) =>
+            i === index ? { ...it, lastSoldPrice: null, lastSoldCurrency: null } : it
+          );
+        },
+      });
+  }
+
+  // ======== Per-item calculations ========
+
+  getItemSubtotal(index: number): number {
+    const item = this.state.items[index];
+    if (!item) return 0;
+    return item.price * item.quantity;
+  }
+
+  getItemDiscountAmount(index: number): number {
+    const item = this.state.items[index];
+    if (!item || !item.discountType || item.discountValue <= 0) return 0;
+    const subtotal = this.getItemSubtotal(index);
+    if (item.discountType === 'PERCENT') {
+      return Math.round(subtotal * item.discountValue / 100 * 100) / 100;
     }
-    state.saleQuantity = value;
-    return value;
+    // FIXED
+    return Math.min(item.discountValue, subtotal);
   }
 
-  /**
-   * Calculates total sale amount (subtotal before tax)
-   */
-  getTotal(state: SaleFormState): number {
-    return state.salePrice * state.saleQuantity;
+  getItemTaxAmount(index: number): number {
+    const item = this.state.items[index];
+    if (!item || !item.taxRateId) return 0;
+    const rate = this.state.availableTaxRates.find(r => r.id === item.taxRateId);
+    if (!rate) return 0;
+    const pct = parseFloat(String(rate.rate));
+    if (!isFinite(pct) || pct < 0) return 0;
+    const discountedSubtotal = this.getItemSubtotal(index) - this.getItemDiscountAmount(index);
+    return Math.round(discountedSubtotal * pct / 100 * 100) / 100;
   }
 
-  loadPaymentTerms(state: SaleFormState): void {
-    this.paymentTermsService.getPaymentTerms().subscribe({
-      next: (terms) => {
-        state.availablePaymentTerms = terms;
+  getItemLineTotal(index: number): number {
+    return (
+      this.getItemSubtotal(index) -
+      this.getItemDiscountAmount(index) +
+      this.getItemTaxAmount(index)
+    );
+  }
+
+  // ======== Grand totals ========
+
+  getGrandSubtotal(): number {
+    return this.state.items.reduce((sum, _, i) => sum + this.getItemSubtotal(i), 0);
+  }
+
+  getGrandDiscount(): number {
+    return this.state.items.reduce((sum, _, i) => sum + this.getItemDiscountAmount(i), 0);
+  }
+
+  getGrandTax(): number {
+    return this.state.items.reduce((sum, _, i) => sum + this.getItemTaxAmount(i), 0);
+  }
+
+  getGrandTotal(): number {
+    return this.state.items.reduce((sum, _, i) => sum + this.getItemLineTotal(i), 0);
+  }
+
+  // ======== Data loading ========
+
+  loadClients(): void {
+    this.clientService.getClients().pipe(take(1)).subscribe({
+      next: (clients) => {
+        this.state.availableClients = clients;
         this.stateChange$.next();
       },
       error: (err) => {
-        console.error('Failed to fetch payment terms:', err);
+        console.error('Failed to fetch clients:', err);
+        this.snackBar.open('Gabim ne ngarkimin e klienteve', 'Mbyll', { duration: 3000 });
       },
     });
   }
 
-  /**
-   * Loads available tax rates into the state
-   */
-  loadTaxRates(state: SaleFormState): void {
-    this.taxRateService.getTaxRates().subscribe({
+  loadProducts(): void {
+    this.productService.getProducts().pipe(take(1)).subscribe({
+      next: (products) => {
+        this.state.availableProducts = products.filter(p => p.disponibility > 0);
+        this.stateChange$.next();
+      },
+      error: (err) => {
+        console.error('Failed to fetch products:', err);
+        this.snackBar.open('Gabim ne ngarkimin e produkteve', 'Mbyll', { duration: 3000 });
+      },
+    });
+  }
+
+  loadTaxRates(): void {
+    this.taxRateService.getTaxRates().pipe(take(1)).subscribe({
       next: (rates) => {
-        state.availableTaxRates = rates;
-        const defaultRate = rates.find(r => r.is_default);
-        if (defaultRate) {
-          state.selectedTaxRateId = defaultRate.id;
-        }
+        this.state.availableTaxRates = rates;
         this.stateChange$.next();
       },
       error: (err) => {
@@ -303,161 +367,179 @@ export class SaleFormService {
     });
   }
 
-  getDiscountAmount(state: SaleFormState): number {
-    if (!state.discountType || state.discountValue <= 0) return 0;
-    const subtotal = this.getTotal(state);
-    if (state.discountType === 'PERCENT') {
-      return Math.round(subtotal * state.discountValue / 100 * 100) / 100;
+  loadPaymentTerms(): void {
+    this.paymentTermsService.getPaymentTerms().pipe(take(1)).subscribe({
+      next: (terms) => {
+        this.state.availablePaymentTerms = terms;
+        this.stateChange$.next();
+      },
+      error: (err) => {
+        console.error('Failed to fetch payment terms:', err);
+      },
+    });
+  }
+
+  // ======== Validation ========
+
+  canCreateSale(): boolean {
+    if (!this.state.selectedClient || this.state.items.length === 0 || this.state.isSubmitting) {
+      return false;
     }
-    return Math.min(state.discountValue, subtotal);
-  }
-
-  getDiscountedSubtotal(state: SaleFormState): number {
-    return this.getTotal(state) - this.getDiscountAmount(state);
-  }
-
-  getTaxAmount(state: SaleFormState): number {
-    if (!state.selectedTaxRateId) return 0;
-    const rate = state.availableTaxRates.find(r => r.id === state.selectedTaxRateId);
-    if (!rate) return 0;
-    const discountedSubtotal = this.getDiscountedSubtotal(state);
-    return Math.round(discountedSubtotal * parseFloat(rate.rate) / 100 * 100) / 100;
-  }
-
-  getTotalWithTax(state: SaleFormState): number {
-    return this.getDiscountedSubtotal(state) + this.getTaxAmount(state);
-  }
-
-  /**
-   * Validates if sale can be created
-   */
-  canCreateSale(state: SaleFormState, clientId?: number): boolean {
-    const effectiveClientId = clientId ?? state.selectedClient?.id;
-    return (
-      effectiveClientId != null &&
-      state.selectedProduct != null &&
-      state.saleQuantity > 0 &&
-      state.saleQuantity <= state.selectedProduct.disponibility &&
-      state.salePrice > 0 &&
-      !state.isSubmitting
+    return this.state.items.every(
+      item => item.selectedProduct != null && item.price > 0 && item.quantity > 0
     );
   }
 
-  /**
-   * Creates a new sale
-   */
-  createSale(state: SaleFormState, clientId?: number, navigateOnSuccess: boolean = true): Observable<boolean> {
-    const result = new Subject<boolean>();
+  // ======== Sale creation / update ========
 
-    const effectiveClientId = clientId ?? state.selectedClient?.id;
-    if (!this.canCreateSale(state, effectiveClientId) || !state.selectedProduct) {
-      result.next(false);
-      result.complete();
-      return result.asObservable();
-    }
-
-    state.isSubmitting = true;
-    const total = this.getTotalWithTax(state);
-    const userId = this.authService.getUserId();
-
-    if (!userId) {
-      this.snackBar.open('Gabim: Përdoruesi nuk u gjet', 'Mbyll', { duration: 3000 });
-      state.isSubmitting = false;
-      result.next(false);
-      result.complete();
-      return result.asObservable();
-    }
-
-    const newSale: any = {
-      prod: state.selectedProduct.id,
-      prod_price: state.salePrice,
-      quantity: state.saleQuantity,
-      user: userId,
-      client_id: effectiveClientId,
-      currency: state.currency,
+  createSale(): Observable<SaleCreateResponse> {
+    const req: CreateSaleRequest = {
+      client_id: this.state.selectedClient!.id!,
+      currency: this.state.currency,
+      payment_terms_id: this.state.selectedPaymentTermsId || null,
+      items: this.state.items.map(item => ({
+        prod: item.selectedProduct!.id!,
+        prod_price: item.price,
+        quantity: item.quantity,
+        tax_rate_id: item.taxRateId || null,
+        discount_type: item.discountType || null,
+        discount_value: item.discountValue || 0,
+      })),
     };
 
-    if (state.selectedTaxRateId) {
-      newSale.tax_rate_id = state.selectedTaxRateId;
-    }
-
-    if (state.discountType && state.discountValue > 0) {
-      newSale.discount_type = state.discountType;
-      newSale.discount_value = state.discountValue;
-    }
-
-    if (state.selectedPaymentTermsId) {
-      newSale.payment_terms_id = state.selectedPaymentTermsId;
-    }
-
-    if (state.isPaid) {
-      newSale.payment = {
-        amount: total,
-        currency: state.currency,
-        payment_method: state.paymentMethod,
-        notes: `Payment for sale of ${state.saleQuantity} ${state.selectedProduct.name}`,
+    if (this.state.isPaid) {
+      req.payment = {
+        amount: this.getGrandTotal(),
+        currency: this.state.currency,
+        payment_method: this.state.paymentMethod as 'CASH' | 'CARD',
       };
     }
 
-    this.saleService.createSale(newSale).subscribe({
-      next: (response) => {
-        console.log('Sale created successfully:', response);
-        const statusMsg = response.transaction_status === 'COMPLETED' ? 'dhe u pagua' : '';
-        this.snackBar.open(`Shitja u krijua me sukses ${statusMsg}!`, 'Mbyll', { duration: 3000 });
-        state.isSubmitting = false;
-        
-        if (navigateOnSuccess) {
-          this.router.navigate(['/sales']);
-        }
-        
-        result.next(true);
-        result.complete();
-      },
-      error: (error) => {
-        console.error('Error creating sale:', error);
-        const errorMsg = error?.error?.error || 'Gabim ne krijimin e shitjes';
-        this.snackBar.open(errorMsg, 'Mbyll', { duration: 5000 });
-        state.isSubmitting = false;
-        result.next(false);
-        result.complete();
-      },
-    });
-
-    return result.asObservable();
+    return this.salesApiService.createSale(req);
   }
 
-  /**
-   * Clears/resets the form state
-   */
-  clearSelection(state: SaleFormState): void {
-    state.selectedClient = null;
-    state.clientSearchText = '';
-    state.selectedProduct = null;
-    state.productSearchText = '';
-    state.saleQuantity = 1;
-    state.salePrice = 0;
-    state.basePriceEUR = 0;
-    state.isPaid = true;
-    state.lastSoldPrice = null;
-    state.lastSoldCurrency = null;
-    state.discountType = null;
-    state.discountValue = 0;
-    const defaultRate = state.availableTaxRates.find(r => r.is_default);
-    state.selectedTaxRateId = defaultRate ? defaultRate.id : null;
-    state.selectedPaymentTermsId = null;
-    state.paymentMethod = 'CASH';
-    state.currency = 'EUR';
+  updateSale(transactionId: number): Observable<SaleUpdateResponse> {
+    const req: UpdateSaleRequest = {
+      client_id: this.state.selectedClient!.id!,
+      currency: this.state.currency,
+      payment_terms_id: this.state.selectedPaymentTermsId || null,
+      items: this.state.items.map(item => ({
+        id: item.id,
+        prod: item.selectedProduct!.id!,
+        prod_price: item.price,
+        quantity: item.quantity,
+        tax_rate_id: item.taxRateId || null,
+        discount_type: item.discountType || null,
+        discount_value: item.discountValue || 0,
+      })),
+    };
+
+    return this.salesApiService.updateSale(transactionId, req);
+  }
+
+  // ======== Edit loading ========
+
+  loadForEdit(saleDetails: SaleDetails): void {
+    const tx = saleDetails.transaction;
+
+    // Set client (use ClientInfo from SaleDetails if available, map to Client shape)
+    if (saleDetails.client) {
+      const c = saleDetails.client;
+      this.state.selectedClient = {
+        id: c.id,
+        firstname: c.firstname,
+        lastname: c.lastname,
+        email: '',
+        phone: c.phone,
+        address: c.address,
+        city: c.city,
+        unpaidBalance: 0,
+      };
+      this.state.clientSearchText = `${c.firstname} ${c.lastname}`;
+    }
+
+    this.state.currency = tx.currency;
+    this.state.selectedPaymentTermsId = tx.payment_terms ?? null;
+
+    this.state.items = saleDetails.items.map(lineItem => {
+      const prodPrice = lineItem.prod_price;
+      const product: Product = {
+        id: lineItem.product.id,
+        name: lineItem.product.name,
+        category: lineItem.product.category,
+        price: parseFloat(lineItem.product.price),
+        description: lineItem.product.description,
+        disponibility: 0,  // unknown in edit context; server enforces
+      };
+      return {
+        id: lineItem.id,
+        selectedProduct: product,
+        productSearchText: lineItem.product.name,
+        quantity: lineItem.quantity,
+        price: prodPrice,
+        basePriceEUR: prodPrice,  // assume stored in transaction currency; best effort
+        taxRateId: null,          // resolved below
+        discountType: lineItem.discount_type,
+        discountValue: lineItem.discount_value,
+        lastSoldPrice: null,
+        lastSoldCurrency: null,
+      } as SaleLineItemFormState;
+    });
+
+    // Resolve tax rate IDs from rate names/percentages stored on line items
+    this.state.items.forEach((item, idx) => {
+      const detail = saleDetails.items[idx];
+      if (detail.tax_rate_percent != null) {
+        const matched = this.state.availableTaxRates.find(
+          r => Math.abs(parseFloat(r.rate) - detail.tax_rate_percent!) < 0.001
+        );
+        item.taxRateId = matched ? matched.id : null;
+      }
+    });
+
     this.stateChange$.next();
   }
 
-  /**
-   * Display helpers
-   */
+  // ======== Display helpers ========
+
   displayClient(client: Client | null): string {
     return client ? `${client.firstname} ${client.lastname}` : '';
   }
 
   displayProduct(product: Product | null): string {
     return product ? product.name : '';
+  }
+
+  filteredClients(): Client[] {
+    if (!this.state.clientSearchText) return this.state.availableClients;
+    const search = this.state.clientSearchText.toLowerCase();
+    return this.state.availableClients.filter(
+      c =>
+        c.firstname.toLowerCase().includes(search) ||
+        c.lastname.toLowerCase().includes(search)
+    );
+  }
+
+  filteredProductsForItem(index: number): Product[] {
+    const item = this.state.items[index];
+    if (!item || !item.productSearchText) return this.state.availableProducts;
+    const search = item.productSearchText.toLowerCase();
+    return this.state.availableProducts.filter(p =>
+      p.name.toLowerCase().includes(search)
+    );
+  }
+
+  // ======== Legacy compatibility (state-passing overloads) ========
+  // These accept the old SaleFormState shape so existing callers compile
+  // while consuming components are migrated.  They delegate to internal state.
+
+  /** @deprecated Use loadClients() without arguments */
+  loadClientsLegacy(state: any): void {
+    this.loadClients();
+  }
+
+  /** @deprecated Use loadProducts() without arguments */
+  loadProductsLegacy(state: any): void {
+    this.loadProducts();
   }
 }
