@@ -61,6 +61,8 @@
 
 .line-items-table {
   width: 100%;
+  min-width: 880px;
+  table-layout: fixed;
   border-collapse: collapse;
 
   th, td {
@@ -85,35 +87,32 @@
     }
   }
 
-  // Column sizing
-  .col-num   { width: 36px; text-align: center; color: #999; }
-  .col-product { min-width: 180px; }
-  .col-qty   { width: 90px; }
-  .col-price { width: 110px; }
-  .col-tax   { width: 130px; }
-  .col-discount { width: 200px; }
-  .col-total { width: 130px; white-space: nowrap; }
+  // Column sizing (sums to 880px = table min-width; table-layout:fixed clips cells)
+  .col-num   { width: 32px; text-align: center; color: #999; }
+  .col-product { width: 220px; }
+  .col-qty   { width: 78px; }
+  .col-price { width: 92px; }
+  .col-tax   { width: 120px; }
+  .col-discount { width: 150px; }
+  .col-total { width: 138px; white-space: nowrap; text-align: right; }
   .col-action { width: 48px; text-align: center; }
 
   // Compact mat-form-fields inside table cells
   td mat-form-field {
     width: 100%;
+    min-width: 0;
     // Remove bottom margin that Angular Material adds
     ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       display: none;
     }
   }
 
-  .product-field {
-    min-width: 160px;
-  }
-
-  .number-field {
-    max-width: 100px;
-  }
-
+  .product-field,
+  .number-field,
   .tax-field {
-    min-width: 120px;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 
   .line-total {
@@ -136,13 +135,13 @@
   align-items: flex-start;
 
   .discount-type-field {
-    width: 80px;
-    flex-shrink: 0;
+    width: 78px;
+    flex: 0 0 78px;
   }
 
   .discount-value-field {
-    flex: 1;
-    min-width: 70px;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 }
 
