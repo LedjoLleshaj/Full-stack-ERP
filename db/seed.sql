@@ -492,4 +492,26 @@ WHERE EXISTS (
     SELECT 1 FROM accounttransaction at3 WHERE at3.account_id = a.id
 );
 
+-- ============================================================
+-- 18. SYNC sequences to MAX(id) — rows above use explicit ids,
+--     which does NOT advance serial sequences. Without this the
+--     next ORM insert reuses an id and hits a unique-constraint
+--     violation (e.g. transaction_pkey).
+-- ============================================================
+DO $$
+DECLARE t text; seq text; mx bigint;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'transaction','account','client','inventory','payment','product',
+    'product_categories','product_names','restock','sales','supplier',
+    'tax_rate','accounttransaction'
+  ] LOOP
+    seq := pg_get_serial_sequence('"'||t||'"','id');
+    IF seq IS NOT NULL THEN
+      EXECUTE format('SELECT COALESCE(MAX(id),0) FROM %I', t) INTO mx;
+      PERFORM setval(seq, GREATEST(mx,1));
+    END IF;
+  END LOOP;
+END $$;
+
 COMMIT;
