@@ -80,6 +80,14 @@ Create, track, and manage sales and purchases with full audit trails.
 ![Transaction Detail](docs/screenshots/09-transaction-detail.png)
 _View complete transaction history with line items, payment status, and client information._
 
+**Multi-Item Invoice Builder**
+![Create Sale](docs/screenshots/13-create-sale-multi-item.png)
+_Build multi-product sales in one form — per-line quantity, price, VAT, and discount with live subtotal and grand total._
+
+**Sale Detail**
+![Sale Detail](docs/screenshots/14-sale-detail.png)
+_Review a completed sale with per-item VAT breakdown, client info, and a payment summary showing paid vs. outstanding balance._
+
 ### Client & Product Management
 
 Maintain detailed profiles with transaction history and inventory metrics.
