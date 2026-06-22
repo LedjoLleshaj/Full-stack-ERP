@@ -9,6 +9,8 @@ from django.utils import timezone
 from erp.constants import (
     AccountType,
     Currency,
+    ExpenseChargeStatus,
+    ExpenseFrequency,
     PaymentMethod,
     QuotationStatus,
     TransactionStatus,
@@ -523,3 +525,89 @@ class Restock(models.Model):
         return (
             f"{self.prod}, {self.quantity}, {self.restock_price}, {self.restock_date}"
         )
+
+
+class RecurringExpense(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=50, null=True, blank=True)
+    description = models.TextField(blank=True, default="")
+    amount = models.DecimalField(
+        max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
+    )
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)
+    account_type = models.CharField(max_length=20, choices=AccountType.CHOICES)
+    frequency = models.CharField(max_length=20, choices=ExpenseFrequency.CHOICES)
+    start_date = models.DateField()
+    next_due_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    auto_charge = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "recurring_expense"
+        verbose_name = "Recurring Expense"
+        verbose_name_plural = "Recurring Expenses"
+        ordering = ["next_due_date"]
+        indexes = [
+            models.Index(fields=["next_due_date"], name="rec_exp_next_due_idx"),
+            models.Index(
+                fields=["is_active", "auto_charge", "next_due_date"],
+                name="rec_exp_due_idx",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.next_due_date:
+            self.next_due_date = self.start_date
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({self.frequency})"
+
+
+class ExpenseCharge(models.Model):
+    recurring_expense = models.ForeignKey(
+        RecurringExpense, on_delete=models.CASCADE, related_name="charges"
+    )
+    account = models.ForeignKey(
+        Account, on_delete=models.PROTECT, related_name="expense_charges"
+    )
+    amount = models.DecimalField(
+        max_digits=14, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
+    )
+    currency = models.CharField(max_length=3, choices=Currency.CHOICES)
+    period_date = models.DateField()
+    charge_date = models.DateTimeField(auto_now_add=True)
+    account_transaction = models.ForeignKey(
+        AccountTransaction,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expense_charges",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=ExpenseChargeStatus.CHOICES,
+        default=ExpenseChargeStatus.POSTED,
+    )
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = "expense_charge"
+        verbose_name = "Expense Charge"
+        verbose_name_plural = "Expense Charges"
+        ordering = ["-charge_date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["recurring_expense", "period_date"],
+                name="unique_expense_period",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["-charge_date"], name="exp_charge_date_idx"),
+            models.Index(fields=["period_date"], name="exp_charge_period_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.recurring_expense.name} - {self.amount} {self.currency} ({self.period_date})"

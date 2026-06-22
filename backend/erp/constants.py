@@ -125,3 +125,27 @@ class Currency:
     
     # Default currency for the application
     DEFAULT = EUR
+
+
+class ExpenseFrequency:
+    """Cadence values for RecurringExpense records."""
+    DAILY = "DAILY"
+    WEEKLY = "WEEKLY"
+    MONTHLY = "MONTHLY"
+
+    CHOICES = [
+        (DAILY, "Daily"),
+        (WEEKLY, "Weekly"),
+        (MONTHLY, "Monthly"),
+    ]
+
+
+class ExpenseChargeStatus:
+    """Status values for ExpenseCharge records."""
+    POSTED = "POSTED"
+    REVERSED = "REVERSED"
+
+    CHOICES = [
+        (POSTED, "Posted"),
+        (REVERSED, "Reversed"),
+    ]
