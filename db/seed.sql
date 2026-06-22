@@ -15,6 +15,8 @@ BEGIN;
 -- 1. CLEAN SLATE — reset all app data, preserve Django internals
 -- ============================================================
 TRUNCATE TABLE
+    expense_charge,
+    recurring_expense,
     quotation_item,
     quotation,
     accounttransaction,
@@ -427,7 +429,20 @@ OVERRIDING SYSTEM VALUE VALUES
 -- T39 PENDING: no payment row
 
 -- ============================================================
--- 15. ACCOUNT TRANSACTIONS — opening balances (no linked payment)
+-- 15. RECURRING EXPENSES  (3 sample entries)
+--     Currencies/account_types match seeded accounts (section 6):
+--       EUR  BANK → account 4 "Bank EUR"
+--       EUR  CASH → account 1 "Cash EUR"
+-- ============================================================
+INSERT INTO recurring_expense
+  (name, category, description, amount, currency, account_type, frequency, start_date, next_due_date, end_date, auto_charge, is_active, created_date)
+VALUES
+  ('Office Rent',      'Rent',      'Monthly office rent', 800.00, 'EUR', 'BANK', 'MONTHLY', '2026-01-01', '2026-07-01', NULL,  true,  true,  NOW()),
+  ('Internet',         'Utilities', 'Monthly ISP bill',     45.00, 'EUR', 'BANK', 'MONTHLY', '2026-01-05', '2026-07-05', NULL,  true,  true,  NOW()),
+  ('Cleaning Service', 'Services',  'Weekly cleaning',       60.00, 'EUR', 'CASH', 'WEEKLY',  '2026-06-01', '2026-06-22', NULL,  false, true,  NOW());
+
+-- ============================================================
+-- 16. ACCOUNT TRANSACTIONS — opening balances (no linked payment)
 -- ============================================================
 INSERT INTO accounttransaction (account_id, payment_id, transaction_type, amount, balance_after, transaction_date, notes)
 VALUES
@@ -435,7 +450,7 @@ VALUES
 (4, NULL, 'DEPOSIT', 10000.00, 10000.00, '2025-12-01 08:00:00+00', 'Opening balance');
 
 -- ============================================================
--- 16. ACCOUNT TRANSACTIONS — one entry per payment
+-- 17. ACCOUNT TRANSACTIONS — one entry per payment
 --     Running balance = opening_balance + cumulative signed amounts,
 --     partitioned by account and ordered by payment_date, payment_id.
 -- ============================================================
@@ -478,7 +493,7 @@ FROM   running
 ORDER  BY account_id, payment_date;
 
 -- ============================================================
--- 17. SYNC account.current_balance to final ledger balance
+-- 18. SYNC account.current_balance to final ledger balance
 -- ============================================================
 UPDATE account a
 SET    current_balance = (
@@ -493,7 +508,7 @@ WHERE EXISTS (
 );
 
 -- ============================================================
--- 18. SYNC sequences to MAX(id) — rows above use explicit ids,
+-- 19. SYNC sequences to MAX(id) — rows above use explicit ids,
 --     which does NOT advance serial sequences. Without this the
 --     next ORM insert reuses an id and hits a unique-constraint
 --     violation (e.g. transaction_pkey).
@@ -504,7 +519,7 @@ BEGIN
   FOREACH t IN ARRAY ARRAY[
     'transaction','account','client','inventory','payment','product',
     'product_categories','product_names','restock','sales','supplier',
-    'tax_rate','accounttransaction'
+    'tax_rate','accounttransaction','recurring_expense'
   ] LOOP
     seq := pg_get_serial_sequence('"'||t||'"','id');
     IF seq IS NOT NULL THEN
