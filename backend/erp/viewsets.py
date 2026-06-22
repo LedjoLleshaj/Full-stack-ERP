@@ -8,11 +8,13 @@ from erp.models import (
     AccountTransaction,
     Client,
     ExchangeRate,
+    ExpenseCharge,
     Inventory,
     Payment,
     PaymentTerms,
     Product,
     Product_Categories,
+    RecurringExpense,
     Restock,
     Sales,
     Supplier,
@@ -26,11 +28,13 @@ from erp.serializers import (
     AccountSerializer,
     AccountTransactionSerializer,
     ClientSerializer,
+    ExpenseChargeSerializer,
     InventorySerializer,
     PaymentSerializer,
     PaymentTermsSerializer,
     ProductCategoriesSerializer,
     ProductSerializer,
+    RecurringExpenseSerializer,
     RestockSerializer,
     SalesSerializer,
     SupplierSerializer,
@@ -38,8 +42,9 @@ from erp.serializers import (
     TransactionSerializer,
     UserSerializer,
 )
+from erp.services.expense_service import ExpenseError, ExpenseService
 from erp.services.inventory_service import InventoryService
-from erp.utils.responses import success_response
+from erp.utils.responses import bad_request_response, created_response, success_response
 
 
 class ExchangeRateSerializer(drf_serializers.ModelSerializer):
@@ -218,3 +223,83 @@ class ExchangeRateViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ExchangeRateSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardPagination
+
+
+class RecurringExpenseViewSet(BaseViewSet):
+    queryset = RecurringExpense.objects.all()
+    serializer_class = RecurringExpenseSerializer
+
+    def get_permissions(self):
+        if self.action in ("create", "update", "partial_update", "charge", "run_due"):
+            return [IsManagerOrAbove()]
+        return super().get_permissions()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action == "list":
+            qs = qs.filter(is_active=True)
+        return qs
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
+
+    @action(detail=True, methods=["post"], url_path="charge")
+    def charge(self, request, pk=None):
+        expense = self.get_object()
+        try:
+            charge = ExpenseService.charge_expense(expense, expense.next_due_date)
+        except ExpenseError as exc:
+            return bad_request_response(str(exc))
+        return created_response(
+            ExpenseChargeSerializer(charge).data, message="Expense charged"
+        )
+
+    @action(detail=False, methods=["post"], url_path="run-due")
+    def run_due(self, request):
+        summary = ExpenseService.process_due_expenses()
+        summary["total_amount"] = str(summary["total_amount"])
+        return success_response(summary, message="Due expenses processed")
+
+    @action(detail=False, methods=["get"], url_path="due")
+    def due(self, request):
+        today = timezone.localdate()
+        qs = RecurringExpense.objects.filter(
+            is_active=True, next_due_date__lte=today
+        )
+        return success_response(self.get_serializer(qs, many=True).data)
+
+
+class ExpenseChargeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ExpenseCharge.objects.select_related(
+        "recurring_expense", "account"
+    ).all()
+    serializer_class = ExpenseChargeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardPagination
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        expense_id = self.request.query_params.get("recurring_expense")
+        if expense_id:
+            try:
+                qs = qs.filter(recurring_expense_id=int(expense_id))
+            except (ValueError, TypeError):
+                return qs.none()
+        return qs
+
+    def get_permissions(self):
+        if self.action == "reverse":
+            return [IsManagerOrAbove()]
+        return [permissions.IsAuthenticated()]
+
+    @action(detail=True, methods=["post"], url_path="reverse")
+    def reverse(self, request, pk=None):
+        charge = self.get_object()
+        try:
+            ExpenseService.reverse_charge(charge)
+        except ExpenseError as exc:
+            return bad_request_response(str(exc))
+        return success_response(
+            ExpenseChargeSerializer(charge).data, message="Charge reversed"
+        )
