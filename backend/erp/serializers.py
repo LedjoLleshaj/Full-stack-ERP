@@ -6,7 +6,6 @@ from .models import (
     Account,
     AccountTransaction,
     Client,
-    ExpenseCharge,
     Inventory,
     Payment,
     PaymentTerms,
@@ -15,7 +14,6 @@ from .models import (
     Product_Names,
     Quotation,
     QuotationItem,
-    RecurringExpense,
     Restock,
     Sales,
     Supplier,
@@ -251,40 +249,3 @@ class AddInventorySerializer(serializers.Serializer):
     supplier_id = serializers.IntegerField(min_value=1)  # Must be a valid positive ID
     description = serializers.CharField(required=False, allow_blank=True, default="")
     is_paid = serializers.BooleanField(default=True)  # Handles bool/string conversion
-
-
-class RecurringExpenseSerializer(serializers.ModelSerializer):
-    next_due_date = serializers.DateField(read_only=True)
-    created_date = serializers.DateTimeField(read_only=True)
-
-    class Meta:
-        model = RecurringExpense
-        fields = "__all__"
-        read_only_fields = ["is_active"]
-
-    def validate(self, attrs):
-        account_type = attrs.get(
-            "account_type", getattr(self.instance, "account_type", None)
-        )
-        currency = attrs.get("currency", getattr(self.instance, "currency", None))
-        if not Account.objects.filter(
-            account_type=account_type, currency=currency
-        ).exists():
-            raise serializers.ValidationError(
-                {"account_type": f"No {account_type} account exists for {currency}."}
-            )
-        return attrs
-
-
-class ExpenseChargeSerializer(serializers.ModelSerializer):
-    charge_date = serializers.DateTimeField(read_only=True)
-    expense_name = serializers.CharField(
-        source="recurring_expense.name", read_only=True
-    )
-    account_name = serializers.CharField(
-        source="account.account_name", read_only=True
-    )
-
-    class Meta:
-        model = ExpenseCharge
-        fields = "__all__"

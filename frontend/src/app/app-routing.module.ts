@@ -103,15 +103,6 @@ const routes: Routes = [
         redirectTo: "sales/add",
         pathMatch: "full",
       },
-      {
-        path: "expenses",
-        loadChildren: () => import("./features/expenses/expenses.module").then(m => m.ExpensesModule),
-      },
-      {
-        path: "add-expense",
-        redirectTo: "expenses/add",
-        pathMatch: "full",
-      },
     ],
   },
 ];

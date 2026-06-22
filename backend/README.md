@@ -298,25 +298,6 @@ Exchange rates synchronized: 9 created, 0 updated
 ```bash
 python manage.py sync_exchange_rates
 ```
-
-### Scheduled Management Commands (Cron)
-
-| Schedule | Command | Purpose |
-|----------|---------|---------|
-| Weekly (Sunday 01:00) | `python manage.py sync_exchange_rates` | Refresh currency exchange rates from API |
-| Daily (01:00) | `python manage.py charge_due_expenses` | Post recurring expenses whose `next_due_date` is due |
-
-Example crontab entries (run from inside the container or server):
-```
-# Weekly — refresh exchange rates
-0 1 * * 0  cd /app/backend && python manage.py sync_exchange_rates
-
-# Daily — post due recurring expenses (mirrors the weekly sync_exchange_rates cron)
-0 1 * * *  cd /app/backend && python manage.py charge_due_expenses
-```
-
-The `charge_due_expenses` command supports `--dry-run` to preview which expenses would be charged without actually posting them.
-
 ### Exchange Rate API Endpoints
 
 | Endpoint | Method | Description |

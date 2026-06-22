@@ -119,11 +119,6 @@ export class AuthApiService {
     return role === 'ADMIN' || role === 'MANAGER';
   }
 
-  isManager(): boolean {
-    const role = this.currentUserSubject.value?.role;
-    return role === 'ADMIN' || role === 'MANAGER';
-  }
-
   private setUserInfo(response: LoginResponse): void {
     localStorage.setItem(LOCAL_STORAGE_KEYS.USER_ID, response.user_id.toString());
     localStorage.setItem(LOCAL_STORAGE_KEYS.USERNAME, response.username);
