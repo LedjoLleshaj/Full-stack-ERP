@@ -183,6 +183,37 @@
         </button>
       </div>
       <mat-divider></mat-divider>
+
+      <button
+        class="flex flex-row"
+        mat-list-item
+        aria-label="Hap shpenzimet"
+        title="Hap shpenzimet"
+        [activated]="this.router.url === '/expenses' || this.router.url === '/add-expense'"
+        (click)="navigateToExpenses()"
+      >
+        <mat-icon matListItemIcon>payments</mat-icon>
+        <div matListItemTitle class="flex items-center">
+          Shpenzimet
+          <mat-icon *ngIf="!isExpenseMenuOpen">expand_less</mat-icon>
+          <mat-icon *ngIf="isExpenseMenuOpen">expand_more</mat-icon>
+        </div>
+      </button>
+
+      <div *ngIf="isExpenseMenuOpen" class="submenu">
+        <button
+          *ngIf="authApiService.isManager()"
+          mat-list-item
+          aria-label="Shto nje shpenzim"
+          title="Shto nje shpenzim"
+          [activated]="this.router.url === '/add-expense'"
+          (click)="this.router.navigate(['/add-expense'])"
+        >
+          <mat-icon matListItemIcon>add</mat-icon>
+          <div matListItemTitle>Shto nje shpenzim</div>
+        </button>
+      </div>
+      <mat-divider></mat-divider>
     </mat-nav-list>
   </mat-sidenav>
 
