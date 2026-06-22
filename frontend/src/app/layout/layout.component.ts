@@ -20,6 +20,7 @@ export class LayoutComponent {
   isSupplierMenuOpen: boolean = false; // Track supplier menu state
   isSaleMenuOpen: boolean = false; // Track sale menu state
   isRestockMenuOpen: boolean = false; // Track restock menu state
+  isExpenseMenuOpen: boolean = false; // Track expense menu state
 
   constructor(
     public router: Router,
@@ -68,6 +69,11 @@ export class LayoutComponent {
   navigateToRestocks() {
     this.isRestockMenuOpen = !this.isRestockMenuOpen;
     this.router.navigate(["/restocks"]);
+  }
+
+  navigateToExpenses() {
+    this.isExpenseMenuOpen = !this.isExpenseMenuOpen;
+    this.router.navigate(["/expenses"]);
   }
 
 }
